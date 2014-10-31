@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="no-cache" />
+    <title></title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            height: 100%;
+        }
+    </style>
+</head>
+<body style="background-color: yellow;">
+
+    <div style="margin: 0px; overflow: auto; position: absolute; box-sizing: border-box; -moz-box-sizing: border-box;">
+        <div style="padding: 0px; border: 0px currentColor; width: 1px; height: 1px; position: absolute;">
+            <div style="padding: 0px; border: 0px currentColor; width: 100%; height: 100%; overflow: hidden; position: relative; direction: ltr;">
+            </div>
+        </div>
+    </div>
+
+    <span id="message"></span>
+    <div id="host" style="width: 100%; height: 600px;">
+    </div>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+    <script src="../icons/JavaScript.js"></script>
+    <script type="text/javascript">
+       
+      
+        var data = [],
+            target = {
+
+                add: function () {
+
+                    this.empty();
+                },
+
+                empty: function () {
+
+                    this.test();
+                },
+
+                test: function () {
+
+                }
+
+            };
+
+        flyingon.trace_start({
+
+            "target": target
+        });
+
+        for (var i = 0; i < 100000; i++)
+        {
+            target.add();
+        }
+
+        data = flyingon.trace_show(1);
+
+
+        alert(data[0].time + " " + data[1].time + " " + data[2].time);
+
+        var w = new flyingon.Window(host).init({
+
+            border: "4px solid blue",
+            spacingWidth: "10px",
+            spacingHeight: "10px",
+
+            children: [{
+
+                __id__: 1,
+                id: "button1",
+                xtype: "Button",
+                className: "class1",
+                width: "200px",
+                text: "点击同步增加宽度",
+                resizable: "both",
+                bindings: {
+
+                    width: { source: 2, expression: "width"/*, setter: null*/ },
+                    height: { source: 2, expression: "height" }
+                }
+
+            }, {
+
+                __id__: 2,
+                id: "button2",
+                xtype: "Button",
+                className: "class2",
+                width: "200px",
+                text: "点击同步减小宽度",
+                resizable: "both"
+            }]
+        });
+
+
+        w.find("#button1").on("click", function (event) {
+
+            this.set_width(this.__boxModel.width + 10);
+        });
+
+        w.find(".class2").on("click", function (event) {
+
+            this.set_width(this.__boxModel.width - 10);
+        });
+
+
+        w.show();
+
+
+    </script>
+
+</body>
+</html>

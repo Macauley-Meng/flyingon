@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!--以IE的当前版本渲染,如果安装了ChromeFrame则优先使用-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title></title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        div[type] {
+            color: red;
+        }
+    </style>
+</head>
+<body style="margin: 0;">
+
+    <div style="width: 100%; height: 100%;">
+
+        <div id="drag" style="background-color: yellow;">
+
+            <input type="button" value="Create" onclick="create()" />
+            <input type="button" value="Paint" onclick="paint()" />
+
+            <input type="text" id="selector" value=".class3,.class4" />
+            <input type="text" id="propertyname" value="offsetWidth" />
+            <input type="text" id="propertyvalue" value="5" />
+
+            <input type="button" value="query" onclick="query()" />
+            <input type="button" value="performance" onclick="performance()" />
+        </div>
+
+        <div id="host" style="width: 100%; height: 100%;">
+        </div>
+
+    </div>
+
+
+    <script type="text/javascript">
+
+        var date = new Date();
+
+    </script>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+    <script type="text/javascript">
+
+
+
+        var w = new flyingon.Window(host);
+
+
+        function create() {
+
+
+            var date = new Date();
+
+            for (var k = 0; k < 50; k++)
+            {
+                var panel = new flyingon.Panel();
+
+                for (var i = 0; i < 200; i++)
+                {
+
+                    var ctrl = new flyingon.Button().sets({
+
+                        id: "button" + (k * 200) + i + "px",
+                        className: "class" + (i % 20) + "px",
+                        left: i % 5 * 120 + "px",
+                        top: i / 5 * 30 + "px",
+                        width: "100px",
+                        height: "21px"
+                    });
+
+                    switch (i % 5)
+                    {
+                        case 0:
+                            ctrl.set_dock("left");
+                            break;
+
+                        case 1:
+                            ctrl.set_dock("top");
+                            break;
+
+                        case 2:
+                            ctrl.set_dock("right");
+                            break;
+
+                        case 3:
+                            ctrl.set_dock("bottom");
+                            ctrl.width = "fill";
+                            break;
+
+                        case 4:
+                            ctrl.dock = "fill";
+                            break;
+                    }
+
+                    panel.appendChild(ctrl);
+                }
+
+
+                panel.margin = "10px";
+                panel.border = "4px solid red";
+                panel.padding = "10px";
+
+                panel.layoutType = "flow";
+                panel.spacingWidth = "10px";
+                panel.spacingHeight = "10px";
+
+                w.appendChild(panel);
+
+            }
+
+            w.update();
+
+        };
+
+
+
+        function paint() {
+
+            var date = new Date();
+
+            w.update();
+
+
+            alert(new Date() - date);
+        };
+
+        function query() {
+
+            var date = new Date();
+
+            w.find(selector.value).value(propertyname.value, propertyvalue.value);
+
+            alert(new Date() - date);
+        };
+
+
+        function performance() {
+
+            var result;
+            var date = new Date();
+
+            for (var i = 0; i < 100; i++)
+            {
+                result = w.find(selector.value);
+            }
+
+            alert("loop:100 controls:" + result.length + " time:" + (new Date() - date));
+        };
+
+
+    </script>
+
+</body>
+</html>

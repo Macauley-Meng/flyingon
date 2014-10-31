@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body>
+
+    <div style="width: 100%; height: 600px;">
+
+        <div id="drag" style="background-color: yellow;">
+
+            <input type="button" value="horizontalLine" onclick="layoutVertical(false)" />
+            <input type="button" value="verticalLine" onclick="layoutVertical(true)" />
+
+            <input type="button" value="ltr" onclick="direction('ltr')" />
+            <input type="button" value="rtl" onclick="direction('rtl')" />
+
+        </div>
+
+        <div id="message">
+
+        </div>
+
+        <div id="host" style="width: 100%; height: 100%;">
+        </div>
+
+    </div>
+
+
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+
+    <script type="text/javascript">
+
+
+        var w = new flyingon.Window(host).init({
+
+            padding: "10px",
+            spacingWidth: "10px",
+            spacingHeight: "10px"
+        });
+
+        
+        var panel = new flyingon.SplitPanel2().init({
+
+            border: "4px solid blue",
+            width: "fill"
+        });
+
+
+        w.appendChild(panel);
+
+        panel.panel1.set("border", "1 solid red").set("width", "20%");
+        panel.panel2.set("border", "1 solid red");
+        panel.panel3.set("border", "1 solid red").set("width", "20%");
+
+        w.show();
+
+
+    </script>
+
+
+</body>
+</html>

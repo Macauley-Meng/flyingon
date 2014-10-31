@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body>
+
+    <div id="host" style="width: 100%; height: 600px;">
+    </div>
+
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+
+    <script type="text/javascript">
+
+
+
+        var w = new flyingon.Window().init({
+
+            layoutType: "flow",
+            border: "4px solid blue",
+            padding: "10px",
+            spacingWidth: "10px",
+            spacingHeight: "10px",
+
+            children: [{
+
+                xtype: "flyingon.Fieldset",
+                legend: "title",
+                border: "1px solid red",
+                spacingWidth: "10px",
+                spacingHeight: "10px",
+
+                children: [{
+
+                    xtype: "flyingon.Label",
+                    text: "label",
+                    textAlign: "center",
+                    border: "1px solid red"
+                }, {
+
+                    xtype: "flyingon.TextBox",
+                    border: "1px solid red",
+                    value: "textbox",
+                    readOnly: true
+                }, {
+
+                    xtype: "flyingon.CheckBox",
+                    border: "1px solid red",
+                    value: "checkbox",
+                    text: "checkbox",
+                    readOnly: true
+                }, {
+
+                    xtype: "flyingon.RadioButton",
+                    border: "1px solid red",
+                    value: "radio",
+                    text: "radio",
+                    readOnly: true
+                }]
+
+            }]
+
+        });
+
+
+
+        //var data = w.stringify(true);
+
+        //w = new flyingon.SerializeReader().deserialize(data);
+        host.appendChild(w.dom_window);
+
+        w.show();
+
+        alert(w.stringify(false));
+
+
+
+    </script>
+
+
+</body>
+</html>

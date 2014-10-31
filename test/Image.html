@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body>
+
+    <div id="host" style="width: 100%; height: 600px;">
+    </div>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+
+    <script type="text/javascript">
+
+
+
+        var w = new flyingon.Window(host).init({
+
+            layoutType: "flow",
+            border: "4px solid blue",
+            padding: "10px",
+            spacingWidth: "10px",
+            spacingHeight: "10px"
+        });
+
+
+        var date = new Date();
+
+        for (var i = 0; i < 100; i++)
+        {
+            var image = new flyingon.Image().init({
+
+                width: "20px",
+                height: "20px",
+                overflow: "hidden",
+                textAlign: "center",
+                directory: "theme",
+                src: "images/tool.png",
+                clip: "89,28,20,20",
+                alt: "没找到图片",
+                title: "why?"
+            });
+
+            w.appendChild(image);
+        }
+
+        //alert(new Date() - date);
+
+
+        w.show();
+
+
+
+    </script>
+
+
+</body>
+</html>
