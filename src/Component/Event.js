@@ -41,12 +41,6 @@ flyingon.defineClass("Event", function (Class, base, flyingon) {
     this.target = null;
 
 
-    //触发事件的目标控件(可独立运行的控件,如滚动条等不在此列)
-    this.defineProperty("control", function () {
-
-        return this.target.__fn_event_control();
-    });
-
 
 
     //阻止事件冒泡

@@ -11,7 +11,7 @@ flyingon.defineClass("Fieldset", flyingon.Control, function (Class, base, flying
     Class.create = function () {
 
         this.dom_legend = this.dom.children[0];
-        this.dom_body = this.dom.children[1];
+        this.dom_children = this.dom.children[1];
 
         this.children = this.__children = new flyingon.ControlCollection(this, 1);
     };

@@ -2,22 +2,25 @@
 
 
 //控件类
-flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyingon) {
+flyingon.defineClass("Control", function (Class, base, flyingon) {
 
 
 
-
-    Class.create_mode = "merge";
 
     Class.create = function () {
 
-        //生成唯一Id
-        this.__uniqueId = flyingon.newId();
+        //变量管理器
+        this.__fields = Object.create(this.__defaults);
 
         //根据dom模板创建关联的dom元素
         (this.dom = this.dom_template.cloneNode(this.dom_template.firstChild)).flyingon = this;
     };
 
+
+
+
+    //扩展组件接口
+    flyingon.IComponent.call(this, flyingon);
 
 
 
@@ -100,30 +103,45 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         });
 
 
+        //默认class
+        this.__className0 = "";
+
+        //自定义class
+        this.__className1 = "";
+
+        //伪类class
+        this.__className2 = "";
+
 
         //处理className
         this.__fn_className = function (value) {
 
-            var values;
+            var fields = this.__fields,
+                values;
 
             if (value && (values = value.match(regex_className)))
             {
-                var cache = this.__className = {};
+                var cache = this.__class_list = {};
 
                 for (var i = 0, _ = values.length; i < _; i++)
                 {
                     cache[values[i]] = true;
                 }
 
-                this.__fields.className = this.dom.className = Object.keys(cache).join(" ");
+                this.__className1 = " " + (fields.className = Object.keys(cache).join(" "));
             }
             else
             {
-                this.__className = null;
-                this.__fields.className = this.dom.className = "";
+                this.__class_list = null;
+                this.__className1 = fields.className = "";
             }
 
-            if (!flyingon.__initializing)
+            if (this.dom.className !== (value = this.__className0 + this.__className1 + this.__className2))
+            {
+                this.dom.className = value;
+            }
+
+            if (this.__css_types)
             {
                 //重置样式
                 this.__css_types = null;
@@ -138,7 +156,7 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         //是否包含指定class
         this.hasClass = function (className) {
 
-            return this.__className && this.__className[className];
+            return this.__class_list && this.__class_list[className];
         };
 
         //添加class
@@ -155,11 +173,10 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         //移除class
         this.removeClass = function (className) {
 
-            var names = this.__className;
+            var names;
 
-            if (names && className && names[className])
+            if (className && (names = this.__class_list) && names[className])
             {
-                delete names[className];
                 this.__fn_className(Object.keys(names).join(" "));
             }
 
@@ -169,7 +186,7 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         //切换class 有则移除无则添加
         this.toggleClass = function (className) {
 
-            var names = this.__className;
+            var names = this.__class_list;
 
             if (names && className)
             {
@@ -208,88 +225,68 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
 
 
 
-        var css_type = flyingon.__dom_css_type,
-            css_style = flyingon.browser_MSIE && !+"\v1", //!+"\v1" IE6,7,8
-            states; //已注册需改变状态的控件
+        var registry_states; //已注册需改变状态的控件
 
 
 
         //更新控件状态
         function update() {
 
-            var data, target, value, cache;
-
-            for (var id in states)
+            for (var id in registry_states)
             {
-                target = (data = states[id]).target;
-                cache = data.target = null;
+                var target = registry_states[id],
+                    type = target.__class_type,
+                    states = target.__states,
+                    dom = target.dom,
+                    keys = (target.__className0 + target.__className1).split(" "),
+                    className = "";
 
-                for (var name in data)
+                if (states.disabled)
                 {
-                    if ((value = data[name]) !== null)
+                    className = " " + keys.join("--disabled ") + "--disabled";
+                }
+                else
+                {
+                    if (states.checked)
                     {
-                        if (css_type) //可使用样式表模式时设置属性值
-                        {
-                            if (value)
-                            {
-                                target.dom.setAttribute("flyingon_" + name, "1");
-                            }
-                            else
-                            {
-                                target.dom.removeAttribute("flyingon_" + name);
-                            }
-                        }
+                        className += " " + keys.join("--checked ") + "--checked";
+                    }
 
-                        cache = true;
+                    if (states.focus)
+                    {
+                        className += " " + keys.join("--focus ") + "--focus";
+                    }
+
+                    if (states.hover)
+                    {
+                        className += " " + keys.join("--hover ") + "--hover";
+                    }
+
+                    if (states.active)
+                    {
+                        className += " " + keys.join("--active ") + "--active";
                     }
                 }
 
-                if (css_type && css_style)
+                if (dom.className !== (className = target.__className0 + target.__className1 + (target.__className2 = className)))
                 {
-                    //ie78在属性变更时不会自动刷新
-                    cache = target.dom.style.zIndex;
-                    target.dom.style.zIndex = (+cache || 0) + 1;
-                    target.dom.style.zIndex = cache;
-                }
+                    dom.className = className;
 
-                if (cache && target.__update_dirty !== 1)
-                {
-                    target.__update_dirty = 1;
-
-                    while ((target = target.__parent) && !target.__update_dirty)
+                    if (target.__update_dirty !== 1)
                     {
-                        target.__update_dirty = 2;
+                        target.__update_dirty = 1;
+
+                        while ((target = target.__parent) && !target.__update_dirty)
+                        {
+                            target.__update_dirty = 2;
+                        }
                     }
                 }
             }
 
             //清空注册
-            states = null;
+            registry_states = null;
         };
-
-
-        function registry(control, name, value) {
-
-            var id = control.__uniqueId || (control.__uniqueId = flyingon.newId()),
-                data;
-
-            if (states)
-            {
-                if (data = states[id])
-                {
-                    data[name] = name in data ? null : value;
-                }
-                else
-                {
-                    (states[id] = { target: control })[name] = value;
-                }
-            }
-            else
-            {
-                ((states = {})[id] = { target: control })[name] = value;
-            }
-        };
-
 
 
         //生成状态操作方法
@@ -297,13 +294,13 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
 
             this["__fn_to_" + name] = function (value) {
 
-                var states = this.__states || (this.__states = {});
+                var states = this.__states || (this.__uniqueId = flyingon.newId(), this.__states = {});
 
                 if (states[name] !== (value = !!value))
                 {
                     states[name] = value;
 
-                    registry(this, name, value);
+                    (registry_states || (registry_states = {}))[this.__uniqueId] = this;
                     (this.__ownerWindow || this.get_ownerWindow()).__fn_registry_update(this, update);
                 }
             };
@@ -737,10 +734,10 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         //刷新控件
         this.update = function (arrange) {
 
-            var parent;
-
             if (this.__boxModel && this.__update_dirty !== 1)
             {
+                var parent = this;
+
                 this.__update_dirty = 1; //标记需要更新
 
                 while ((parent = parent.__parent) && !parent.__update_dirty)
@@ -1101,17 +1098,7 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
             dom = dom.cloneNode(true);
         }
 
-        Class.__css_className = className = Class.xtype.replace(/\./g, "-");
-
-        if (flyingon.__dom_css_type)
-        {
-            while ((Class = Class.superclass) && Class.__css_className)
-            {
-                className = Class.__css_className + " " + className;
-            }
-
-            dom.className = className;
-        }
+        this.__className0 = dom.className = Class.xtype.replace(/\./g, "-");
     };
 
 

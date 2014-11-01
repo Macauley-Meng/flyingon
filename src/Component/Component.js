@@ -2,18 +2,7 @@
 
 
 //组件基类(此类开始支持属性,事件,序列化及反序列化)
-flyingon.defineClass("Component", function (Class, base, flyingon) {
-
-
-
-
-    Class.create = function () {
-
-
-        //变量管理器
-        this.__fields = Object.create(this.__defaults);
-
-    };
+flyingon.IComponent = function (flyingon) {
 
 
 
@@ -549,7 +538,25 @@ flyingon.defineClass("Component", function (Class, base, flyingon) {
 
 
 
+};
+
+
+
+
+//组件基类(支持属性,事件,序列化及反序列化)
+flyingon.defineClass("Component", function (Class, base, flyingon) {
+
+
+
+    Class.create = function () {
+
+        //变量管理器
+        this.__fields = Object.create(this.__defaults);
+    };
+
+
+
+    //扩展组件接口
+    flyingon.IComponent.call(this, flyingon);
+
 });
-
-
-

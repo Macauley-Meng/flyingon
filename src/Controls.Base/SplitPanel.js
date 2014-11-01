@@ -7,7 +7,7 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (Class, base, flyi
 
     Class.create = function () {
 
-        this.dom_body = this.dom;
+        this.dom_children = this.dom;
 
         this.panel1 = new flyingon.Panel();
         this.panel2 = new flyingon.Panel();

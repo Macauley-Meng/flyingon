@@ -67,7 +67,7 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
                     break;
 
                 case ".": //class
-                    if (!target.__className || !target.__className[node.name])
+                    if (!target.__class_list || !target.__class_list[node.name])
                     {
                         return;
                     }

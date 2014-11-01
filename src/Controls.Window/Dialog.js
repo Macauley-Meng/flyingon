@@ -1,6 +1,6 @@
 ﻿
 //弹出窗口
-flyingon.defineClass("Dialog", flyingon.BaseWindow, function (Class, base, flyingon) {
+flyingon.defineClass("Dialog", flyingon.Control, function (Class, base, flyingon) {
 
 
 
@@ -9,7 +9,7 @@ flyingon.defineClass("Dialog", flyingon.BaseWindow, function (Class, base, flyin
 
     Class.create = function () {
 
-        var dom = this.dom_body = this.dom;
+        var dom = this.dom_children = this.dom;
 
         this.__fn_init_header(dom);
         this.__fn_init_body(dom);
@@ -17,8 +17,13 @@ flyingon.defineClass("Dialog", flyingon.BaseWindow, function (Class, base, flyin
     };
 
 
+    
 
 
+    //扩展窗口接口
+    flyingon.extend(this, flyingon.IWindow, base);
+
+    
 
     //创建模板
     this.create_dom_template("div");

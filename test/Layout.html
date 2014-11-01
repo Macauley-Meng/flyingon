@@ -50,6 +50,19 @@
     <script type="text/javascript">
 
 
+        var date = new Date();
+
+        for (var i = 0; i < 1000; i++)
+        {
+            new flyingon.Button();
+        }
+
+        //alert(new Date() - date);
+
+
+        date = new Date();
+
+
         var w = new flyingon.Window(host).sets({
 
             layoutType: "flow",
@@ -60,7 +73,7 @@
         });
 
 
-        for (var k = 0; k < 100; k++)
+        for (var k = 0; k < 10; k++)
         {
             var panel = new flyingon.Panel().sets({
 
@@ -83,7 +96,6 @@
 
                     left: i % 5 * 120 + "px",
                     top: i / 5 * 30 + "px",
-                    width: "10em",
                     text: "button" + i
                 });
 
@@ -117,6 +129,7 @@
         }
 
 
+        //alert(new Date() - date);
 
 
         function paint() {
@@ -198,12 +211,12 @@
         //});
 
 
-        w.on("mousemove", function (event) {
+        //w.on("mousemove", function (event) {
 
-            var offset = event.offset(event.target);
+        //    var offset = event.offset(event.target);
 
-            message.innerHTML = "target:" + event.target.xtype + ":" + event.target.get_uniqueId() + " x:" + offset.x + " y:" + offset.y;
-        });
+        //    message.innerHTML = "target:" + event.target.xtype + ":" + event.target.get_uniqueId() + " x:" + offset.x + " y:" + offset.y;
+        //});
 
 
 

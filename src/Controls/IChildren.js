@@ -71,7 +71,7 @@ flyingon.IChildren = function (base) {
                 }
 
                 //批量添加子dom
-                if (items[0].dom !== this.dom_body)
+                if (items[0].dom !== this.dom_children)
                 {
                     cache = document.createDocumentFragment();
 
@@ -80,7 +80,7 @@ flyingon.IChildren = function (base) {
                         cache.appendChild(items[i].dom);
                     }
 
-                    this.dom_body.appendChild(cache);
+                    this.dom_children.appendChild(cache);
                 }
 
                 this.contentWidth = this.clientWidth;
@@ -88,7 +88,7 @@ flyingon.IChildren = function (base) {
 
                 this.arrange();
 
-                cache = this.dom_body.style;
+                cache = this.dom_children.style;
                 cache.width = this.contentWidth + "px";
                 cache.height = this.contentHeight + "px";
 

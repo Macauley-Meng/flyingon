@@ -72,7 +72,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
     //元素节点
     var element_node = flyingon.defineClass(function (Class) {
-
+        
 
         Class.create = function (nodes, token, name) {
 
@@ -111,8 +111,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             nodes.type = null;
         };
 
-
-
+        
         //所属组合类型
         this.type = null;
 
@@ -135,36 +134,6 @@ A~B                    匹配任何在A控件之后的同级B控件
         this.push = function (item) {
 
             this[this.length++] = item;
-        };
-
-        //生成保存的css规则(伪元素不支持生成css)
-        this.rule = function () {
-
-            if (this.token === "::")
-            {
-                return null;
-            }
-
-            var result = [];
-
-            if (this.type)
-            {
-                result.push(this.type);
-            }
-
-            result.push(this.token);
-            result.push(this.name);
-
-            //属性
-            if (this.length > 0)
-            {
-                for (var i = 0, _ = this.length; i < _; i++)
-                {
-                    result.push(this[i].rule());
-                }
-            }
-
-            return result.join("");
         };
 
         this.toString = function () {
@@ -269,7 +238,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         this.value = "";
 
 
-        this.rule = this.toString = function () {
+        this.toString = function () {
 
             return "[" + this.name + this.operator + this.value + "]";
         };
@@ -295,12 +264,6 @@ A~B                    匹配任何在A控件之后的同级B控件
         //当前名称
         this.name = null;
 
-
-        //生成css规则(伪类转换为属性)
-        this.rule = function () {
-
-            return "[flyingon_" + this.name + "]";
-        };
 
         this.toString = function () {
 

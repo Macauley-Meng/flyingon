@@ -39,7 +39,7 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (Class, 
             //如果父控件已测量过则直接添加至父控件
             if (parent.__boxModel)
             {
-                parent.dom_body.appendChild(item.dom);
+                parent.dom_children.appendChild(item.dom);
             }
 
             //非初始化状态则触发事件

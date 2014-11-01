@@ -104,16 +104,10 @@ A~B                    匹配任何在A控件之后的同级B控件
 flyingon.defineStyle({
 
 
-    //默认控件样式
-    ".flyingon-Control": {
-
-        overflow: "auto"
-    },
-
-
     //面板控件样式
     ".flyingon-Panel": {
 
+        overflow: "auto",
         backgroundColor: "white"
     },
 
@@ -121,6 +115,7 @@ flyingon.defineStyle({
     //主窗口样式
     ".flyingon-Window": {
 
+        overflow: "auto",
         padding: "2px"
     },
 
@@ -128,6 +123,7 @@ flyingon.defineStyle({
     //弹出窗口样式
     ".flyingon-Dialog": {
 
+        overflow: "auto",
         backgroundColor: "white"
     },
 
@@ -180,12 +176,17 @@ flyingon.defineStyle({
         backgroundColor: ""
     },
 
-    //活动状态时默认控件样式
+    //活动状态时按钮样式
     ".flyingon-Button:hover": {
 
         backgroundColor: "yellow"
-    }
+    },
 
+    //鼠标按下时按钮样式
+    ".flyingon-Button:active": {
+
+        backgroundColor: "blue"
+    }
 
 
 });

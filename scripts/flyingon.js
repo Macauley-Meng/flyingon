@@ -2531,7 +2531,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
     //元素节点
     var element_node = flyingon.defineClass(function (Class) {
-
+        
 
         Class.create = function (nodes, token, name) {
 
@@ -2570,8 +2570,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             nodes.type = null;
         };
 
-
-
+        
         //所属组合类型
         this.type = null;
 
@@ -2594,36 +2593,6 @@ A~B                    匹配任何在A控件之后的同级B控件
         this.push = function (item) {
 
             this[this.length++] = item;
-        };
-
-        //生成保存的css规则(伪元素不支持生成css)
-        this.rule = function () {
-
-            if (this.token === "::")
-            {
-                return null;
-            }
-
-            var result = [];
-
-            if (this.type)
-            {
-                result.push(this.type);
-            }
-
-            result.push(this.token);
-            result.push(this.name);
-
-            //属性
-            if (this.length > 0)
-            {
-                for (var i = 0, _ = this.length; i < _; i++)
-                {
-                    result.push(this[i].rule());
-                }
-            }
-
-            return result.join("");
         };
 
         this.toString = function () {
@@ -2728,7 +2697,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         this.value = "";
 
 
-        this.rule = this.toString = function () {
+        this.toString = function () {
 
             return "[" + this.name + this.operator + this.value + "]";
         };
@@ -2754,12 +2723,6 @@ A~B                    匹配任何在A控件之后的同级B控件
         //当前名称
         this.name = null;
 
-
-        //生成css规则(伪类转换为属性)
-        this.rule = function () {
-
-            return "[flyingon_" + this.name + "]";
-        };
 
         this.toString = function () {
 
@@ -3926,12 +3889,6 @@ flyingon.defineClass("Event", function (Class, base, flyingon) {
     this.target = null;
 
 
-    //触发事件的目标控件(可独立运行的控件,如滚动条等不在此列)
-    this.defineProperty("control", function () {
-
-        return this.target.__fn_event_control();
-    });
-
 
 
     //阻止事件冒泡
@@ -4361,18 +4318,7 @@ flyingon.defineClass("ScrollEvent", flyingon.Event, function (Class, base, flyin
 
 
 //组件基类(此类开始支持属性,事件,序列化及反序列化)
-flyingon.defineClass("Component", function (Class, base, flyingon) {
-
-
-
-
-    Class.create = function () {
-
-
-        //变量管理器
-        this.__fields = Object.create(this.__defaults);
-
-    };
+flyingon.IComponent = function (flyingon) {
 
 
 
@@ -4908,10 +4854,28 @@ flyingon.defineClass("Component", function (Class, base, flyingon) {
 
 
 
+};
+
+
+
+
+//组件基类(支持属性,事件,序列化及反序列化)
+flyingon.defineClass("Component", function (Class, base, flyingon) {
+
+
+
+    Class.create = function () {
+
+        //变量管理器
+        this.__fields = Object.create(this.__defaults);
+    };
+
+
+
+    //扩展组件接口
+    flyingon.IComponent.call(this, flyingon);
+
 });
-
-
-
 
 
 
@@ -4989,7 +4953,7 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
                     break;
 
                 case ".": //class
-                    if (!target.__className || !target.__className[node.name])
+                    if (!target.__class_list || !target.__class_list[node.name])
                     {
                         return;
                     }
@@ -6756,8 +6720,6 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
 
         style_no_names = Object.create(null),   //不需同步的样式名
 
-        class_css_types = Object.create(null),  //控件类支持的css类别集合
-
         registry_types = Object.create(null),   //注册的css类型
 
         registry_names = Object.create(null),   //注册的样式名
@@ -6772,7 +6734,16 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
 
         style_pseudo_fn = Object.create(null),  //样式伪类检查函数
 
-        pseudo_keys = {     //伪类key 不在此列即为伪元素 value为伪元素权重 默认为10
+        selector_rule_type = {      //支持的选择器规则类型
+
+            " ": true,
+            ",": true,
+            ">": true,
+            "+": true,
+            "~": true
+        },
+
+        pseudo_keys = {             //伪类key 不在此列即为伪元素 value为伪元素权重 默认为10
 
             enabled: 15,
             disabled: 15,
@@ -6828,12 +6799,6 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
 
 
 
-    //控件样式是否使用css方式
-    //注1: 使用css方式时会动态生成css样式表,dom通过className与样式表关联,否则直接操作dom的style
-    //注2: 默认只有IE6使用非css方式
-    flyingon.__dom_css_type = !!+"\v" || !!window.XMLHttpRequest;
-
-
     //样式表
     flyingon.styleSheets = (function () {
 
@@ -6854,7 +6819,6 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
         this.update = function () {
 
             style_yes_names = null;
-            class_css_types = Object.create(null);
             registry_types = Object.create(null);
             registry_names = Object.create(null);
 
@@ -7903,8 +7867,7 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
 
         var result = [],
             registry = registry_types,
-            types = class_css_types[target.__class_type.xtype] || get_class_types(target.__class_type),
-            rule = types.rule,
+            rule = true,
             name,
             value;
 
@@ -7916,9 +7879,9 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
         }
 
         //class 后置优先
-        if (target.__className)
+        if (target.__class_list)
         {
-            for (var name in target.__className)
+            for (var name in target.__class_list)
             {
                 if (value = registry[name = "." + name])
                 {
@@ -7928,48 +7891,17 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
             }
         }
 
-        //添加类样式类型集合
-        if (types.length > 0)
+        //添加类型class
+        if (value = registry[name = "." + target.__className0])
         {
-            result.push.apply(result, types);
+            result.push(name);
+            rule = rule && value === 1;
         }
 
         //标记是否可使用保存的css样式
         result.rule = rule;
 
         return target.__css_types = result;
-    };
-
-
-    //获取指定类型的css类别集合
-    function get_class_types(type) {
-
-        var result = class_css_types[type.xtype] = [],
-            registry = registry_types,
-            rule = true,
-            name,
-            value;
-
-        while (type && (name = "." + type.__css_className))
-        {
-            if (value = registry[name])
-            {
-                result.push(name);
-                rule = rule && value === 1;
-            }
-
-            type = type.superclass;
-        }
-
-        if (value = registry["*"]) //all
-        {
-            result.push("*");
-            rule = rule && value === 1;
-        }
-
-        result.rule = rule; //是否支持保存css
-
-        return result;
     };
 
 
@@ -8383,33 +8315,72 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
         selector.weight = selector_weight(selector);
 
         //如果控件dom使用css方式关联样式
-        if (flyingon.__dom_css_type && (selector.cssText = cssText))
+        if (selector.cssText = cssText)
         {
-            if (flyingon.__dom_css_type)
-            {
-                var values = [];
+            var values = [];
 
-                for (var i = 0; i <= index; i++)
+            for (var i = 0; i <= index; i++)
+            {
+                if (value = selector_rule(selector[i]))
                 {
-                    if (value = selector[i].rule())
-                    {
-                        values.push(value);
-                    }
-                    else
-                    {
-                        return selector;
-                    }
+                    values.push(value);
                 }
+                else
+                {
+                    return selector;
+                }
+            }
 
-                selector.rule = values.join(""); //复用且保存css
-            }
-            else
-            {
-                selector.rule = ""; //复用但不保存css
-            }
+            selector.rule = values.join(""); //复用且保存css
+        }
+        else
+        {
+            selector.rule = ""; //复用但不保存css
         }
 
         return selector;
+    };
+
+
+    //IE6只支持" "及","
+    if (flyingon.browser_MSIE && !window.XMLHttpRequest)
+    {
+        selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
+    }
+
+
+    //获取选择器规则(伪元素及多伪类不支持生成css)
+    function selector_rule(selector) {
+
+        if (selector.token === "::" || selector.length > 1)
+        {
+            return null;
+        }
+
+        var type = selector.type;
+
+        if (type && !selector_rule_type[type])
+        {
+            return null;
+        }
+
+        var result = [];
+
+        if (type)
+        {
+            result.push(type);
+        }
+
+        result.push(selector.token);
+        result.push(selector.name);
+
+        //单个伪类
+        if (selector.length > 0)
+        {
+            result.push("--" + selector[0].name);
+        }
+
+        return result.join("");
     };
 
 
@@ -8531,22 +8502,25 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
 
 
 //控件类
-flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyingon) {
+flyingon.defineClass("Control", function (Class, base, flyingon) {
 
 
 
-
-    Class.create_mode = "merge";
 
     Class.create = function () {
 
-        //生成唯一Id
-        this.__uniqueId = flyingon.newId();
+        //变量管理器
+        this.__fields = Object.create(this.__defaults);
 
         //根据dom模板创建关联的dom元素
         (this.dom = this.dom_template.cloneNode(this.dom_template.firstChild)).flyingon = this;
     };
 
+
+
+
+    //扩展组件接口
+    flyingon.IComponent.call(this, flyingon);
 
 
 
@@ -8629,30 +8603,45 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         });
 
 
+        //默认class
+        this.__className0 = "";
+
+        //自定义class
+        this.__className1 = "";
+
+        //伪类class
+        this.__className2 = "";
+
 
         //处理className
         this.__fn_className = function (value) {
 
-            var values;
+            var fields = this.__fields,
+                values;
 
             if (value && (values = value.match(regex_className)))
             {
-                var cache = this.__className = {};
+                var cache = this.__class_list = {};
 
                 for (var i = 0, _ = values.length; i < _; i++)
                 {
                     cache[values[i]] = true;
                 }
 
-                this.__fields.className = this.dom.className = Object.keys(cache).join(" ");
+                this.__className1 = " " + (fields.className = Object.keys(cache).join(" "));
             }
             else
             {
-                this.__className = null;
-                this.__fields.className = this.dom.className = "";
+                this.__class_list = null;
+                this.__className1 = fields.className = "";
             }
 
-            if (!flyingon.__initializing)
+            if (this.dom.className !== (value = this.__className0 + this.__className1 + this.__className2))
+            {
+                this.dom.className = value;
+            }
+
+            if (this.__css_types)
             {
                 //重置样式
                 this.__css_types = null;
@@ -8667,7 +8656,7 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         //是否包含指定class
         this.hasClass = function (className) {
 
-            return this.__className && this.__className[className];
+            return this.__class_list && this.__class_list[className];
         };
 
         //添加class
@@ -8684,11 +8673,10 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         //移除class
         this.removeClass = function (className) {
 
-            var names = this.__className;
+            var names;
 
-            if (names && className && names[className])
+            if (className && (names = this.__class_list) && names[className])
             {
-                delete names[className];
                 this.__fn_className(Object.keys(names).join(" "));
             }
 
@@ -8698,7 +8686,7 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         //切换class 有则移除无则添加
         this.toggleClass = function (className) {
 
-            var names = this.__className;
+            var names = this.__class_list;
 
             if (names && className)
             {
@@ -8737,88 +8725,68 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
 
 
 
-        var css_type = flyingon.__dom_css_type,
-            css_style = flyingon.browser_MSIE && !+"\v1", //!+"\v1" IE6,7,8
-            states; //已注册需改变状态的控件
+        var registry_states; //已注册需改变状态的控件
 
 
 
         //更新控件状态
         function update() {
 
-            var data, target, value, cache;
-
-            for (var id in states)
+            for (var id in registry_states)
             {
-                target = (data = states[id]).target;
-                cache = data.target = null;
+                var target = registry_states[id],
+                    type = target.__class_type,
+                    states = target.__states,
+                    dom = target.dom,
+                    keys = (target.__className0 + target.__className1).split(" "),
+                    className = "";
 
-                for (var name in data)
+                if (states.disabled)
                 {
-                    if ((value = data[name]) !== null)
+                    className = " " + keys.join("--disabled ") + "--disabled";
+                }
+                else
+                {
+                    if (states.checked)
                     {
-                        if (css_type) //可使用样式表模式时设置属性值
-                        {
-                            if (value)
-                            {
-                                target.dom.setAttribute("flyingon_" + name, "1");
-                            }
-                            else
-                            {
-                                target.dom.removeAttribute("flyingon_" + name);
-                            }
-                        }
+                        className += " " + keys.join("--checked ") + "--checked";
+                    }
 
-                        cache = true;
+                    if (states.focus)
+                    {
+                        className += " " + keys.join("--focus ") + "--focus";
+                    }
+
+                    if (states.hover)
+                    {
+                        className += " " + keys.join("--hover ") + "--hover";
+                    }
+
+                    if (states.active)
+                    {
+                        className += " " + keys.join("--active ") + "--active";
                     }
                 }
 
-                if (css_type && css_style)
+                if (dom.className !== (className = target.__className0 + target.__className1 + (target.__className2 = className)))
                 {
-                    //ie78在属性变更时不会自动刷新
-                    cache = target.dom.style.zIndex;
-                    target.dom.style.zIndex = (+cache || 0) + 1;
-                    target.dom.style.zIndex = cache;
-                }
+                    dom.className = className;
 
-                if (cache && target.__update_dirty !== 1)
-                {
-                    target.__update_dirty = 1;
-
-                    while ((target = target.__parent) && !target.__update_dirty)
+                    if (target.__update_dirty !== 1)
                     {
-                        target.__update_dirty = 2;
+                        target.__update_dirty = 1;
+
+                        while ((target = target.__parent) && !target.__update_dirty)
+                        {
+                            target.__update_dirty = 2;
+                        }
                     }
                 }
             }
 
             //清空注册
-            states = null;
+            registry_states = null;
         };
-
-
-        function registry(control, name, value) {
-
-            var id = control.__uniqueId || (control.__uniqueId = flyingon.newId()),
-                data;
-
-            if (states)
-            {
-                if (data = states[id])
-                {
-                    data[name] = name in data ? null : value;
-                }
-                else
-                {
-                    (states[id] = { target: control })[name] = value;
-                }
-            }
-            else
-            {
-                ((states = {})[id] = { target: control })[name] = value;
-            }
-        };
-
 
 
         //生成状态操作方法
@@ -8826,13 +8794,13 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
 
             this["__fn_to_" + name] = function (value) {
 
-                var states = this.__states || (this.__states = {});
+                var states = this.__states || (this.__uniqueId = flyingon.newId(), this.__states = {});
 
                 if (states[name] !== (value = !!value))
                 {
                     states[name] = value;
 
-                    registry(this, name, value);
+                    (registry_states || (registry_states = {}))[this.__uniqueId] = this;
                     (this.__ownerWindow || this.get_ownerWindow()).__fn_registry_update(this, update);
                 }
             };
@@ -9266,10 +9234,10 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
         //刷新控件
         this.update = function (arrange) {
 
-            var parent;
-
             if (this.__boxModel && this.__update_dirty !== 1)
             {
+                var parent = this;
+
                 this.__update_dirty = 1; //标记需要更新
 
                 while ((parent = parent.__parent) && !parent.__update_dirty)
@@ -9630,17 +9598,7 @@ flyingon.defineClass("Control", flyingon.Component, function (Class, base, flyin
             dom = dom.cloneNode(true);
         }
 
-        Class.__css_className = className = Class.xtype.replace(/\./g, "-");
-
-        if (flyingon.__dom_css_type)
-        {
-            while ((Class = Class.superclass) && Class.__css_className)
-            {
-                className = Class.__css_className + " " + className;
-            }
-
-            dom.className = className;
-        }
+        this.__className0 = dom.className = Class.xtype.replace(/\./g, "-");
     };
 
 
@@ -9691,7 +9649,7 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (Class, 
             //如果父控件已测量过则直接添加至父控件
             if (parent.__boxModel)
             {
-                parent.dom_body.appendChild(item.dom);
+                parent.dom_children.appendChild(item.dom);
             }
 
             //非初始化状态则触发事件
@@ -9853,7 +9811,7 @@ flyingon.IChildren = function (base) {
                 }
 
                 //批量添加子dom
-                if (items[0].dom !== this.dom_body)
+                if (items[0].dom !== this.dom_children)
                 {
                     cache = document.createDocumentFragment();
 
@@ -9862,7 +9820,7 @@ flyingon.IChildren = function (base) {
                         cache.appendChild(items[i].dom);
                     }
 
-                    this.dom_body.appendChild(cache);
+                    this.dom_children.appendChild(cache);
                 }
 
                 this.contentWidth = this.clientWidth;
@@ -9870,7 +9828,7 @@ flyingon.IChildren = function (base) {
 
                 this.arrange();
 
-                cache = this.dom_body.style;
+                cache = this.dom_children.style;
                 cache.width = this.contentWidth + "px";
                 cache.height = this.contentHeight + "px";
 
@@ -10133,7 +10091,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (Class, base, flyingon)
 
     Class.create = function () {
 
-        this.dom_body = this.dom.children[0];
+        this.dom_children = this.dom.children[0];
         this.__children = new flyingon.ControlCollection(this, 1);
     };
 
@@ -10168,7 +10126,7 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (Class, base, flyi
 
     Class.create = function () {
 
-        this.dom_body = this.dom;
+        this.dom_children = this.dom;
 
         this.panel1 = new flyingon.Panel();
         this.panel2 = new flyingon.Panel();
@@ -10495,7 +10453,7 @@ flyingon.defineClass("Fieldset", flyingon.Control, function (Class, base, flying
     Class.create = function () {
 
         this.dom_legend = this.dom.children[0];
-        this.dom_body = this.dom.children[1];
+        this.dom_children = this.dom.children[1];
 
         this.children = this.__children = new flyingon.ControlCollection(this, 1);
     };
@@ -10567,143 +10525,19 @@ flyingon.defineClass("TabPage", flyingon.Panel, function (Class, base, flyingon)
 
 ﻿
 
-//窗口基类
-flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyingon) {
+//窗口接口
+(function (flyingon) {
 
 
 
 
     //注册的事件列表
-    var events = Object.create(null);
-
-
-
-
-    this.__fn_init_window = function (dom) {
-
-        //默认设置为初始化状态,在渲染窗口后终止
-        flyingon.__initializing = true;
-
-        //标记所属窗口为自身及绑定dom对象
-        this.__ownerWindow = dom.flyingon = this;
-
-        //绑定事件       
-        for (var name in events)
-        {
-            dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
-        }
-
-        //注册自动更新服务
-        delay_update(this);
-
-    };
-
-
-
-    //主窗口
-    this.defineProperty("mainWindow", function () {
-
-        return this.__mainWindow || null;
-    });
-
-
-    //活动窗口
-    this.defineProperty("activeWindow", function () {
-
-        return this.__mainWindow && this.__mainWindow.__activeWindow || null;
-    });
-
-
-    //父窗口
-    this.defineProperty("parentWindow", function () {
-
-        return this.__parentWindow || null;
-    });
-
-
-
-
-    //修改透明度属性
-    this.defineProperty("opacity", 1, {
-
-        minValue: 0,
-        maxValue: 1,
-        end_code: "this.dom.style.opacity = value;"
-    });
-
-
-
-
-
-    //窗口切换为活动窗口事件
-    this.defineEvent("activate");
-
-
-    //窗口切换为非活动窗口事件
-    this.defineEvent("deactivate");
-
-
-
-    //设置当前窗口为活动窗口
-    this.active = function () {
-
-        var root = this.get_mainWindow(),
-            target;
-
-        if ((target = root.__activeWindow) !== this)
-        {
-            if (target)
-            {
-                if (target !== root)
-                {
-                    target.dom.style.zIndex = 9990;
-                }
-
-                target.dispatchEvent(new Event("deactivate"), true);
-                target.__fn_to_active(false);
-            }
-
-            this.dispatchEvent(new Event("activate"));
-
-            root.__activeWindow = this;
-            host.flyingon = this;
-
-            if (this !== root)
-            {
-                this.dom.style.zIndex = 9991;
-            }
-
-            this.__fn_to_active(true);
-        }
-    };
-
-
-
-    this.update = function (arrange) {
-
-        flyingon.__initializing = false;
-
-        if (arrange)
-        {
-            this.__arrange_dirty = arrange;
-        }
-
-        this.__update_dirty = 1;
-        this.__fn_registry_update(this);
-    };
-
-
-
-
-
-    //初始化事件
-    (function () {
+    var events = (function (events) {
 
 
 
         var host = document.documentElement,  //主容器
 
-            Event = flyingon.Event,
             KeyEvent = flyingon.KeyEvent,
             MouseEvent = flyingon.MouseEvent,
 
@@ -11137,8 +10971,11 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 
 
 
-    }).call(events);
+        return events;
 
+
+
+    })(Object.create(null));
 
 
 
@@ -11147,10 +10984,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
     function delay_update(ownerWindow) {
 
 
-
-
         var target, timer, callback_fn;
-
 
 
         //更新控件样式
@@ -11204,7 +11038,131 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
     };
 
 
-});
+
+
+    //窗口接口
+    flyingon.IWindow = function (base) {
+
+
+        this.__fn_init_window = function (dom) {
+
+            //默认设置为初始化状态,在渲染窗口后终止
+            flyingon.__initializing = true;
+
+            //标记所属窗口为自身及绑定dom对象
+            this.__ownerWindow = dom.flyingon = this;
+
+            //绑定事件       
+            for (var name in events)
+            {
+                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
+            }
+
+            //注册自动更新服务
+            delay_update(this);
+
+        };
+
+
+
+        //主窗口
+        this.defineProperty("mainWindow", function () {
+
+            return this.__mainWindow || null;
+        });
+
+
+        //活动窗口
+        this.defineProperty("activeWindow", function () {
+
+            return this.__mainWindow && this.__mainWindow.__activeWindow || null;
+        });
+
+
+        //父窗口
+        this.defineProperty("parentWindow", function () {
+
+            return this.__parentWindow || null;
+        });
+
+
+
+
+        //修改透明度属性
+        this.defineProperty("opacity", 1, {
+
+            minValue: 0,
+            maxValue: 1,
+            end_code: "this.dom.style.opacity = value;"
+        });
+
+
+
+
+
+        //窗口切换为活动窗口事件
+        this.defineEvent("activate");
+
+
+        //窗口切换为非活动窗口事件
+        this.defineEvent("deactivate");
+
+
+
+        //设置当前窗口为活动窗口
+        this.active = function () {
+
+            var root = this.get_mainWindow(),
+                target;
+
+            if ((target = root.__activeWindow) !== this)
+            {
+                if (target)
+                {
+                    if (target !== root)
+                    {
+                        target.dom.style.zIndex = 9990;
+                    }
+
+                    target.dispatchEvent("deactivate");
+                    target.__fn_to_active(false);
+                }
+
+                this.dispatchEvent("activate");
+
+                root.__activeWindow = this;
+                host.flyingon = this;
+
+                if (this !== root)
+                {
+                    this.dom.style.zIndex = 9991;
+                }
+
+                this.__fn_to_active(true);
+            }
+        };
+
+
+
+        this.update = function (arrange) {
+
+            flyingon.__initializing = false;
+
+            if (arrange)
+            {
+                this.__arrange_dirty = arrange;
+            }
+
+            this.__update_dirty = 1;
+            this.__fn_registry_update(this);
+        };
+
+
+    };
+
+
+
+})(flyingon);
 
 
 
@@ -11214,7 +11172,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 ﻿
 
 //主窗口
-flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyingon) {
+flyingon.defineClass("Window", flyingon.Control, function (Class, base, flyingon) {
 
 
 
@@ -11232,8 +11190,8 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
         //设置dom_window
         dom.style.cssText = "position:relative;width:100%;height:100%;overflow:hidden;";
 
-        //设置dom_body
-        this.dom_body = this.dom.children[0];
+        //设置dom_children
+        this.dom_children = this.dom.children[0];
 
         //初始化窗口
         this.__fn_init_window(this.dom);
@@ -11244,9 +11202,6 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
         //绑定resize事件
         flyingon.addEventListener(window, "resize", function (event) { self.update(true); });
 
-        //记录宿主
-        this.__dom_host = host;
-
         //设为活动窗口
         this.__activeWindow = this;
 
@@ -11256,10 +11211,8 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
         //初始化状态
         this.__states = { active: true };
 
-        if (flyingon.__dom_css_type)
-        {
-            this.dom.setAttribute("flyingon_active", "1");
-        }
+        //修改class
+        this.dom.className += " flyingon-Window-active";
 
         //注册窗口更新
         this.__fn_registry_update(this, function () {
@@ -11282,6 +11235,10 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
 
     //扩展面板接口
     flyingon.extend(this, flyingon.IPanel, base);
+
+
+    //扩展窗口接口
+    flyingon.extend(this, flyingon.IWindow, base);
 
 
 
@@ -11346,7 +11303,7 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
 
 ﻿
 //弹出窗口
-flyingon.defineClass("Dialog", flyingon.BaseWindow, function (Class, base, flyingon) {
+flyingon.defineClass("Dialog", flyingon.Control, function (Class, base, flyingon) {
 
 
 
@@ -11355,7 +11312,7 @@ flyingon.defineClass("Dialog", flyingon.BaseWindow, function (Class, base, flyin
 
     Class.create = function () {
 
-        var dom = this.dom_body = this.dom;
+        var dom = this.dom_children = this.dom;
 
         this.__fn_init_header(dom);
         this.__fn_init_body(dom);
@@ -11363,8 +11320,13 @@ flyingon.defineClass("Dialog", flyingon.BaseWindow, function (Class, base, flyin
     };
 
 
+    
 
 
+    //扩展窗口接口
+    flyingon.extend(this, flyingon.IWindow, base);
+
+    
 
     //创建模板
     this.create_dom_template("div");

@@ -1,7 +1,7 @@
 ﻿
 
 //主窗口
-flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyingon) {
+flyingon.defineClass("Window", flyingon.Control, function (Class, base, flyingon) {
 
 
 
@@ -19,8 +19,8 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
         //设置dom_window
         dom.style.cssText = "position:relative;width:100%;height:100%;overflow:hidden;";
 
-        //设置dom_body
-        this.dom_body = this.dom.children[0];
+        //设置dom_children
+        this.dom_children = this.dom.children[0];
 
         //初始化窗口
         this.__fn_init_window(this.dom);
@@ -31,9 +31,6 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
         //绑定resize事件
         flyingon.addEventListener(window, "resize", function (event) { self.update(true); });
 
-        //记录宿主
-        this.__dom_host = host;
-
         //设为活动窗口
         this.__activeWindow = this;
 
@@ -43,10 +40,8 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
         //初始化状态
         this.__states = { active: true };
 
-        if (flyingon.__dom_css_type)
-        {
-            this.dom.setAttribute("flyingon_active", "1");
-        }
+        //修改class
+        this.dom.className += " flyingon-Window-active";
 
         //注册窗口更新
         this.__fn_registry_update(this, function () {
@@ -69,6 +64,10 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
 
     //扩展面板接口
     flyingon.extend(this, flyingon.IPanel, base);
+
+
+    //扩展窗口接口
+    flyingon.extend(this, flyingon.IWindow, base);
 
 
 

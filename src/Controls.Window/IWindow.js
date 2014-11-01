@@ -1,142 +1,18 @@
 ﻿
 
-//窗口基类
-flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyingon) {
+//窗口接口
+(function (flyingon) {
 
 
 
 
     //注册的事件列表
-    var events = Object.create(null);
-
-
-
-
-    this.__fn_init_window = function (dom) {
-
-        //默认设置为初始化状态,在渲染窗口后终止
-        flyingon.__initializing = true;
-
-        //标记所属窗口为自身及绑定dom对象
-        this.__ownerWindow = dom.flyingon = this;
-
-        //绑定事件       
-        for (var name in events)
-        {
-            dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
-        }
-
-        //注册自动更新服务
-        delay_update(this);
-
-    };
-
-
-
-    //主窗口
-    this.defineProperty("mainWindow", function () {
-
-        return this.__mainWindow || null;
-    });
-
-
-    //活动窗口
-    this.defineProperty("activeWindow", function () {
-
-        return this.__mainWindow && this.__mainWindow.__activeWindow || null;
-    });
-
-
-    //父窗口
-    this.defineProperty("parentWindow", function () {
-
-        return this.__parentWindow || null;
-    });
-
-
-
-
-    //修改透明度属性
-    this.defineProperty("opacity", 1, {
-
-        minValue: 0,
-        maxValue: 1,
-        end_code: "this.dom.style.opacity = value;"
-    });
-
-
-
-
-
-    //窗口切换为活动窗口事件
-    this.defineEvent("activate");
-
-
-    //窗口切换为非活动窗口事件
-    this.defineEvent("deactivate");
-
-
-
-    //设置当前窗口为活动窗口
-    this.active = function () {
-
-        var root = this.get_mainWindow(),
-            target;
-
-        if ((target = root.__activeWindow) !== this)
-        {
-            if (target)
-            {
-                if (target !== root)
-                {
-                    target.dom.style.zIndex = 9990;
-                }
-
-                target.dispatchEvent(new Event("deactivate"), true);
-                target.__fn_to_active(false);
-            }
-
-            this.dispatchEvent(new Event("activate"));
-
-            root.__activeWindow = this;
-            host.flyingon = this;
-
-            if (this !== root)
-            {
-                this.dom.style.zIndex = 9991;
-            }
-
-            this.__fn_to_active(true);
-        }
-    };
-
-
-
-    this.update = function (arrange) {
-
-        flyingon.__initializing = false;
-
-        if (arrange)
-        {
-            this.__arrange_dirty = arrange;
-        }
-
-        this.__update_dirty = 1;
-        this.__fn_registry_update(this);
-    };
-
-
-
-
-
-    //初始化事件
-    (function () {
+    var events = (function (events) {
 
 
 
         var host = document.documentElement,  //主容器
 
-            Event = flyingon.Event,
             KeyEvent = flyingon.KeyEvent,
             MouseEvent = flyingon.MouseEvent,
 
@@ -570,8 +446,11 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 
 
 
-    }).call(events);
+        return events;
 
+
+
+    })(Object.create(null));
 
 
 
@@ -580,10 +459,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
     function delay_update(ownerWindow) {
 
 
-
-
         var target, timer, callback_fn;
-
 
 
         //更新控件样式
@@ -637,6 +513,130 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
     };
 
 
-});
+
+
+    //窗口接口
+    flyingon.IWindow = function (base) {
+
+
+        this.__fn_init_window = function (dom) {
+
+            //默认设置为初始化状态,在渲染窗口后终止
+            flyingon.__initializing = true;
+
+            //标记所属窗口为自身及绑定dom对象
+            this.__ownerWindow = dom.flyingon = this;
+
+            //绑定事件       
+            for (var name in events)
+            {
+                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
+            }
+
+            //注册自动更新服务
+            delay_update(this);
+
+        };
+
+
+
+        //主窗口
+        this.defineProperty("mainWindow", function () {
+
+            return this.__mainWindow || null;
+        });
+
+
+        //活动窗口
+        this.defineProperty("activeWindow", function () {
+
+            return this.__mainWindow && this.__mainWindow.__activeWindow || null;
+        });
+
+
+        //父窗口
+        this.defineProperty("parentWindow", function () {
+
+            return this.__parentWindow || null;
+        });
+
+
+
+
+        //修改透明度属性
+        this.defineProperty("opacity", 1, {
+
+            minValue: 0,
+            maxValue: 1,
+            end_code: "this.dom.style.opacity = value;"
+        });
+
+
+
+
+
+        //窗口切换为活动窗口事件
+        this.defineEvent("activate");
+
+
+        //窗口切换为非活动窗口事件
+        this.defineEvent("deactivate");
+
+
+
+        //设置当前窗口为活动窗口
+        this.active = function () {
+
+            var root = this.get_mainWindow(),
+                target;
+
+            if ((target = root.__activeWindow) !== this)
+            {
+                if (target)
+                {
+                    if (target !== root)
+                    {
+                        target.dom.style.zIndex = 9990;
+                    }
+
+                    target.dispatchEvent("deactivate");
+                    target.__fn_to_active(false);
+                }
+
+                this.dispatchEvent("activate");
+
+                root.__activeWindow = this;
+                host.flyingon = this;
+
+                if (this !== root)
+                {
+                    this.dom.style.zIndex = 9991;
+                }
+
+                this.__fn_to_active(true);
+            }
+        };
+
+
+
+        this.update = function (arrange) {
+
+            flyingon.__initializing = false;
+
+            if (arrange)
+            {
+                this.__arrange_dirty = arrange;
+            }
+
+            this.__update_dirty = 1;
+            this.__fn_registry_update(this);
+        };
+
+
+    };
+
+
+
+})(flyingon);
 
 

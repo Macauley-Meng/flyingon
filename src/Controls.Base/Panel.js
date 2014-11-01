@@ -9,7 +9,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (Class, base, flyingon)
 
     Class.create = function () {
 
-        this.dom_body = this.dom.children[0];
+        this.dom_children = this.dom.children[0];
         this.__children = new flyingon.ControlCollection(this, 1);
     };
 
