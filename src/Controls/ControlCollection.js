@@ -109,6 +109,7 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (Class, 
         item.__ownerWindow = null;
         item.__events_cache = null;  //清空缓存的事件
         item.__css_types = null;     //重置样式
+        item.__update_dirty = 0;
 
         if ((item = item.__children) && item.length > 0)
         {

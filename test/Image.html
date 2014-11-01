@@ -17,7 +17,7 @@
 
 
 
-        var w = new flyingon.Window(host).init({
+        var w = new flyingon.Window(host).sets({
 
             layoutType: "flow",
             border: "4px solid blue",
@@ -31,7 +31,7 @@
 
         for (var i = 0; i < 100; i++)
         {
-            var image = new flyingon.Image().init({
+            var image = new flyingon.Image().sets({
 
                 width: "20px",
                 height: "20px",
@@ -49,10 +49,7 @@
 
         //alert(new Date() - date);
 
-
-        w.show();
-
-
+        
 
     </script>
 

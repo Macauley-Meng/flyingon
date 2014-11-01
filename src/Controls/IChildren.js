@@ -50,20 +50,22 @@ flyingon.IChildren = function (base) {
     //渲染控件
     this.render = function () {
 
-        var items;
+        var items,
+            cache = this.__update_dirty;
 
-        //调用父类渲染方法
-        base.render.call(this);
+        //渲染自身
+        if (cache === 1)
+        {
+            flyingon.__fn_compute_css(this);
+        }
 
         //渲染子控件
-        if ((items = this.__children) && items.length > 0)
+        if (cache > 0 && (items = this.__children) && items.length > 0)
         {
             //重排
             if (this.__arrange_dirty)
             {
-                var cache = this.get_fontSize();
-
-                if (cache !== this.__compute_style.fontSize)
+                if ((cache = this.get_fontSize()) !== this.__compute_style.fontSize)
                 {
                     this.__compute_style.fontSize = cache;
                 }
@@ -96,6 +98,8 @@ flyingon.IChildren = function (base) {
             //渲染子控件
             this.render_children();
         }
+
+        this.__update_dirty = 0;
     };
 
 

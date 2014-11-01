@@ -23,7 +23,6 @@
 
         <div id="drag" style="background-color: yellow;">
 
-            <input type="button" value="Create" onclick="create()" />
             <input type="button" value="Paint" onclick="paint()" />
 
             <input type="text" id="selector" value=".class3,.class4" />
@@ -56,71 +55,68 @@
         var w = new flyingon.Window(host);
 
 
-        function create() {
+
+        var date = new Date();
+
+        for (var k = 0; k < 50; k++)
+        {
+            var panel = new flyingon.Panel().sets({
+
+                margin: "10px",
+                border: "4px solid red",
+                padding: "10px",
+
+                layoutType: "flow",
+                spacingWidth: "10px",
+                spacingHeight: "10px"
+            });
 
 
-            var date = new Date();
-
-            for (var k = 0; k < 50; k++)
+            for (var i = 0; i < 200; i++)
             {
-                var panel = new flyingon.Panel();
 
-                for (var i = 0; i < 200; i++)
+                var ctrl = new flyingon.Button().sets({
+
+                    id: "button" + (k * 200) + i + "px",
+                    className: "class" + (i % 20) + "px",
+                    left: i % 5 * 120 + "px",
+                    top: i / 5 * 30 + "px",
+                    width: "100px",
+                    height: "21px"
+                });
+
+                switch (i % 5)
                 {
+                    case 0:
+                        ctrl.set_dock("left");
+                        break;
 
-                    var ctrl = new flyingon.Button().sets({
+                    case 1:
+                        ctrl.set_dock("top");
+                        break;
 
-                        id: "button" + (k * 200) + i + "px",
-                        className: "class" + (i % 20) + "px",
-                        left: i % 5 * 120 + "px",
-                        top: i / 5 * 30 + "px",
-                        width: "100px",
-                        height: "21px"
-                    });
+                    case 2:
+                        ctrl.set_dock("right");
+                        break;
 
-                    switch (i % 5)
-                    {
-                        case 0:
-                            ctrl.set_dock("left");
-                            break;
+                    case 3:
+                        ctrl.set_dock("bottom");
+                        ctrl.width = "fill";
+                        break;
 
-                        case 1:
-                            ctrl.set_dock("top");
-                            break;
-
-                        case 2:
-                            ctrl.set_dock("right");
-                            break;
-
-                        case 3:
-                            ctrl.set_dock("bottom");
-                            ctrl.width = "fill";
-                            break;
-
-                        case 4:
-                            ctrl.dock = "fill";
-                            break;
-                    }
-
-                    panel.appendChild(ctrl);
+                    case 4:
+                        ctrl.dock = "fill";
+                        break;
                 }
 
-
-                panel.margin = "10px";
-                panel.border = "4px solid red";
-                panel.padding = "10px";
-
-                panel.layoutType = "flow";
-                panel.spacingWidth = "10px";
-                panel.spacingHeight = "10px";
-
-                w.appendChild(panel);
-
+                panel.appendChild(ctrl);
             }
 
-            w.update();
 
-        };
+            w.appendChild(panel);
+
+        }
+
 
 
 
@@ -133,6 +129,7 @@
 
             alert(new Date() - date);
         };
+
 
         function query() {
 

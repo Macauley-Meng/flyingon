@@ -36,7 +36,7 @@
     <script type="text/javascript">
 
 
-        var w = new flyingon.Window(host).init({
+        var w = new flyingon.Window(host).sets({
 
             padding: "10px",
             spacingWidth: "10px",
@@ -44,7 +44,7 @@
         });
 
         
-        var panel = new flyingon.SplitPanel2().init({
+        var panel = new flyingon.SplitPanel2().sets({
 
             border: "4px solid blue",
             width: "fill"
@@ -56,8 +56,6 @@
         panel.panel1.set("border", "1 solid red").set("width", "20%");
         panel.panel2.set("border", "1 solid red");
         panel.panel3.set("border", "1 solid red").set("width", "20%");
-
-        w.show();
 
 
     </script>

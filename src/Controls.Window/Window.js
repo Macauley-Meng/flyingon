@@ -28,14 +28,11 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
         //添加至dom_window
         dom.appendChild(this.dom);
 
-        //添加至宿主
-        if (host)
-        {
-            host.appendChild(dom);
-        }
-
         //绑定resize事件
         flyingon.addEventListener(window, "resize", function (event) { self.update(true); });
+
+        //记录宿主
+        this.__dom_host = host;
 
         //设为活动窗口
         this.__activeWindow = this;
@@ -50,6 +47,15 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
         {
             this.dom.setAttribute("flyingon_active", "1");
         }
+
+        //注册窗口更新
+        this.__fn_registry_update(this, function () {
+
+            if (host)
+            {
+                host.appendChild(dom);
+            }
+        });
     };
 
 
@@ -99,6 +105,12 @@ flyingon.defineClass("Window", flyingon.BaseWindow, function (Class, base, flyin
 
             if (dom)
             {
+                if (this.__update_dirty === 1)
+                {
+                    flyingon.__fn_compute_css(this);
+                    this.__update_dirty = 2;
+                }
+
                 this.measure(dom.clientWidth, dom.clientHeight, true, true);
                 this.locate(0, 0);
 

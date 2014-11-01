@@ -219,6 +219,12 @@ flyingon.defineClass("Dialog", flyingon.BaseWindow, function (Class, base, flyin
         var dom = this.dom,
             style = dom.style;
 
+        if (this.__update_dirty === 1)
+        {
+            flyingon.__fn_compute_css(this);
+            this.__update_dirty = 2;
+        }
+
         this.measure(+this.get_width() || 600, +this.get_height() || 400, true, true);
 
         style.left = this.get_left();
@@ -228,7 +234,6 @@ flyingon.defineClass("Dialog", flyingon.BaseWindow, function (Class, base, flyin
         this.offsetTop = dom.offsetTop;
 
         base.render.call(this);
-
         this.header.render();
         this.body.render();
     };

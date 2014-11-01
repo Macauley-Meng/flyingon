@@ -1,9 +1,9 @@
 ﻿/*
-* flyingon javascript library v1.0.0
+* flyingon javascript library v0.0.1
 * https://github.com/freeoasoft/flyingon
 *
 * Copyright 2014, yaozhengyang
-* licensed under the LGPL Version 3 licenses.
+* licensed under the LGPL Version 3 licenses
 */
 
 
@@ -17,7 +17,7 @@ window.flyingon = (function () {
 
 
     //当前版本
-    this.current_version = this.current_version || "0.0.0.1";
+    this.current_version = "0.0.1";
 
     //当前语言
     this.current_language = this.current_language || "zh-CHS";

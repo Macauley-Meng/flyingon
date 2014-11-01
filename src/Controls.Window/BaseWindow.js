@@ -12,29 +12,13 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 
 
 
-    Class.create_mode = "merge";
-
-    Class.create = function () {
-
+    this.__fn_init_window = function (dom) {
 
         //默认设置为初始化状态,在渲染窗口后终止
         flyingon.__initializing = true;
 
-        //标记所属窗口为自身
-        this.__ownerWindow = this;
-
-    };
-
-
-
-
-
-    this.__fn_init_window = function (dom) {
-
-        var target, timer;
-
-        //绑定对象
-        dom.flyingon = this;
+        //标记所属窗口为自身及绑定dom对象
+        this.__ownerWindow = dom.flyingon = this;
 
         //绑定事件       
         for (var name in events)
@@ -43,31 +27,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
         }
 
         //注册自动更新服务
-        function update() {
-
-            if (target)
-            {
-                target.render();
-                target = null;
-            }
-
-            timer = this.__registry_update_timer = 0;
-        };
-
-        //注册控件更新
-        this.__fn_registry_update = function (control) {
-
-            if (timer)
-            {
-                clearTimeout(timer);
-            }
-
-            target = target && target !== control && target.__parent !== control ?
-               ((control = control.__parent) === target ? target :
-               (control === target.__parent ? control : this)) : control;
-
-            timer = this.__registry_update_timer = setTimeout(update, 50);
-        };
+        delay_update(this);
 
     };
 
@@ -161,7 +121,8 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
             this.__arrange_dirty = arrange;
         }
 
-        this.render();
+        this.__update_dirty = 1;
+        this.__fn_registry_update(this);
     };
 
 
@@ -169,7 +130,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 
 
     //初始化事件
-    (function (ownerWindow) {
+    (function () {
 
 
 
@@ -220,7 +181,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 
 
         //注:IE6/7/8的鼠标事件的event中鼠标数据是全局的,不能直接记录,需要把相关的数据存储至pressdown对象中
-        this.mousedown = function (event) {
+        events.mousedown = function (event) {
 
             var ownerWindow = this.flyingon,
                 target = dom_target(event || (event = fix_event(window.event))),
@@ -275,7 +236,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
         };
 
 
-        this.mousemove = function (event) {
+        events.mousemove = function (event) {
 
             var target;
 
@@ -323,7 +284,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
         };
 
 
-        this.mouseup = function (event) {
+        events.mouseup = function (event) {
 
             var target, cache;
 
@@ -356,7 +317,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 
 
         //dom鼠标事件顺序: mousedown -> mouseup -> click -> mousedown -> mouseup -> click -> dblclick
-        this.click = function (event) {
+        events.click = function (event) {
 
             var target;
 
@@ -371,7 +332,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
         };
 
 
-        this.dblclick = function (event) {
+        events.dblclick = function (event) {
 
             var target;
 
@@ -387,7 +348,7 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 
 
         //DOMMouseScroll:firefox滚动事件
-        this.mousewheel = this.DOMMouseScroll = function (event) {
+        events.mousewheel = events.DOMMouseScroll = function (event) {
 
             var target = dom_target(event || (event = fix_event(window.event)));
 
@@ -403,28 +364,28 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
         };
 
 
-        //this.touchstart = function(event) {
+        //events.touchstart = function(event) {
 
 
         //};
 
-        //this.touchmove = function(event) {
+        //events.touchmove = function(event) {
 
 
         //};
 
-        //this.touchend = function(event) {
+        //events.touchend = function(event) {
 
 
         //};
 
-        //this.touchcancel = function(event) {
+        //events.touchcancel = function(event) {
 
 
         //};
 
 
-        this.keydown = this.keypress = this.keyup = function (event) {
+        events.keydown = events.keypress = events.keyup = function (event) {
 
             //按键判断统一使用which
             if (!(event || (event = fix_event(window.event))).which)
@@ -436,26 +397,26 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
         };
 
 
-        this.focus = function (event) {
+        events.focus = function (event) {
 
-            return dom_target(event || fix_event(event)).dispatchEvent("focus");
+            return dom_target(event || fix_event(window.event)).dispatchEvent("focus");
         };
 
 
-        this.blur = function (event) {
+        events.blur = function (event) {
 
-            return dom_target(event || fix_event(event)).dispatchEvent("blur");
+            return dom_target(event || fix_event(window.event)).dispatchEvent("blur");
         };
 
 
         ["contextmenu", "scroll"].forEach(function (name) {
 
-            this[name] = function (event) {
+            events[name] = function (event) {
 
-                return dom_target(event || fix_event(event)).dispatchEvent(name);
+                return dom_target(event || fix_event(window.event)).dispatchEvent(name);
             };
 
-        }, this);
+        }, events);
 
 
 
@@ -611,6 +572,69 @@ flyingon.defineClass("BaseWindow", flyingon.Control, function (Class, base, flyi
 
     }).call(events);
 
+
+
+
+
+    //延时更新器
+    function delay_update(ownerWindow) {
+
+
+
+
+        var target, timer, callback_fn;
+
+
+
+        //更新控件样式
+        function update() {
+
+            if (callback_fn)
+            {
+                callback_fn(ownerWindow);
+                callback_fn = null;
+            }
+
+            if (target)
+            {
+                target.render();
+                target = null;
+            }
+
+            timer = 0;
+        };
+
+
+        //注册控件更新
+        ownerWindow.__fn_registry_update = function (control, callback) {
+
+            if (timer)
+            {
+                clearTimeout(timer);
+            }
+
+            if (callback && !callback_fn) //如果有回调函数 只有本次刷新前第一个注册的回调函数才可被执行
+            {
+                callback_fn = callback;
+            }
+
+            if (target)
+            {
+                if (control !== target && control.__parent !== target)
+                {
+                    target = target.__parent !== control ? ownerWindow : control;
+                }
+            }
+            else
+            {
+                target = control;
+            }
+
+            timer = setTimeout(update, 20);
+        };
+
+
+    };
 
 
 });

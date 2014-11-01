@@ -25,11 +25,15 @@ flyingon.IPanel = function (base) {
     //渲染子控件
     this.render_children = function () {
 
-        var items = this.__render_items || render_items.call(this);
+        var items = this.__render_items || render_items.call(this),
+            length;
 
-        for (var i = 0, _ = items.length; i < _; i++)
+        if (items && (length = items.length) > 0)
         {
-            items[i].render();
+            for (var i = 0; i < length; i++)
+            {
+                items[i].render();
+            }
         }
     };
 
