@@ -66,23 +66,10 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-//定义样式示例: 定义flyingon控件样式 ".flyingon-" + 类型名 比如定义Button控件的样式如下
+//定义控件样式 ".flyingon-" + 类型名 比如定义Button控件的样式如下
 //".flyingon-Button": {
 
 //    backgroundColor: "red",
-//}
-
-//定义样式示例: 定义名为fn1的函数
-//"fn1": function (color) {
-
-//    this.backgroundColor = color || "red";
-//}
-
-//定义样式示例5: 定义名为fn2的函数,并引入其它样式或函数
-//"fn2": function () {
-
-//    this["&.class1"] = null; //无参数
-//    this["&fn1"] = ["yellow"]; //带参数
 //}
 
 //定义样式示例: 定义名为.class1样式
@@ -91,11 +78,11 @@ A~B                    匹配任何在A控件之后的同级B控件
 //    backgroundColor: "red",
 //}
 
-//定义样式示例: 定义名为.class2样式,并引入其它样式或函数
+//定义样式示例: 定义名为.class2样式,并引入其它样式
 //".class2": {
 
-//    "&.class1": null, //无参数
-//    "&fn2": null      //带参数
+//    import: [".class1", ".flyingon-Button"],  //引入样式,注意不要循环引入
+//    border: "1px solid blue"                  //带参数
 //}
 
 

@@ -7871,8 +7871,8 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
             name,
             value;
 
-        //id
-        if ((name = target.__fields.id) && (value = registry[name = "#" + name]))
+        //添加类型class
+        if (value = registry[name = "." + target.__className0])
         {
             result.push(name);
             rule = rule && value === 1;
@@ -7891,8 +7891,8 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
             }
         }
 
-        //添加类型class
-        if (value = registry[name = "." + target.__className0])
+        //id
+        if ((name = target.__fields.id) && (value = registry[name = "#" + name]))
         {
             result.push(name);
             rule = rule && value === 1;
@@ -7901,8 +7901,10 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
         //标记是否可使用保存的css样式
         result.rule = rule;
 
+        target.__class_keys = null;
         return target.__css_types = result;
     };
+
 
 
     //查询方法
@@ -8181,20 +8183,30 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
 
         var values;
 
+        if (!style)
+        {
+            return target;
+        }
+
         for (var name in style)
         {
             if (name)
             {
-                if (name[0] === "@") //引入
+                if (name === "import")
                 {
-                    if (values = styles[name.substring(0)])
+                    if (values = style[name])
                     {
-                        if (values.constructor === Function)
+                        if (values.constructor === Array) //引入
                         {
-                            values = values.apply(result, style[name] || []);
+                            for (var i = 0, _ = values.length; i < _; i++)
+                            {
+                                parse_style(target, styles[values[i]], styles, cssText);
+                            }
                         }
-
-                        parse_style(target, values, styles, cssText);
+                        else
+                        {
+                            parse_style(target, styles[values], styles, cssText);
+                        }
                     }
                 }
                 else if (name in style_split)
@@ -8349,10 +8361,10 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
     }
 
 
-    //获取选择器规则(伪元素及多伪类不支持生成css)
+    //获取选择器规则(伪元素及Id选择器及多伪类不支持生成css)
     function selector_rule(selector) {
 
-        if (selector.token === "::" || selector.length > 1)
+        if (selector.token === "::" || selector.token === "#" || selector.length > 1)
         {
             return null;
         }
@@ -8728,6 +8740,28 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
         var registry_states; //已注册需改变状态的控件
 
 
+        //获取控件的class_keys
+        function class_keys(target) {
+
+            var keys = [], cache;
+
+            //添加类型class
+            keys.push(target.__className0);
+
+            //class 后置优先
+            if (cache = target.__class_list)
+            {
+                for (var name in cache)
+                {
+                    keys.push(name);
+                }
+            }
+
+            keys.push("");
+
+            return target.__class_keys = keys;
+        };
+
 
         //更新控件状态
         function update() {
@@ -8735,42 +8769,40 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
             for (var id in registry_states)
             {
                 var target = registry_states[id],
-                    type = target.__class_type,
                     states = target.__states,
-                    dom = target.dom,
-                    keys = (target.__className0 + target.__className1).split(" "),
+                    keys = target.__class_keys || class_keys(target),
                     className = "";
 
                 if (states.disabled)
                 {
-                    className = " " + keys.join("--disabled ") + "--disabled";
+                    className = " " + keys.join("--disabled");
                 }
                 else
                 {
                     if (states.checked)
                     {
-                        className += " " + keys.join("--checked ") + "--checked";
+                        className += " " + keys.join("--checked");
                     }
 
                     if (states.focus)
                     {
-                        className += " " + keys.join("--focus ") + "--focus";
+                        className += " " + keys.join("--focus");
                     }
 
                     if (states.hover)
                     {
-                        className += " " + keys.join("--hover ") + "--hover";
+                        className += " " + keys.join("--hover");
                     }
 
                     if (states.active)
                     {
-                        className += " " + keys.join("--active ") + "--active";
+                        className += " " + keys.join("--active");
                     }
                 }
 
-                if (dom.className !== (className = target.__className0 + target.__className1 + (target.__className2 = className)))
+                if (target.dom.className !== (className = target.__className0 + target.__className1 + (target.__className2 = className)))
                 {
-                    dom.className = className;
+                    target.dom.className = className;
 
                     if (target.__update_dirty !== 1)
                     {

@@ -1161,8 +1161,8 @@
             name,
             value;
 
-        //id
-        if ((name = target.__fields.id) && (value = registry[name = "#" + name]))
+        //添加类型class
+        if (value = registry[name = "." + target.__className0])
         {
             result.push(name);
             rule = rule && value === 1;
@@ -1181,8 +1181,8 @@
             }
         }
 
-        //添加类型class
-        if (value = registry[name = "." + target.__className0])
+        //id
+        if ((name = target.__fields.id) && (value = registry[name = "#" + name]))
         {
             result.push(name);
             rule = rule && value === 1;
@@ -1191,8 +1191,10 @@
         //标记是否可使用保存的css样式
         result.rule = rule;
 
+        target.__class_keys = null;
         return target.__css_types = result;
     };
+
 
 
     //查询方法
@@ -1471,20 +1473,30 @@
 
         var values;
 
+        if (!style)
+        {
+            return target;
+        }
+
         for (var name in style)
         {
             if (name)
             {
-                if (name[0] === "@") //引入
+                if (name === "import")
                 {
-                    if (values = styles[name.substring(0)])
+                    if (values = style[name])
                     {
-                        if (values.constructor === Function)
+                        if (values.constructor === Array) //引入
                         {
-                            values = values.apply(result, style[name] || []);
+                            for (var i = 0, _ = values.length; i < _; i++)
+                            {
+                                parse_style(target, styles[values[i]], styles, cssText);
+                            }
                         }
-
-                        parse_style(target, values, styles, cssText);
+                        else
+                        {
+                            parse_style(target, styles[values], styles, cssText);
+                        }
                     }
                 }
                 else if (name in style_split)
@@ -1639,10 +1651,10 @@
     }
 
 
-    //获取选择器规则(伪元素及多伪类不支持生成css)
+    //获取选择器规则(伪元素及Id选择器及多伪类不支持生成css)
     function selector_rule(selector) {
 
-        if (selector.token === "::" || selector.length > 1)
+        if (selector.token === "::" || selector.token === "#" || selector.length > 1)
         {
             return null;
         }

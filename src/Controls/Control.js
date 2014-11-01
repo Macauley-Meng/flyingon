@@ -228,6 +228,28 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
         var registry_states; //已注册需改变状态的控件
 
 
+        //获取控件的class_keys
+        function class_keys(target) {
+
+            var keys = [], cache;
+
+            //添加类型class
+            keys.push(target.__className0);
+
+            //class 后置优先
+            if (cache = target.__class_list)
+            {
+                for (var name in cache)
+                {
+                    keys.push(name);
+                }
+            }
+
+            keys.push("");
+
+            return target.__class_keys = keys;
+        };
+
 
         //更新控件状态
         function update() {
@@ -235,42 +257,40 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
             for (var id in registry_states)
             {
                 var target = registry_states[id],
-                    type = target.__class_type,
                     states = target.__states,
-                    dom = target.dom,
-                    keys = (target.__className0 + target.__className1).split(" "),
+                    keys = target.__class_keys || class_keys(target),
                     className = "";
 
                 if (states.disabled)
                 {
-                    className = " " + keys.join("--disabled ") + "--disabled";
+                    className = " " + keys.join("--disabled");
                 }
                 else
                 {
                     if (states.checked)
                     {
-                        className += " " + keys.join("--checked ") + "--checked";
+                        className += " " + keys.join("--checked");
                     }
 
                     if (states.focus)
                     {
-                        className += " " + keys.join("--focus ") + "--focus";
+                        className += " " + keys.join("--focus");
                     }
 
                     if (states.hover)
                     {
-                        className += " " + keys.join("--hover ") + "--hover";
+                        className += " " + keys.join("--hover");
                     }
 
                     if (states.active)
                     {
-                        className += " " + keys.join("--active ") + "--active";
+                        className += " " + keys.join("--active");
                     }
                 }
 
-                if (dom.className !== (className = target.__className0 + target.__className1 + (target.__className2 = className)))
+                if (target.dom.className !== (className = target.__className0 + target.__className1 + (target.__className2 = className)))
                 {
-                    dom.className = className;
+                    target.dom.className = className;
 
                     if (target.__update_dirty !== 1)
                     {
