@@ -2,12 +2,12 @@
 /*
 
 
-本系统支持的基础选择器如下:
+本系统支持的基础选择器如下(注:本系统不支持html标签选择器):
 
 *                      通用控件选择器, 匹配任何控件
-A                      控件类型选择器, 匹配所有控件类型名称为A的控件
-.                      class选择器, 匹配所有className属性中包含指定值的控件
-#                      id选择器, 匹配所有id属性等于指定值的控件
+.                      class选择器, 匹配className属性中包含指定值的控件
+#                      id选择器, 匹配id属性等于指定值的控件
+@                      自定义控件类型选择器, 匹配控件全名等于指定值的控件(注:全名的"."需替换为"-"以避免与class选择器冲突)
 
 
 本系统支持的组合选择器如下:
@@ -39,9 +39,9 @@ A~B                    匹配任何在A控件之后的同级B控件
 :active                匹配鼠标已经其上按下但还没有释放的控件
 :hover                 匹配鼠标悬停其上的控件
 :focus                 匹配获得当前焦点的控件
-:enabled               匹配表单中激活的控件
-:disabled              匹配表单中禁用的控件
-:checked               匹配表单中被选中的控件
+:enabled               匹配激活的控件
+:disabled              匹配禁用的控件
+:checked               匹配被选中的控件
 
 
 本系统按CSS3标准规定伪元素以::表示, 支持的伪元素如下:
@@ -66,8 +66,8 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-//定义控件样式 ".flyingon-" + 类型名 比如定义Button控件的样式如下
-//".flyingon-Button": {
+//定义控件样式 "@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式如下
+//"@flyingon-Button": {
 
 //    backgroundColor: "red",
 //}
@@ -81,7 +81,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 //定义样式示例: 定义名为.class2样式,并引入其它样式
 //".class2": {
 
-//    import: [".class1", ".flyingon-Button"],  //引入样式,注意不要循环引入
+//    import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
 //    border: "1px solid blue"                  //带参数
 //}
 
@@ -92,7 +92,7 @@ flyingon.defineStyle({
 
 
     //面板控件样式
-    ".flyingon-Panel": {
+    "@flyingon-Panel": {
 
         overflow: "auto",
         backgroundColor: "white"
@@ -100,7 +100,7 @@ flyingon.defineStyle({
 
 
     //主窗口样式
-    ".flyingon-Window": {
+    "@flyingon-Window": {
 
         overflow: "auto",
         padding: "2px"
@@ -108,7 +108,7 @@ flyingon.defineStyle({
 
 
     //弹出窗口样式
-    ".flyingon-Dialog": {
+    "@flyingon-Dialog": {
 
         overflow: "auto",
         backgroundColor: "white"
@@ -131,7 +131,7 @@ flyingon.defineStyle({
 
 
     //文本框样式
-    ".flyingon-TextBox": {
+    "@flyingon-TextBox": {
 
         paddingLeft: "2px",
         paddingRight: "2px",
@@ -139,38 +139,38 @@ flyingon.defineStyle({
     },
 
     //鼠标指向时文本框
-    ".flyingon-TextBox:hover": {
+    "@flyingon-TextBox:hover": {
 
         borderColor: "yellow"
     },
 
     //获取焦点时文本框
-    ".flyingon-TextBox:focus": {
+    "@flyingon-TextBox:focus": {
 
         borderColor: "blue"
     },
 
 
     //列表框样式
-    ".flyingon-ListBox": {
+    "@flyingon-ListBox": {
 
     },
 
 
     //按钮样式
-    ".flyingon-Button": {
+    "@flyingon-Button": {
 
         backgroundColor: ""
     },
 
     //活动状态时按钮样式
-    ".flyingon-Button:hover": {
+    "@flyingon-Button:hover": {
 
         backgroundColor: "yellow"
     },
 
     //鼠标按下时按钮样式
-    ".flyingon-Button:active": {
+    "@flyingon-Button:active": {
 
         backgroundColor: "blue"
     }

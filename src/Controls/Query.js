@@ -59,8 +59,8 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
 
             switch (node.token)
             {
-                case "":  //类型
-                    if (target.xtype !== node.name)
+                case "@":
+                    if (target.selector_rule !== node.name)
                     {
                         return;
                     }
@@ -110,7 +110,7 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
                             case "focus":
                             case "disabled":
                             case "checked":
-                                return target.__states != null && target.__states[item.name];
+                                return target.__states != null && !!target.__states[item.name];
 
                             case "enabled":
                                 return !target.__states || !target.__states.disabled;

@@ -514,6 +514,10 @@
 
 
 
+    //窗口集合
+    flyingon.__all_windows = [];
+
+
 
     //窗口接口
     flyingon.IWindow = function (base) {

@@ -6,7 +6,7 @@
 
 
 
-    var style_yes_names = null,                 //需同步至dom的样式名
+    var style_split = Object.create(null),      //样式拆分函数
 
         style_no_names = Object.create(null),   //不需同步的样式名
 
@@ -18,11 +18,11 @@
 
         style_data_types = Object.create(null), //样式数据类型
 
-        style_split = Object.create(null),      //样式拆分函数
-
         style_type_fn = Object.create(null),    //样式类型检查函数
 
         style_pseudo_fn = Object.create(null),  //样式伪类检查函数
+
+        check_property = flyingon.__fn_check_property,  //检查属性
 
         selector_rule_type = {      //支持的选择器规则类型
 
@@ -105,10 +105,16 @@
         this.splice = Array.prototype.splice;
 
 
+        //清除样式
+        this.clear = function () {
+
+            [].splice.call(this, 0, this.length);
+        };
+
+
         //更新样式
         this.update = function () {
 
-            style_yes_names = null;
             registry_types = Object.create(null);
             registry_names = Object.create(null);
 
@@ -128,7 +134,6 @@
 
 
     }).call({});
-
 
 
 
@@ -995,13 +1000,59 @@
 
 
 
+    //切换主题
+    flyingon.change_theme = function (theme_name, files) {
+
+        if (theme_name)
+        {
+            flyingon.current_theme = theme_name;
+
+            flyingon.styleSheets.clear();
+            flyingon.styleSheets.update();
+
+            if (files)
+            {
+                for (var i = 0, _ = files.length; i < _; i++)
+                {
+                    flyingon.ajax_get("/themes/" + theme_name + "/" + files[i], "javascript");
+                }
+            }
+
+            if (files = flyingon.__all_windows)
+            {
+                for (var i = 0, _ = files.length; i < _; i++)
+                {
+                    update_theme(files[i]);
+                    files[i].render();
+                }
+            }
+        }
+    };
+
+
+    function update_theme(target) {
+
+        target.__update_dirty = 1;
+        target.__css_types = null;
+
+        if (target = target.__children)
+        {
+            for (var i = 0, _ = target.length; i < _; i++)
+            {
+                update_theme(target[i]);
+            }
+        }
+    };
+
+
+
 
     //计算css样式(仅计算需同步至dom的css)
     flyingon.__fn_compute_css = function (target) {
 
         var result = Object.create(null);
 
-        if ((target.__css_types || get_css_types(target)).rule) //可复用css样式,不需同步
+        if ((target.__css_types || get_css_types(target)).rule) //是否使用css
         {
             if (target.__css_names)
             {
@@ -1012,9 +1063,9 @@
         else
         {
             var style = target.__styles,
-                css_names = {},
-                names = style_yes_names || get_style_names(),
+                names = target.__css_keys || get_css_keys(target),
                 name,
+                css_names,
                 value;
 
             for (var i = 0, _ = names.length; i < _; i++)
@@ -1028,7 +1079,7 @@
 
                 if ((value = flyingon.__fn_css_value(target, name)) !== undefined)
                 {
-                    result[name] = css_names[name] = value;
+                    result[name] = (css_names || (css_names = {}))[name] = value;
                 }
             }
 
@@ -1050,6 +1101,7 @@
             target.__css_names = css_names;
         }
 
+        //记录样式值
         return target.__css_values = result;
     };
 
@@ -1065,7 +1117,7 @@
                 style,
                 weights;
 
-            for (var i = 0, _ = types.length; i < _; i++)
+            for (var i = types.length - 1; i >= 0; i--)
             {
                 if ((style = css_list[types[i]]) && (weights = style.__weights__))
                 {
@@ -1084,7 +1136,7 @@
                         }
 
                         //检测属性
-                        if (node.length > 0 && style_pseudo_fn.check_property(node, item) === false)
+                        if (node.length > 0 && check_property(node, item) === false)
                         {
                             continue;
                         }
@@ -1132,40 +1184,34 @@
     function empty_fn() { };
 
 
-    //获取当前使用的样式名
-    function get_style_names() {
-
-        var result = style_yes_names = [],
-            names1 = registry_names,
-            names2 = style_no_names,
-            name;
-
-        for (var name in names1)
-        {
-            if (!(name in names2))
-            {
-                result.push(name);
-            }
-        }
-
-        return result;
-    };
-
-
     //获取指定控件的css类别集合
     function get_css_types(target) {
 
         var result = [],
-            registry = registry_types,
-            rule = true,
+            types = registry_types,
             name,
-            value;
+            cache;
+
+        //全部类型
+        if (cache = types["*"])
+        {
+            result.push("*");
+            result.rule = cache[0];
+        }
+        else
+        {
+            result.rule = true;
+        }
 
         //添加类型class
-        if (value = registry[name = "." + target.__className0])
+        if (cache = types[name = "@" + target.selector_rule])
         {
             result.push(name);
-            rule = rule && value === 1;
+
+            if (result.rule)
+            {
+                result.rule = cache[0];
+            }
         }
 
         //class 后置优先
@@ -1173,38 +1219,70 @@
         {
             for (var name in target.__class_list)
             {
-                if (value = registry[name = "." + name])
+                if (cache = types[name = "." + name])
                 {
                     result.push(name);
-                    rule = rule && value === 1;
+
+                    if (result.rule)
+                    {
+                        result.rule = cache[0];
+                    }
                 }
             }
         }
 
         //id
-        if ((name = target.__fields.id) && (value = registry[name = "#" + name]))
+        if ((name = target.__fields.id) && types[name = "#" + name])
         {
             result.push(name);
-            rule = rule && value === 1;
+            result.rule = false;
         }
 
-        //标记是否可使用保存的css样式
-        result.rule = rule;
+        //清空相关缓存
+        target.__css_keys = target.__class_keys = null;
 
-        target.__class_keys = null;
+        //返回结果
         return target.__css_types = result;
     };
+
+
+    //获取控件相关的样式名
+    function get_css_keys(target) {
+
+        var types = target.__css_types || get_css_types(target),
+            length = types.length;
+
+        switch (length)
+        {
+            case 0:
+                return {};
+
+            case 1:
+                return registry_types[types[0]][1];
+
+            default:
+                var result = Object.create(null);
+
+                for (var i = 0; i < length; i++)
+                {
+                    var names = registry_types[types[i]];
+
+                    for (var name in names)
+                    {
+                        result[name] = true;
+                    }
+                }
+
+                return result;
+        }
+    };
+
 
 
 
     //查询方法
     //注: ","组合类型已被拆分,此处不处理
-    (function (type_fn, pseudo_fn) {
-
-
-
-        //引入检查属性方法
-        var check_property = pseudo_fn.check_property = flyingon.__fn_check_property;
+    (function (type_fn, pseudo_fn, check_property) {
 
 
 
@@ -1215,8 +1293,8 @@
 
             switch (node.token)
             {
-                case "":  //类型
-                    if (target.xtype !== node.name)
+                case "@":
+                    if (target.selector_rule !== node.name)
                     {
                         return false;
                     }
@@ -1258,7 +1336,6 @@
 
             return true;
         };
-
 
 
 
@@ -1407,7 +1484,7 @@
         };
 
 
-    })(style_type_fn, style_pseudo_fn);
+    })(style_type_fn, style_pseudo_fn, check_property);
 
 
 
@@ -1608,8 +1685,8 @@
     //处理选择器
     function handle_selector(selector, style, cssText) {
 
-        var index = selector.length - 1,
-            value = selector[index];
+        var length = selector.length,
+            value = selector[length - 1];
 
         selector.style = style;
         selector.key = selector.join("");
@@ -1621,7 +1698,7 @@
         {
             var values = [];
 
-            for (var i = 0; i <= index; i++)
+            for (var i = 0; i < length; i++)
             {
                 if (value = selector_rule(selector[i]))
                 {
@@ -1673,7 +1750,7 @@
             result.push(type);
         }
 
-        result.push(selector.token);
+        result.push(selector.token === "@" ? "." : selector.token);
         result.push(selector.name);
 
         //单个伪类
@@ -1743,6 +1820,8 @@
 
         var style = selector.style,
             type = selector.type,
+            types = registry_types[type] || (registry_types[type] = [true, Object.create(null)]), //注册类型
+            no_names = style_no_names,
             value;
 
         if (selector.rule !== undefined)
@@ -1751,15 +1830,10 @@
             {
                 add_rule(selector.rule, selector.cssText);
             }
-
-            if (registry_types[type] !== 2)
-            {
-                registry_types[type] = 1; //可复用样式
-            }
         }
         else
         {
-            registry_types[type] = 2; //不可复用样式
+            types[0] = false; //不可复用样式
         }
 
         for (var name in style)
@@ -1769,6 +1843,13 @@
                 cache_name,
                 cache;
 
+            //注册类型
+            if (!(name in no_names || name in types[1]))
+            {
+                types[1][name] = true;
+            }
+
+            //注册属性
             if (cache_name = registry_names[name]) //已有属性
             {
                 if (cache = cache_name[type])

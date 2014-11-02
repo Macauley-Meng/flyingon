@@ -106,51 +106,70 @@ window.flyingon = (function () {
     });
 
 
-    //扩展数组indexOf方法
-    Array.prototype.indexOf || (Array.prototype.indexOf = function (item, index) {
 
-        for (var i = index || 0, _ = this.length; i < _; i++)
-        {
-            if (this[i] === item)
+    //扩展数据方法
+    (function () {
+
+
+        //扩展数组indexOf方法
+        this.indexOf || (this.indexOf = function (item, index) {
+
+            for (var i = index || 0, _ = this.length; i < _; i++)
             {
-                return i;
+                if (this[i] === item)
+                {
+                    return i;
+                }
             }
-        }
 
-        return -1;
-    });
+            return -1;
+        });
 
 
-    //扩展数组indexOf方法
-    Array.prototype.lastIndexOf || (Array.prototype.lastIndexOf = function (item, index) {
+        //扩展数组indexOf方法
+        this.lastIndexOf || (this.lastIndexOf = function (item, index) {
 
-        for (var i = index || this.length - 1; i >= 0; i--)
-        {
-            if (this[i] === item)
+            for (var i = index || this.length - 1; i >= 0; i--)
             {
-                return i;
+                if (this[i] === item)
+                {
+                    return i;
+                }
             }
-        }
 
-        return -1;
-    });
+            return -1;
+        });
 
 
-    //扩展数组forEach方法
-    Array.prototype.forEach || (Array.prototype.forEach = function (callback, thisArg) {
+        //扩展移除数组项方法
+        this.remove || (this.remove = function (item) {
 
-        if (callback)
-        {
-            thisArg = thisArg || this;
+            var index = this.indexOf(item);
 
-            for (var i = 0, _ = this.length; i < _; i++)
+            if (index >= 0)
             {
-                callback.call(thisArg, this[i], i);
+                this.splice(index, 1);
             }
-        }
+        });
 
-    });
 
+        //扩展数组forEach方法
+        this.forEach || (this.forEach = function (callback, thisArg) {
+
+            if (callback)
+            {
+                thisArg = thisArg || this;
+
+                for (var i = 0, _ = this.length; i < _; i++)
+                {
+                    callback.call(thisArg, this[i], i);
+                }
+            }
+
+        });
+
+
+    }).call(Array.prototype);
 
 
 

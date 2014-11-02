@@ -2,12 +2,12 @@
 /*
 
 
-本系统支持的基础选择器如下:
+本系统支持的基础选择器如下(注:本系统不支持html标签选择器):
 
 *                      通用控件选择器, 匹配任何控件
-A                      控件类型选择器, 匹配所有控件类型名称为A的控件
-.                      class选择器, 匹配所有className属性中包含指定值的控件
-#                      id选择器, 匹配所有id属性等于指定值的控件
+.                      class选择器, 匹配className属性中包含指定值的控件
+#                      id选择器, 匹配id属性等于指定值的控件
+@                      自定义控件类型选择器, 匹配控件全名等于指定值的控件(注:全名的"."需替换为"-"以避免与class选择器冲突)
 
 
 本系统支持的组合选择器如下:
@@ -39,9 +39,9 @@ A~B                    匹配任何在A控件之后的同级B控件
 :active                匹配鼠标已经其上按下但还没有释放的控件
 :hover                 匹配鼠标悬停其上的控件
 :focus                 匹配获得当前焦点的控件
-:enabled               匹配表单中激活的控件
-:disabled              匹配表单中禁用的控件
-:checked               匹配表单中被选中的控件
+:enabled               匹配激活的控件
+:disabled              匹配禁用的控件
+:checked               匹配被选中的控件
 
 
 本系统按CSS3标准规定伪元素以::表示, 支持的伪元素如下:
@@ -72,7 +72,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
     //元素节点
     var element_node = flyingon.defineClass(function (Class) {
-        
+
 
         Class.create = function (nodes, token, name) {
 
@@ -111,7 +111,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             nodes.type = null;
         };
 
-        
+
         //所属组合类型
         this.type = null;
 
@@ -276,7 +276,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-    var split_regex = /"[^"]*"|'[^']*'|[\w-@%&]+|[.#* ,>+:=~|^$()\[\]]/g; //选择器拆分正则表达式
+    var split_regex = /"[^"]*"|'[^']*'|[\w-]+|[@.#* ,>+:=~|^$()\[\]]/g; //选择器拆分正则表达式
 
 
     //[name?="value"]属性选择器
@@ -362,8 +362,9 @@ A~B                    匹配任何在A控件之后的同级B控件
             //switch代码在chrome下的效率没有IE9好,不知道什么原因,有可能是其操作非合法变量名的时候性能太差
             switch (token = tokens[i++])
             {
-                case "#":  //id选择器标记
-                case ".":  //class选择器标记
+                case "@":   //自定义类型选择器
+                case "#":   //id选择器标记
+                case ".":   //class选择器标记
                     node = new element_node(nodes, token, tokens[i++]);
                     break;
 

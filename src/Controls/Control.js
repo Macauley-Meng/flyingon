@@ -103,9 +103,6 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
         });
 
 
-        //默认class
-        this.__className0 = "";
-
         //自定义class
         this.__className1 = "";
 
@@ -136,7 +133,7 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
                 this.__className1 = fields.className = "";
             }
 
-            if (this.dom.className !== (value = this.__className0 + this.__className1 + this.__className2))
+            if (this.dom.className !== (value = this.selector_rule + this.__className1 + this.__className2))
             {
                 this.dom.className = value;
             }
@@ -234,7 +231,7 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
             var keys = [], cache;
 
             //添加类型class
-            keys.push(target.__className0);
+            keys.push(target.selector_rule);
 
             //class 后置优先
             if (cache = target.__class_list)
@@ -288,7 +285,7 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
                     }
                 }
 
-                if (target.dom.className !== (className = target.__className0 + target.__className1 + (target.__className2 = className)))
+                if (target.dom.className !== (className = target.selector_rule + target.__className1 + (target.__className2 = className)))
                 {
                     target.dom.className = className;
 
@@ -1118,7 +1115,8 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
             dom = dom.cloneNode(true);
         }
 
-        this.__className0 = dom.className = Class.xtype.replace(/\./g, "-");
+        //选择器名称
+        this.selector_rule = dom.className = Class.xtype.replace(/\./g, "-");
     };
 
 

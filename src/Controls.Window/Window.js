@@ -43,6 +43,9 @@ flyingon.defineClass("Window", flyingon.Control, function (Class, base, flyingon
         //修改class
         this.dom.className += " flyingon-Window-active";
 
+        //注册窗口
+        flyingon.__all_windows.push(this);
+
         //注册窗口更新
         this.__fn_registry_update(this, function () {
 

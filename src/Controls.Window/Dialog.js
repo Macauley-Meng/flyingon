@@ -17,13 +17,13 @@ flyingon.defineClass("Dialog", flyingon.Control, function (Class, base, flyingon
     };
 
 
-    
+
 
 
     //扩展窗口接口
     flyingon.extend(this, flyingon.IWindow, base);
 
-    
+
 
     //创建模板
     this.create_dom_template("div");
@@ -153,9 +153,17 @@ flyingon.defineClass("Dialog", flyingon.Control, function (Class, base, flyingon
 
         //设为活动窗口
         this.__activeWindow = this;
-        (this.__states = {}).active = true;
 
-        this.update();
+        //初始化状态
+        this.__states = { active: true };
+
+        //修改class
+        this.dom.className += " flyingon-Window-active";
+
+        //注册窗口
+        flyingon.__all_windows.push(this);
+
+        this.render();
     };
 
 
@@ -178,6 +186,8 @@ flyingon.defineClass("Dialog", flyingon.Control, function (Class, base, flyingon
             {
                 flyingon.dispose_dom(this.dom_mask);
             }
+
+            flyingon.__all_windows.removeAt(this);
 
             this.dispatchEvent("closed");
 
