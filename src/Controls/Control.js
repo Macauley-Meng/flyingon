@@ -453,9 +453,8 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
         //defaultHeight_to_fill     当高度为auto时是否充满可用空间 true|false
         //less_width_to_default     当宽度不足时是否使用默认宽度 true|false
         //less_height_to_default    当高度不足时是否使用默认高度 true|false
-        //ignore_margin             是否忽略margin值(绝对定位时不需要margin)
         //返回最大占用宽度及高度
-        this.measure = function (usable_width, usable_height, defaultWidth_to_fill, defaultHeight_to_fill, less_width_to_default, less_height_to_default, ignore_margin) {
+        this.measure = function (usable_width, usable_height, defaultWidth_to_fill, defaultHeight_to_fill, less_width_to_default, less_height_to_default) {
 
 
             var box = this.__boxModel || (this.__boxModel = new boxModel()),
@@ -468,13 +467,10 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
 
 
             //计算盒模型
-            if (!ignore_margin)
-            {
-                box.marginLeft = fn(this.get_marginLeft());
-                box.marginTop = fn(this.get_marginTop());
-                box.marginRight = fn(this.get_marginRight());
-                box.marginBottom = fn(this.get_marginBottom());
-            }
+            box.marginLeft = fn(this.get_marginLeft());
+            box.marginTop = fn(this.get_marginTop());
+            box.marginRight = fn(this.get_marginRight());
+            box.marginBottom = fn(this.get_marginBottom());
 
             box.borderLeft = dom.clientLeft;
             box.borderTop = dom.clientTop;
@@ -703,7 +699,8 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
         //返回控件最大占位坐标
         this.locate = function (x, y, align_width, align_height) {
 
-            var box = this.__boxModel,
+            var parent = this.__parent,
+                box = this.__boxModel,
                 style = this.dom.style,
                 value;
 
@@ -737,6 +734,17 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
 
             style.left = (x += box.offsetX + box.marginLeft) + "px";
             style.top = (y += box.offsetY + box.marginTop) + "px";
+
+            //计算控件相对窗口的绝对坐标
+            if (parent)
+            {
+                this.windowX = x + parent.clientLeft + parent.windowX;
+                this.windowY = y + parent.clientTop + parent.windowY;
+            }
+            else
+            {
+                this.windowX = this.windowY = 0;
+            }
 
             //返回最大占位
             return {

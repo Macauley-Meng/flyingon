@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -73,7 +73,7 @@
         });
 
 
-        for (var k = 0; k < 10; k++)
+        for (var k = 0; k < 100; k++)
         {
             var panel = new flyingon.Panel().sets({
 
@@ -86,7 +86,10 @@
                 spacingWidth: "10px",
                 spacingHeight: "10px",
 
-                layoutTable: "*[50% * *] *[* 50% table(50% 50%) *[* * *] *[* * *] *[* * *] end *] *[* * * *]"
+                layoutColumns: "* ...5", //4
+                layoutRows: "25px ...8",   //4
+
+                layoutTable: "*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]"
             });
 
             for (var i = 0; i < 100; i++)
@@ -96,6 +99,8 @@
 
                     left: i % 5 * 120 + "px",
                     top: i / 5 * 30 + "px",
+                    spacingColumns: 4,
+                    //columnIndex: -3,
                     text: "button" + i
                 });
 
@@ -103,6 +108,8 @@
                 {
                     case 0:
                         ctrl.set_dock("left");
+                        ctrl.set_columnSpan(-1);
+                        ctrl.set_rowSpan(1);
                         break;
 
                     case 1:
@@ -129,7 +136,7 @@
         }
 
 
-        //alert(new Date() - date);
+        alert(new Date() - date);
 
 
         function paint() {
@@ -164,7 +171,7 @@
                 panel.set_layoutType(value);
             }
 
-            w.update(false, true);
+            w.render();
 
             alert(new Date() - date);
         };
@@ -183,7 +190,7 @@
                 panel.set_layoutVertical(value);
             }
 
-            w.update();
+            w.render();
 
             alert(new Date() - date);
         };
@@ -201,7 +208,7 @@
                 panel.set_direction(value);
             }
 
-            w.update();
+            w.render();
 
             alert(new Date() - date);
         };

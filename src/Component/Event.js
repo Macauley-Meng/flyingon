@@ -160,7 +160,6 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (Class, base, flying
         return function () {
 
             var dom = this,
-                defaultView = this.ownerDocument.defaultView,
                 style,
                 x = 0,
                 y = 0;

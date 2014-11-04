@@ -587,7 +587,7 @@
         this.defineEvent("deactivate");
 
 
-
+        
         //设置当前窗口为活动窗口
         this.active = function () {
 

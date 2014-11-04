@@ -64,11 +64,6 @@ flyingon.IPanel = function (base) {
             {
                 items.push(item);
             }
-
-            if (style.visibility !== (visible = visible ? "visible" : "hidden"))
-            {
-                style.visibility = visible;
-            }
         }
 
         return items;

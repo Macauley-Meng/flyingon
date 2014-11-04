@@ -389,25 +389,25 @@
         //number%   控件客户区高度的百分比
         style("layout-height", "0", "last-value");
 
-        //单页显示布局当前页(此值仅对单页显示布局(page)有效)
+        //单页显示布局当前布局页(此值仅对单页显示布局(page)有效)
         //number	整数值 
-        style("current-page", 0, "last-value");
+        style("layout-page", 0, "last-value");
 
         //均匀网格布局行数(此值仅对网格布局(grid)有效)
         //number	整数值 
-        //string    自定义行 如:"20 30% 20* *"表示3列 第一行固定宽度为20 第2行使用剩下可用空间的30% 第3,4行使用全部剩余空间,第3行占比20/120 第4行占比100/120
-        style("grid-rows", 3, "last-value");
+        //string    自定义行 如:"20 30% 20* *"表示4行 第一行固定宽度为20 第2行使用可用空间的30% 第3,4行使用全部剩余空间,第3行占比20/120 第4行占比100/120
+        style("layout-rows", "3", "last-value");
 
         //均匀网格布局列数(此值仅对网格布局(grid)有效)
         //number	整数值 
-        //string    自定义列 如:"20 30% 20* *"表示3列 第一列固定宽度为20 第2列使用剩下可用空间的30% 第3,4行使用全部剩余空间,第3行占比20/120 第4行占比100/120
-        style("grid-columns", 3, "last-value");
+        //string    自定义列 如:"20 30% 20* *"表示4列 第一列固定宽度为20 第2列使用可用空间的30% 第3,4行使用全部剩余空间,第3行占比20/120 第4行占比100/120
+        style("layout-columns", "3", "last-value");
 
         //表格布局定义(此值仅对表格布局(table)有效)
         //行列格式: row[column ...] ...
         //row,column可选值: 整数(固定行高或列宽) 数字%(总宽度或高度的百分比) [数字]*(剩余空间的百分比,数字表示权重,省略时权重默认为100)
-        //column可嵌套表,嵌套表格式: table(spaceX spaceY) row[column ...] ... end spaceX,spaceY为横或纵向留空(可省略,默认与父表相等),整数值或百分比
-        //九宫格正中内嵌九宫格(留空为父表的一半)示例: "*[* * *] *[* * table(50% 50%) *[* * *] *[* * *] *[* * *] end *] *[* * *]"
+        //column可嵌套表,嵌套表格式: {(spacing-x spacing-y) row[column ...] ...} spacing-x,spacing-y为横或纵向留空(可省略,默认与父表相等),整数值或百分比
+        //九宫格正中内嵌九宫格(留空为父表的一半)示例: "*[* * *] *[* * {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * *]"
         style("layout-table", "*[* * *] *[* * *] *[* * *]", "last-value");
 
 
@@ -451,35 +451,40 @@
 
 
 
-        //控件停靠方式(此值仅在所属布局类型为停靠布局(dock)时有效)
+        //是否强制换行(此值仅在当前布局类型为流式布局(flow)时有效)
+        //fals
+        //true
+        style("newline", false, "last-value");
+
+        //控件停靠方式(此值仅在当前布局类型为停靠布局(dock)时有效)
         //left:     左见枚举
         //top:      顶部见枚举
         //right:    右见枚举
         //bottom:   底部见枚举
         //fill:     充满
-        //none:     不停靠(使用绝对定位)
         style("dock", "left", "last-value");
 
-        //是否强制换行(此值仅在所属布局类型为流式布局(flow),网格布局(grid)及表格布局(table)时有效)
-        //fals
-        //true
-        style("newline", false, "last-value");
-
-        //横跨行数(此值仅在所属布局类型为网格布局(grid)或表格布局(table)时有效)
-        //number	整数值 
-        //all       横跨所有行
+        //横跨行数(此值仅在当前布局类型为网格布局(grid)时有效)
+        //number	整数值(负整数表示横跨至倒数第几列)
         style("row-span", 0, "last-value");
 
-        //纵跨列数(此值仅在所属布局类型为网格布局(grid)或表格布局(table)时有效)
-        //number	整数值 
-        //all       横跨所有列
+        //纵跨列数(此值仅在当前布局类型为网格布局(grid)时有效)
+        //number	整数值(负整数表示横跨至倒数第几列)
         style("column-span", 0, "last-value");
 
+        //跳空列数(此值仅在当前布局类型为网格布局(grid)时有效)
+        //number	正整数值
+        style("spacing-columns", 0, "last-value");
+
+        //指定列索引(此值仅在当前布局类型为网格布局(grid)时有效)
+        //number	整数值(0:不固定 正整数:指定使用第几列 负整数:指定使用倒数第几列)
+        style("column-index", 0, "last-value");
 
 
 
 
-        //控件左上角x及y坐标(此值仅在所属布局类型为绝对定位(absolute)时有效)
+
+        //控件左上角x及y坐标(此值仅在当前布局类型为绝对定位(absolute)时有效)
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   父控件客户区宽或高度的百分比
         styles("?", ["top", "left"], "0", "last-value");

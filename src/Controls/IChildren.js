@@ -50,37 +50,41 @@ flyingon.IChildren = function (base) {
     //渲染控件
     this.render = function () {
 
-        var items,
-            cache = this.__update_dirty;
-
-        //渲染自身
-        if (cache === 1)
+        switch (this.__update_dirty)
         {
-            flyingon.__fn_compute_css(this);
+            case 1:
+                flyingon.__fn_compute_css(this);
+                render_children.call(this);
+                break;
+
+            case 2:
+                render_children.call(this);
+                break;
         }
+    };
 
-        //渲染子控件
-        if (cache > 0 && (items = this.__children) && items.length > 0)
+
+    //渲染子控件
+    function render_children() {
+
+        var items = this.__children,
+            cache;
+
+        if (items && items.length > 0)
         {
+            //如果有未处理子dom则添加
+            if (cache = items.__dom_children)
+            {
+                this.dom_children.appendChild(cache);
+                items.__dom_children = null;
+            }
+
             //重排
-            if (this.__arrange_dirty)
+            if (cache || this.__arrange_dirty)
             {
                 if ((cache = this.get_fontSize()) !== this.__compute_style.fontSize)
                 {
                     this.__compute_style.fontSize = cache;
-                }
-
-                //批量添加子dom
-                if (items[0].dom !== this.dom_children)
-                {
-                    cache = document.createDocumentFragment();
-
-                    for (var i = 0, _ = items.length ; i < _; i++)
-                    {
-                        cache.appendChild(items[i].dom);
-                    }
-
-                    this.dom_children.appendChild(cache);
                 }
 
                 this.contentWidth = this.clientWidth;
@@ -89,8 +93,8 @@ flyingon.IChildren = function (base) {
                 this.arrange();
 
                 cache = this.dom_children.style;
-                cache.width = this.contentWidth + "px";
-                cache.height = this.contentHeight + "px";
+                cache.width = this.contentWidth === this.clientWidth ? "100%" : this.contentWidth + "px";
+                cache.height = this.contentHeight === this.clientHeight ? "100%" : this.contentHeight + "px";
 
                 this.__arrange_dirty = false;
             }

@@ -119,6 +119,7 @@ flyingon.defineClass("Window", flyingon.Control, function (Class, base, flyingon
                 render.call(this);
             }
 
+            flyingon.__initializing = false;
         };
 
     })(this.render);

@@ -18,6 +18,12 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (Class, 
 
 
 
+    //隐藏子项
+    this.hide = function (item) {
+
+        (this.__dom_children || (this.__dom_children = document.createDocumentFragment())).appendChild(item.dom);
+    };
+
 
     //添加进集合时进行验证
     this.__fn_validate = function (index, item) {
@@ -34,13 +40,10 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (Class, 
 
             //添加上下级关系
             item.__parent = parent;
-            item.__ownerWindow = parent.__ownerWindow || null;
+            item.__ownerWindow = parent.__ownerWindow;
 
-            //如果父控件已测量过则直接添加至父控件
-            if (parent.__boxModel)
-            {
-                parent.dom_children.appendChild(item.dom);
-            }
+            //添加至临时集合
+            (this.__dom_children || (this.__dom_children = document.createDocumentFragment())).appendChild(item.dom);
 
             //非初始化状态则触发事件
             if (!flyingon.__initializing)
@@ -109,7 +112,7 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (Class, 
         item.__ownerWindow = null;
         item.__events_cache = null;  //清空缓存的事件
         item.__css_types = null;     //重置样式
-        item.__update_dirty = 0;
+        item.__update_dirty = 1;
 
         if ((item = item.__children) && item.length > 0)
         {
