@@ -1,6 +1,6 @@
 ﻿
 //页签控件
-flyingon.defineClass("TabControl", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("TabControl", flyingon.Control, function (base) {
 
 
 
@@ -10,7 +10,7 @@ flyingon.defineClass("TabControl", flyingon.Control, function (Class, base, flyi
 
 
 //页签页
-flyingon.defineClass("TabPage", flyingon.Panel, function (Class, base, flyingon) {
+flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
 
 
 

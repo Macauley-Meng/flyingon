@@ -1,7 +1,7 @@
 ﻿/*
 
 */
-flyingon.defineClass("Fieldset", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("Fieldset", flyingon.Control, function (base) {
 
 
 
@@ -31,7 +31,7 @@ flyingon.defineClass("Fieldset", flyingon.Control, function (Class, base, flying
     this.create_dom_template("fieldset", null, "<legend style=\"\"></legend><div style=\"position:relative;\"></div>");
 
 
-    
+
     //修改默认值
     this.defaultValue("paddingLeft", 2);
 

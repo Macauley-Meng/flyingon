@@ -71,7 +71,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
     //元素节点
-    var element_node = flyingon.defineClass(function (Class) {
+    var element_node = flyingon.defineClass(function () {
 
 
         Class.create = function (nodes, token, name) {
@@ -169,7 +169,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
     //元素节点集合 不同类型的节点组合成一个集合
-    var element_nodes = flyingon.defineClass(function (Class) {
+    var element_nodes = flyingon.defineClass(function () {
 
 
         Class.create = function (first, second) {
@@ -205,7 +205,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
     //元素属性 
-    var element_property = flyingon.defineClass(function (Class) {
+    var element_property = flyingon.defineClass(function () {
 
 
         Class.create = function (name) {
@@ -249,7 +249,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
     //伪类(不含伪元素)
-    var pseudo_class = flyingon.defineClass(function (Class) {
+    var pseudo_class = flyingon.defineClass(function () {
 
 
         Class.create = function (name) {

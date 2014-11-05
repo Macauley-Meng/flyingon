@@ -6,7 +6,7 @@
 //scale_y	垂直缩放绘图
 //move_x	水平移动绘图
 //move_y	垂直移动绘图
-flyingon.Matrix = flyingon.defineClass(function (Class, base, flyingon) {
+flyingon.Matrix = flyingon.defineClass(function () {
 
 
     Class.create = function (scale_x, skew_x, skew_y, scale_y, move_x, move_y) {

@@ -87,15 +87,7 @@ flyingon.IChildren = function (base) {
                     this.__compute_style.fontSize = cache;
                 }
 
-                this.contentWidth = this.clientWidth;
-                this.contentHeight = this.clientHeight;
-
                 this.arrange();
-
-                cache = this.dom_children.style;
-                cache.width = this.contentWidth === this.clientWidth ? "100%" : this.contentWidth + "px";
-                cache.height = this.contentHeight === this.clientHeight ? "100%" : this.contentHeight + "px";
-
                 this.__arrange_dirty = false;
             }
 
@@ -136,7 +128,7 @@ flyingon.IChildren = function (base) {
 
         if (items && items.length > 0)
         {
-            this.current_layout.call(this, items);
+            this.current_layout.__fn_arrange(this, items);
         }
     };
 

@@ -1,5 +1,6 @@
 ﻿//标签
-flyingon.defineClass("Label", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("Label", flyingon.Control, function (base) {
+
 
 
 
@@ -17,7 +18,7 @@ flyingon.defineClass("Label", flyingon.Control, function (Class, base, flyingon)
     this.create_dom_template("div", null, "<span style=\"position:relative;\"></span>");
 
 
-    
+
     //修改默认值
     this.defaultValue("paddingTop", 2);
 

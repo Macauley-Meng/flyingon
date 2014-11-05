@@ -2,7 +2,7 @@
 
 
 
-    function checked_base(type, Class, base, flyingon) {
+    function checked_base(type, base) {
 
 
 
@@ -16,6 +16,7 @@
             this.dom_text = dom.children[1];
 
             this.__fn_change_event(this.dom_input = dom.children[0]);
+
         };
 
 
@@ -104,12 +105,12 @@
 
 
     //复选框
-    flyingon.defineClass("CheckBox", flyingon.Control, function (Class, base, flyingon) {
+    flyingon.defineClass("CheckBox", flyingon.Control, function (base) {
 
 
 
         //扩展功能
-        checked_base.call(this, "checkbox", Class, base, flyingon);
+        checked_base.call(this, "checkbox", base);
 
 
     });
@@ -118,12 +119,12 @@
 
 
     //单选框
-    flyingon.defineClass("RadioButton", flyingon.Control, function (Class, base, flyingon) {
+    flyingon.defineClass("RadioButton", flyingon.Control, function (base) {
 
 
 
         //扩展功能
-        checked_base.call(this, "radio", Class, base, flyingon);
+        checked_base.call(this, "radio", base);
 
 
     });

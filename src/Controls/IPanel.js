@@ -82,7 +82,7 @@ flyingon.IPanel = function (base) {
 
         if (items && items.length > 0)
         {
-            (this.current_layout || layouts[this.get_layoutType()] || layout_unkown).call(this, items);
+            (this.current_layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this, items);
         }
     };
 

@@ -28,7 +28,7 @@ flyingon基于LGPLv3协议,无论您是个人或公司都可以免费使用!有�
 
 
 	//定义基类
-	flyingon.defineClass("BaseClass", function (Class, base, flyingon) {
+	flyingon.defineClass("BaseClass", function () {
 
 
 		//定义构造函数
@@ -60,7 +60,7 @@ flyingon基于LGPLv3协议,无论您是个人或公司都可以免费使用!有�
 
 
 	//定义子类(从BaseClass继承)
-	flyingon.defineClass("ChildClass", flyingon.BaseClass, function (Class, base, flyingon) {
+	flyingon.defineClass("ChildClass", flyingon.BaseClass, function (base) {
 
 
 		//子类会自动调用父类的构造函数
@@ -75,6 +75,9 @@ flyingon基于LGPLv3协议,无论您是个人或公司都可以免费使用!有�
 
 			//调用父类的方法
 			return base.instance1.call(this); 
+	
+			//也可这样调
+			return flyingon.ChildClass.base.instance1.call(this);
 		};
 
 
@@ -127,7 +130,7 @@ flyingon基于LGPLv3协议,无论您是个人或公司都可以免费使用!有�
 
 
 	//定义支持属性及事件的类
-	flyingon.defineClass("PEClass", flyingon.Component, function (Class, base, flyingon) {
+	flyingon.defineClass("PEClass", flyingon.Component, function (base) {
 	
 	
 	    //定义布尔型属性,默认值为false

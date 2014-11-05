@@ -5,7 +5,7 @@
 /*
 
 */
-flyingon.defineClass("Image", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("Image", flyingon.Control, function (base) {
 
 
 

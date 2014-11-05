@@ -1,6 +1,6 @@
 ﻿
 //弹出窗口
-flyingon.defineClass("Dialog", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("Dialog", flyingon.Control, function (base) {
 
 
 

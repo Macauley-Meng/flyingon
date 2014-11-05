@@ -3,7 +3,7 @@
 
 
 //文本框
-flyingon.defineClass("TextBox", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("TextBox", flyingon.Control, function (base) {
 
 
 
@@ -33,7 +33,7 @@ flyingon.defineClass("TextBox", flyingon.Control, function (Class, base, flyingo
 
 
 //密码框
-flyingon.defineClass("Password", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("Password", flyingon.Control, function (base) {
 
 
 

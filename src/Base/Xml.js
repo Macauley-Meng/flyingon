@@ -21,7 +21,7 @@ xmlDoc.documentElement.childNodes(0).hasChild,可以判断是否有子节点
 
 
 
-    flyingon.Xml = flyingon.defineClass(function (Class, base, flyingon) {
+    flyingon.Xml = flyingon.defineClass(function () {
 
 
         Class.create = function (xml_string) {

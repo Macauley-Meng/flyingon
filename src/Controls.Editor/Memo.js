@@ -5,7 +5,7 @@
 /*
 
 */
-flyingon.defineClass("Memo", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("Memo", flyingon.Control, function (base) {
 
 
 

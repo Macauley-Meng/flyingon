@@ -5,7 +5,7 @@
 /*
 
 */
-flyingon.defineClass("ComboBox", flyingon.TextButton, function (Class, base, flyingon) {
+flyingon.defineClass("ComboBox", flyingon.TextButton, function (base) {
 
 
 

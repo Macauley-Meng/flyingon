@@ -1,7 +1,7 @@
 ﻿
 
 //主窗口
-flyingon.defineClass("Window", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("Window", flyingon.Control, function (base) {
 
 
 
@@ -54,6 +54,7 @@ flyingon.defineClass("Window", flyingon.Control, function (Class, base, flyingon
                 host.appendChild(dom);
             }
         });
+
     };
 
 

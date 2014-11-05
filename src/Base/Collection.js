@@ -1,6 +1,6 @@
 ﻿//集合
 //注: 此集合不是数组,不能像数组一样手动修改length的值,否则可能会出现无法预知的错误
-flyingon.defineClass("Collection", function (Class, base, flyingon) {
+flyingon.defineClass("Collection", function () {
 
 
 

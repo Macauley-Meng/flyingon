@@ -1,7 +1,7 @@
 ﻿
 
 //事件类型基类
-flyingon.defineClass("Event", function (Class, base, flyingon) {
+flyingon.defineClass("Event", function () {
 
 
 
@@ -93,7 +93,7 @@ flyingon.defineClass("Event", function (Class, base, flyingon) {
 
 
 //鼠标事件类型
-flyingon.defineClass("MouseEvent", flyingon.Event, function (Class, base, flyingon) {
+flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
 
 
 
@@ -141,6 +141,7 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (Class, base, flying
             this.distanceX = dom_event.clientX - pressdown.clientX;
             this.distanceY = dom_event.clientY - pressdown.clientY;
         }
+
     };
 
 
@@ -238,7 +239,7 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (Class, base, flying
 
 
 //拖拉事件类型
-flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (Class, base, flyingon) {
+flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (base) {
 
 
 
@@ -287,8 +288,7 @@ flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (Class, base, fl
 
 
 ////触摸事件类型
-//flyingon.defineClass("TouchEvent", flyingon.Event, function (Class, base, flyingon) {
-
+//flyingon.defineClass("TouchEvent", flyingon.Event, function (base) {
 
 
 
@@ -328,6 +328,7 @@ flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (Class, base, fl
 
 //        //事件触发时间
 //        this.timeStamp = dom_event.timeStamp;
+
 //    };
 
 
@@ -337,7 +338,8 @@ flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (Class, base, fl
 
 
 //键盘事件类型
-flyingon.defineClass("KeyEvent", flyingon.Event, function (Class, base, flyingon) {
+flyingon.defineClass("KeyEvent", flyingon.Event, function (base) {
+
 
 
     Class.create_mode = "merge";
@@ -364,6 +366,7 @@ flyingon.defineClass("KeyEvent", flyingon.Event, function (Class, base, flyingon
 
         //键码
         this.which = dom_event.which;
+
     };
 
 
@@ -374,7 +377,8 @@ flyingon.defineClass("KeyEvent", flyingon.Event, function (Class, base, flyingon
 
 
 //值变更事件类型
-flyingon.defineClass("ChangeEvent", flyingon.Event, function (Class, base, flyingon) {
+flyingon.defineClass("ChangeEvent", flyingon.Event, function (base) {
+
 
 
     Class.create_mode = "merge";
@@ -385,6 +389,7 @@ flyingon.defineClass("ChangeEvent", flyingon.Event, function (Class, base, flyin
         this.oldValue = oldValue;
 
         this.value = value;
+
     };
 
 
@@ -404,10 +409,11 @@ flyingon.defineClass("ChangeEvent", flyingon.Event, function (Class, base, flyin
 
 
 //属性值变更事件类型
-flyingon.defineClass("PropertyChangeEvent", flyingon.Event, function (Class, base, flyingon) {
+flyingon.defineClass("PropertyChangeEvent", flyingon.Event, function (base) {
 
 
-    Class.create_mode = "replace";
+
+    Class.create = "replace";
 
     Class.create = function (name, value, oldValue) {
 
@@ -435,7 +441,8 @@ flyingon.defineClass("PropertyChangeEvent", flyingon.Event, function (Class, bas
 
 
 //滚动事件
-flyingon.defineClass("ScrollEvent", flyingon.Event, function (Class, base, flyingon) {
+flyingon.defineClass("ScrollEvent", flyingon.Event, function (base) {
+
 
 
     Class.create_mode = "replace";

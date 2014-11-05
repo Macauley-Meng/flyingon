@@ -1,5 +1,5 @@
 ﻿
-flyingon.defineClass("SerializeReader", function (Class, base, flyingon) {
+flyingon.defineClass("SerializeReader", function () {
 
 
 

@@ -680,17 +680,16 @@ window.flyingon = (function () {
     flyingon.defineClass = namespace_fn.prototype.defineClass = function (name, superclass, class_fn) {
 
 
-        var anonymous_type,
-            Class = function () { },
+        var Class_old = window.Class,
+            Class = window.Class = function () { }, //定义全局类型变量以定义构造函数及静态方法
+            anonymous,
             base,
             prototype,
-            fn,
-            chain,
-            body;
+            fn;
 
 
         //处理参数
-        if (anonymous_type = !name)
+        if (anonymous = !name)
         {
             name = "anonymous_type_" + anonymous_index++;
         }
@@ -699,16 +698,11 @@ window.flyingon = (function () {
             class_fn = superclass;
             superclass = name;
             name = "anonymous_type_" + anonymous_index++;
-            anonymous_type = true;
+            anonymous = true;
         }
         else if (name.match(/^\d|\W/))
         {
             throw new flyingon.Exception("Class name can only use letters and numbers and cannot begin with a digit!");
-        }
-
-        if (!anonymous_type && name in this)
-        {
-            throw new flyingon.Exception("名字空间\"{0}\"中已存在名为\"{1}\"的接口或类型!", [this.name || "flyingon", name]);
         }
 
         if (!class_fn)
@@ -753,7 +747,11 @@ window.flyingon = (function () {
 
 
         //类功能扩展
-        class_fn.call(prototype, Class, base, flyingon);
+        class_fn.call(prototype, base, flyingon);
+
+
+        //回滚全局对象
+        window.Class = Class_old;
 
 
         //处理构造函数(自动调用父类的构造函数)
@@ -831,23 +829,23 @@ window.flyingon = (function () {
 
 
         //绑定类型
-        prototype.__class_type = prototype.constructor = Class;
+        prototype.Class = prototype.constructor = Class;
 
         //定义类型检测方法
         prototype.is = is;
 
 
         //输出及注册类(匿名类不注册)
-        if (!anonymous_type)
+        if (!anonymous)
         {
             this[name] = class_list[prototype.xtype] = Class;
         }
 
 
         //类初始化完毕方法
-        if (fn = prototype.__Class_init__)
+        if (prototype.__Class_initialize__)
         {
-            fn.call(prototype, Class, base, flyingon);
+            prototype.__Class_initialize__(Class, base);
         }
 
 
@@ -1222,7 +1220,6 @@ flyingon.IEvent = function () {
 
     var trace_list,         //跟踪类型集
         trace_tree,         //跟踪树
-        trace_offset,       //跟踪时间偏差
         trace_pause,        //是否停止跟踪
         trace_parent,       //上级跟踪数据
 
@@ -1323,7 +1320,7 @@ flyingon.IEvent = function () {
             }
 
             filter.constructor = true;
-            filter.__class_type = true;
+            filter.Class = true;
 
             var keys = getOwnPropertyNames(target),
                 key;
@@ -1359,7 +1356,6 @@ flyingon.IEvent = function () {
             result = fn.apply(this, arguments);
 
             current.time = new Date() - date;
-            current.offset += trace_offset * current.items.length;
             current.time2 = Math.round(current.time - current.offset);
 
             if (trace_parent = parent)
@@ -1371,38 +1367,6 @@ flyingon.IEvent = function () {
 
             return result;
         };
-    };
-
-
-    //计算执行时间偏差(不够准确)
-    function execute_offset() {
-
-        var data = [], date, time;
-
-        handle_type("Array", Array, ["push"]);
-
-        date = new Date();
-
-        for (var i = 0; i < 100000; i++)
-        {
-            data.push(i);
-        }
-
-        time = new Date() - date;
-
-        flyingon.trace_remove("Array");
-
-        trace_tree = [];
-
-        data = [];
-        date = new Date();
-
-        for (var i = 0; i < 100000; i++)
-        {
-            data.push(i);
-        }
-
-        return (time - (new Date() - date)) / 100000;
     };
 
 
@@ -1429,11 +1393,6 @@ flyingon.IEvent = function () {
         trace_parent = null;
         trace_list = {};
         trace_tree = [];
-
-        if (trace_offset === undefined)
-        {
-            trace_offset = execute_offset();
-        }
 
         if (trace)
         {

@@ -73,7 +73,7 @@
 
 
         //定义基类
-        flyingon.defineClass("BaseClass", function (Class, base, flyingon) {
+        flyingon.defineClass("BaseClass", function () {
 
 
             //定义构造函数
@@ -86,10 +86,11 @@
 
 
             //定义静态方法
-            Class.static1 = function () {
+            this.defineStatic("static1", function () {
 
                 return "static";
-            };
+
+            });
 
 
             //实现接口
@@ -106,7 +107,7 @@
 
 
         //定义子类(从BaseClass继承)
-        flyingon.defineClass("ChildClass", flyingon.BaseClass, function (Class, base, flyingon) {
+        flyingon.defineClass("ChildClass", flyingon.BaseClass, function (base) {
 
 
             //子类会自动调用父类的构造函数
@@ -120,7 +121,10 @@
             this.instance1 = function () {
 
                 //调用父类的方法
-                return base.instance1.call(this); //base.instance1();
+                return base.instance1.call(this);
+
+                //也可这样调
+                //flyingon.ChildClass.base.instance1.call(this);
             };
 
             this.instance2 = function () {
@@ -169,7 +173,7 @@
 
 
         //定义支持属性及事件的类
-        flyingon.defineClass("PEClass", flyingon.Component, function (Class, base, flyingon) {
+        flyingon.defineClass("PEClass", flyingon.Component, function (base) {
 
 
             //定义布尔型属性,默认值为false

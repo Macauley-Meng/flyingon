@@ -472,10 +472,6 @@
         //number	整数值(负整数表示横跨至倒数第几列)
         style("column-span", 0, "last-value");
 
-        //跳空列数(此值仅在当前布局类型为网格布局(grid)时有效)
-        //number	正整数值
-        style("spacing-columns", 0, "last-value");
-
         //指定列索引(此值仅在当前布局类型为网格布局(grid)时有效)
         //number	整数值(0:不固定 正整数:指定使用第几列 负整数:指定使用倒数第几列)
         style("column-index", 0, "last-value");

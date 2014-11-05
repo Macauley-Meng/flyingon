@@ -1,6 +1,6 @@
 ﻿
 //数据绑定
-flyingon.defineClass("DataBinding", function (Class, base, flyingon) {
+flyingon.defineClass("DataBinding", function () {
 
 
 

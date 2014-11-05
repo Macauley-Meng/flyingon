@@ -1,11 +1,11 @@
 ﻿//DataTable
-flyingon.defineClass("DataTable", function (Class, base, flyingon) {
+flyingon.defineClass("DataTable", function (base) {
 
 
 
 
     //表格列
-    var column_type = flyingon.defineClass(function (Class, base, flyingon) {
+    var column_type = flyingon.defineClass(function () {
 
 
         var target = this;
@@ -58,7 +58,7 @@ flyingon.defineClass("DataTable", function (Class, base, flyingon) {
 
 
 
-    var column_collection = flyingon.defineClass(function (Class, base, flyingon) {
+    var column_collection = flyingon.defineClass(function () {
 
 
         Class.create = function (table) {
@@ -190,14 +190,13 @@ flyingon.defineClass("DataTable", function (Class, base, flyingon) {
 
 
 
-    var row_type = flyingon.defineClass(function (Class, base, flyingon) {
+    var row_type = flyingon.defineClass(function () {
 
 
         Class.create = function (table, data) {
 
             this.__table = table;
             this.__data = data || {};
-
         };
 
 
@@ -342,7 +341,7 @@ flyingon.defineClass("DataTable", function (Class, base, flyingon) {
 
 
 
-    var row_collection = flyingon.defineClass(function (Class, base, flyingon) {
+    var row_collection = flyingon.defineClass(function () {
 
 
         Class.create = function (table) {

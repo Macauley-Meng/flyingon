@@ -2,7 +2,7 @@
 
 
 //组件基类(此类开始支持属性,事件,序列化及反序列化)
-flyingon.IComponent = function (flyingon) {
+flyingon.IComponent = function () {
 
 
 
@@ -400,7 +400,7 @@ flyingon.IComponent = function (flyingon) {
     //复制生成新控件
     this.copy = function () {
 
-        var result = new this.__class_type(),
+        var result = new this.Class(),
             fields1 = result.__fields,
             fields2 = this.__fields,
             names = Object.getOwnPropertyNames(fields2),
@@ -544,7 +544,7 @@ flyingon.IComponent = function (flyingon) {
 
 
 //组件基类(支持属性,事件,序列化及反序列化)
-flyingon.defineClass("Component", function (Class, base, flyingon) {
+flyingon.defineClass("Component", function () {
 
 
 
@@ -557,6 +557,6 @@ flyingon.defineClass("Component", function (Class, base, flyingon) {
 
 
     //扩展组件接口
-    flyingon.IComponent.call(this, flyingon);
+    flyingon.IComponent.call(this);
 
 });

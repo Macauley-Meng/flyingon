@@ -3,7 +3,7 @@
 控件集合
 
 */
-flyingon.defineClass("ControlCollection", flyingon.Collection, function (Class, base, flyingon) {
+flyingon.defineClass("ControlCollection", flyingon.Collection, function (base) {
 
 
 
@@ -21,7 +21,19 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (Class, 
     //隐藏子项
     this.hide = function (item) {
 
-        (this.__dom_children || (this.__dom_children = document.createDocumentFragment())).appendChild(item.dom);
+        var children = this.__dom_children || (this.__dom_children = document.createDocumentFragment());
+
+        if (item.dom)
+        {
+            children.appendChild(item.dom);
+        }
+        else
+        {
+            for (var i = +item, _ = this.length; i < _; i++)
+            {
+                children.appendChild(this[i].dom);
+            }
+        }
     };
 
 

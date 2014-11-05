@@ -2,7 +2,7 @@
 
 
 //控件类
-flyingon.defineClass("Control", function (Class, base, flyingon) {
+flyingon.defineClass("Control", function () {
 
 
 
@@ -20,7 +20,7 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
 
 
     //扩展组件接口
-    flyingon.IComponent.call(this, flyingon);
+    flyingon.IComponent.call(this);
 
 
 
@@ -999,8 +999,7 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
         this.create_dom_template = function (tagName, cssText, attributes) {
 
             //计算dom盒模型是否包含边框
-            var dom = document.createElement(tagName = tagName || "div"),
-                type = this.__class_type;
+            var dom = document.createElement(tagName = tagName || "div");
 
             if (attributes && attributes.type)
             {
@@ -1112,7 +1111,7 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
 
 
     //类初始化方法
-    this.__Class_init__ = function (Class, base, flyingon) {
+    this.__Class_initialize__ = function (Class, base) {
 
         //处理className
         var dom = this.dom_template,
@@ -1125,6 +1124,7 @@ flyingon.defineClass("Control", function (Class, base, flyingon) {
 
         //选择器名称
         this.selector_rule = dom.className = Class.xtype.replace(/\./g, "-");
+
     };
 
 

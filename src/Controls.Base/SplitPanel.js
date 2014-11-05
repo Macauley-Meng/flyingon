@@ -1,5 +1,5 @@
 ﻿//分隔面板
-flyingon.defineClass("SplitPanel", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("SplitPanel", flyingon.Control, function (base) {
 
 
 
@@ -16,6 +16,7 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (Class, base, flyi
             this.panel1,
             this.splitter1 = this.__fn_create_splitter(this.panel1),
             this.panel2);
+
     };
 
 
@@ -218,7 +219,7 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (Class, base, flyi
 
 
 //分隔面板(三栏)
-flyingon.defineClass("SplitPanel2", flyingon.SplitPanel, function (Class, base, flyingon) {
+flyingon.defineClass("SplitPanel2", flyingon.SplitPanel, function (base) {
 
 
 
@@ -232,6 +233,8 @@ flyingon.defineClass("SplitPanel2", flyingon.SplitPanel, function (Class, base, 
             this.splitter2 = this.__fn_create_splitter(this.panel3),
             this.panel3);
     };
+
+
 
 
 

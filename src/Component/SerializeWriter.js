@@ -1,5 +1,5 @@
 ﻿
-flyingon.defineClass("SerializeWriter", function (Class, base, flyingon) {
+flyingon.defineClass("SerializeWriter", function () {
 
 
 
@@ -288,7 +288,7 @@ flyingon.defineClass("SerializeWriter", function (Class, base, flyingon) {
 
 
 
-flyingon.defineClass("XmlSerializeWriter", flyingon.SerializeWriter, function (Class, base, flyingon) {
+flyingon.defineClass("XmlSerializeWriter", flyingon.SerializeWriter, function (base) {
 
 
 

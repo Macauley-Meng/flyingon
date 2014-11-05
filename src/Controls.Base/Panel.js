@@ -1,6 +1,6 @@
 ﻿
 //面板控件
-flyingon.defineClass("Panel", flyingon.Control, function (Class, base, flyingon) {
+flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
 

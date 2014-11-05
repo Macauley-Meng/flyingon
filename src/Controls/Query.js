@@ -1,6 +1,6 @@
 ﻿
 //选择器
-flyingon.defineClass("Query", function (Class, base, flyingon) {
+flyingon.defineClass("Query", function () {
 
 
 
@@ -34,7 +34,6 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
                     return;
             }
         }
-
     };
 
 
@@ -485,7 +484,7 @@ flyingon.defineClass("Query", function (Class, base, flyingon) {
     //保存状态
     this.save = function () {
 
-        var query = new Class();
+        var query = new this.Class();
 
         query.push.apply(query, this);
         query.__previous = this;
