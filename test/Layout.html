@@ -13,13 +13,11 @@
 
         <div id="drag" style="background-color: yellow;">
 
-            <input type="button" value="Paint" onclick="paint()" />
-
-            <span style="width: 10px"></span>
             <input type="button" value="line" onclick="layout('line')" />
             <input type="button" value="flow" onclick="layout('flow')" />
-            <input type="button" value="page" onclick="layout('page')" />
             <input type="button" value="dock" onclick="layout('dock')" />
+            <input type="button" value="cascade" onclick="layout('cascade')" />
+            <input type="button" value="page" onclick="layout('page')" />
             <input type="button" value="grid" onclick="layout('grid')" />
             <input type="button" value="table" onclick="layout('table')" />
             <input type="button" value="absolute" onclick="layout('absolute')" />
@@ -32,9 +30,37 @@
             <input type="button" value="ltr" onclick="direction('ltr')" />
             <input type="button" value="rtl" onclick="direction('rtl')" />
 
+            <span style="width: 10px"></span>
+            <input type="button" value="Paint" onclick="paint()" />
+
+            <span style="width: 50px"></span>
+            <span style="margin-left: 10px;">spacingWidth<input id="panel1" type="text" style="width:50px;" value="10px" onchange="sync_panel()" /></span>
+            <span style="margin-left: 10px;">spacingHeight<input id="panel2" type="text" style="width:50px;" value="10px" onchange="sync_panel()" /></span>
+
+            <span style="width: 10px"></span>
+            <span style="margin-left: 10px;">alignX<input id="button1" type="text" style="width:50px;" value="center" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px;">alignY<input id="button2" type="text" style="width:50px;" value="middle" onchange="sync_button()" /></span>
+
         </div>
 
-        <div id="message" style="height:30px;">
+        <div id="detail" style="height:30px;">
+
+            <span style="margin-left: 10px;" tag="flow">layoutWidth<input type="text" style="width:50px;" value="0" onchange="sync_panel()" /></span>
+            <span style="margin-left: 10px;" tag="flow">layoutHeight<input type="text" style="width:50px;" value="0" onchange="sync_panel()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="page">layoutPage<input type="text" style="width:50px;" value="0" onchange="sync_panel()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="4" onchange="sync_panel()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="4" onchange="sync_panel()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="table">layoutTable<input type="text" style="width: 400px; " value="*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]" onchange="sync_panel()" /></span>
+
+            <span style="width: 50px"></span>
+            <span style="margin-left: 10px;" tag="flow">newline<input type="text" style="width:50px;" value="false" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="grid">columnIndex<input type="text" style="width:50px;" value="0" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="absolute">left<input type="text" style="width:50px;" value="0" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
 
         </div>
 
@@ -50,17 +76,23 @@
     <script type="text/javascript">
 
 
-        var date = new Date();
+        var inputs = document.getElementsByTagName("input");
 
-        for (var i = 0; i < 1000; i++)
+        for (var i = 0; i < inputs.length; i++)
         {
-            new flyingon.Button();
+            inputs[i].onkeydown = function (event) {
+
+                event = event || window.event;
+
+                if (event.keyCode === 13)
+                {
+                    this.blur();
+                }
+            };
         }
 
-        //alert(new Date() - date);
 
-
-        date = new Date();
+        var date = new Date();
 
 
         var w = new flyingon.Window(host).sets({
@@ -86,8 +118,8 @@
                 spacingWidth: "10px",
                 spacingHeight: "10px",
 
-                layoutColumns: "* ...5", //4
-                layoutRows: "25px ...8",   //4
+                layoutColumns: "6", //4
+                layoutRows: "6",   //4
 
                 layoutTable: "*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]"
             });
@@ -99,8 +131,6 @@
 
                     left: i % 5 * 120 + "px",
                     top: i / 5 * 30 + "px",
-                    //spacingColumns: 4,
-                    //columnIndex: -3,
                     text: "button" + i
                 });
 
@@ -108,8 +138,6 @@
                 {
                     case 0:
                         ctrl.set_dock("left");
-                        ctrl.set_columnSpan(-1);
-                        ctrl.set_rowSpan(1);
                         break;
 
                     case 1:
@@ -139,21 +167,47 @@
         alert(new Date() - date);
 
 
+
+
+
+
+        function sync_panel() {
+
+            var children = detail.children,
+                layoutWidth = children[0].children[0].value,
+                layoutHeight = children[1].children[0].value,
+                layoutPage = children[2].children[0].value,
+                layoutRows = children[3].children[0].value,
+                layoutColumns = children[4].children[0].value,
+                layoutTable = children[5].children[0].value;
+
+            children = w.get_children();
+
+            for (var i = 0; i < children.length; i++)
+            {
+                var panel = children[i];
+
+                panel.set_spacingWidth(panel1.value);
+                panel.set_spacingHeight(panel2.value);
+
+                panel.set_layoutWidth(layoutWidth);
+                panel.set_layoutHeight(layoutHeight);
+                panel.set_layoutPage(layoutPage);
+                panel.set_layoutRows(layoutRows);
+                panel.set_layoutColumns(layoutColumns);
+                panel.set_layoutTable(layoutTable);
+            }
+        };
+
+
+
+
         function paint() {
 
-            var control = w.get_children()[0].get_children()[0];
             var date = new Date();
 
-            for (var i = 0; i < 10000; i++)
-            {
-                //control.measure(100, 100);
-                control.__css_types = null;
-                control.update();
-
-                control.render();
-            }
-
-            //w.update();
+            w.update(true);
+            w.render();
 
             alert(new Date() - date);
         };
@@ -161,9 +215,19 @@
 
         function layout(value) {
 
+            var children = detail.children;
+
+            for (var i = 0; i < children.length; i++)
+            {
+                var node = children[i];
+                var attr = node.getAttribute("tag");
+
+                node.style.display = attr && attr !== value ? "none" : "";
+            }
+
             var date = new Date();
 
-            var children = w.get_children();
+            children = w.get_children();
 
             for (var i = 0; i < children.length; i++)
             {
@@ -175,7 +239,6 @@
 
             alert(new Date() - date);
         };
-
 
 
         function layoutVertical(value) {
@@ -215,31 +278,54 @@
 
 
 
-        //w.on("mousedown", function (event) {
 
-        //});
+        var button = w.get_children()[0].get_children()[0];
 
 
-        w.on("mousemove", function (event) {
+        function sync_button() {
 
-            //var offset = event.offset(event.target);
+            if (button)
+            {
+                var children = detail.children;
 
-            //message.innerHTML = "target:" + event.target.xtype + ":" + event.target.get_uniqueId() + " x:" + offset.x + " y:" + offset.y;
+                button.set_alignX(button1.value);
+                button.set_alignY(button2.value);
+
+                button.set_newline(children[7].children[0].value == true);
+                button.set_dock(children[8].children[0].value);
+                button.set_rowSpan(children[9].children[0].value);
+                button.set_columnSpan(children[10].children[0].value);
+                button.set_columnIndex(children[11].children[0].value);
+                button.set_spacingCells(children[12].children[0].value);
+                button.set_left(children[13].children[0].value);
+                button.set_top(children[14].children[0].value);
+
+                button.get_parent().update(true);
+            }
+        };
+
+
+        w.on("mousedown", function (event) {
+
+            if (event.target.is(flyingon.Button))
+            {
+                var children = detail.children;
+
+                button = event.target;
+
+                button1.value = button.get_alignX();
+                button2.value = button.get_alignY();
+
+                children[7].children[0].value = button.get_newline() ? "true" : "false";
+                children[8].children[0].value = button.get_dock();
+                children[9].children[0].value = button.get_rowSpan();
+                children[10].children[0].value = button.get_columnSpan();
+                children[11].children[0].value = button.get_columnIndex();
+                children[12].children[0].value = button.get_spacingCells();
+                children[13].children[0].value = button.get_left();
+                children[14].children[0].value = button.get_top();
+            }
         });
-
-
-
-
-        w.on("click", function (event) {
-
-            var offset = event.offset(event.target);
-
-        });
-
-        //w.on("mouseover", function (event) {
-
-        //    document.title = "source :" + event.control.uniqueId + " target:" + event.target.uniqueId;
-        //});
 
 
 
