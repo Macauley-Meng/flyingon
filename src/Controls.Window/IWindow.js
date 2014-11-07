@@ -18,6 +18,8 @@
 
             fix_event = flyingon.__fn_fix_event,
 
+            dragdrop = flyingon.dragdrop,
+
             draggable,          //拖动方式
             resizable,          //调整大小的方式
             resize_side,        //可调整大小的边
@@ -77,37 +79,45 @@
                 event.which = event.button & 1 ? 1 : (event.button & 2 ? 3 : 2);
             }
 
-            //可调整大小或可拖动
-            if (resize_side || ((cache = target.get_draggable()) !== "none" && flyingon.dragdrop.start(target, cache, event) && (draggable = cache)))
+            //可调整大小 触控版目前不支持调整大小
+            if (resize_side)
             {
-                //如果是调整大小需转换target
-                if (resize_side)
-                {
-                    target = resize_side.target;
-                }
+                //转换target
+                target = resize_side.target;
+
+                //禁止点击事件
+                flyingon.__disable_click = flyingon.__disable_dbclick = true;
 
                 //记录鼠标按下dom事件
-                save_pressdown(target, event, true);
+                save_pressdown(target, event);
+            }
+            else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
+            {
+                //记录状态
+                draggable = cache;
 
-                //记录开始位置及大小
-                pressdown.offsetLeft = target.offsetLeft;
-                pressdown.offsetTop = target.offsetTop;
-                pressdown.offsetWidth = target.offsetWidth;
-                pressdown.offsetHeight = target.offsetHeight;
+                //禁止点击事件
+                flyingon.__disable_click = flyingon.__disable_dbclick = true;
+
+                //记录鼠标按下dom事件
+                save_pressdown(target, event);
             }
             else if (target && target.get_enabled())
             {
+                //如果未绑定自定义事件则绑定
+                if (!target.dom.onscroll)
+                {
+                    target.dom.onscroll = onscroll;
+                }
+
                 //记录鼠标按下dom事件
-                save_pressdown(target, event, false);
+                save_pressdown(target, event);
+
+                //设置活动状态
+                target.__fn_to_active(true);
 
                 //分发事件
                 target.dispatchEvent(new MouseEvent("mousedown", event));
-
-                //设置活动状态(滚动条不处理,否则在IE7时无法拖动滚动条) 
-                if (!event.target.getAttribute("scrollbar"))
-                {
-                    target.__fn_to_active(true);
-                }
             }
         };
 
@@ -126,15 +136,14 @@
                 }
                 else if (draggable) //处理拖动
                 {
-                    flyingon.dragdrop.move(dom_target(event), event);
+                    dragdrop.move(dom_target(event), event, pressdown);
                 }
                 else  //启用捕获
                 {
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
                 }
             }
-            else if ((target = dom_target(event || (event = fix_event(window.event)))) &&
-                    target.get_enabled() && !resize_check(target, event)) //调整大小状态不触发相关事件
+            else if ((target = dom_target(event)) && target.get_enabled() && !resize_check(target, event)) //调整大小状态不触发相关事件
             {
                 var source = hover_control;
 
@@ -162,7 +171,7 @@
 
         events.mouseup = function (event) {
 
-            var target, cache;
+            var target;
 
             event || (event = fix_event(window.event));
 
@@ -175,7 +184,7 @@
             else if (draggable) //如果处于拖动状态则停止拖动
             {
                 //停止拖动
-                flyingon.dragdrop.stop(event);
+                dragdrop.stop(event, pressdown, this === host);
                 draggable = null;
             }
             else if (pressdown && (target = pressdown.capture))
@@ -285,29 +294,44 @@
         };
 
 
-        ["contextmenu", "scroll"].forEach(function (name) {
+        events.contextmenu = function (event) {
 
-            events[name] = function (event) {
+            return dom_target(event || fix_event(window.event)).dispatchEvent("contextmenu");
+        };
 
-                return dom_target(event || fix_event(window.event)).dispatchEvent(name);
-            };
 
-        }, events);
+
+
+        //直接绑定事件至dom, 解决某些事件(如scroll)无法在父控件正确捕获的问题
+        function onscroll(event) {
+
+            var target = dom_target(event || fix_event(window.event)),
+                result = target.dispatchEvent("scroll");
+
+            target.__scrollLeft = target.dom.scrollLeft;
+            target.__scrollTop = target.dom.scrollTop;
+
+            pressdown = null; //IE滚动时无法触发mouseup事件
+
+            return result;
+        };
 
 
 
         //保存鼠标按下事件
-        function save_pressdown(target, event, disable_click) {
+        function save_pressdown(target, event) {
 
-            //禁止点击事件
-            flyingon.__disable_click = flyingon.__disable_dbclick = disable_click;
 
             return pressdown = {
 
                 capture: target,
                 clientX: event.clientX,
                 clientY: event.clientY,
-                which: event.which
+                which: event.which,
+                offsetLeft: target.offsetLeft,
+                offsetTop: target.offsetTop,
+                offsetWidth: target.offsetWidth,
+                offsetHeight: target.offsetHeight
             };
         };
 
@@ -587,7 +611,7 @@
         this.defineEvent("deactivate");
 
 
-        
+
         //设置当前窗口为活动窗口
         this.active = function () {
 

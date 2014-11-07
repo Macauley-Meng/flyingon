@@ -59,7 +59,7 @@ flyingon.defineClass("Query", function () {
             switch (node.token)
             {
                 case "@":
-                    if (target.selector_rule !== node.name)
+                    if (target.css_className !== node.name)
                     {
                         return;
                     }

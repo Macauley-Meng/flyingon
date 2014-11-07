@@ -242,45 +242,12 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
 flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (base) {
 
 
-
     //拖动目标
     this.dragTargets = null;
 
     //接收目标
     this.dropTarget = null;
-
-    //是否拖动目标控件的副本
-    this.drag_copy = false;
-
-
-    //执行放下动作
-    this.drop = function (copy) {
-
-        var target = this.dropTarget,
-            items = this.dragTargets,
-            length;
-
-        if (target && items && (length = items.length) > 0)
-        {
-            if (copy)
-            {
-                var children = target.children;
-
-                for (var i = 0; i < length; i++)
-                {
-                    children.append(items[i].copy());
-                }
-            }
-            else
-            {
-                for (var i = 0; i < length; i++)
-                {
-                    items[i].parent = target;
-                }
-            }
-        }
-    };
-
+    
 
 });
 

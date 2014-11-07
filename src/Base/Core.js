@@ -685,7 +685,9 @@ window.flyingon = (function () {
             anonymous,
             base,
             prototype,
-            fn;
+            fn,
+            chain,
+            body;
 
 
         //处理参数

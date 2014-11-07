@@ -517,7 +517,7 @@
         //控件最小宽度和最小高度
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   父控件客户区宽或高度的百分比
-        styles("min-?", ["width", "height"], 0, {
+        styles("min-?", ["width", "height"], "0", {
 
             attributes: "layout|no",
             minValue: 0
@@ -526,7 +526,7 @@
         //控件最大宽度和最大高度
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   父控件客户区宽或高度的百分比
-        styles("max-?", ["width", "height"], 0, "last-value");
+        styles("max-?", ["width", "height"], "0", "last-value");
 
         //控件层叠顺序
         //number	整数值 
@@ -1209,7 +1209,7 @@
         }
 
         //添加类型class
-        if (cache = types[name = "@" + target.selector_rule])
+        if (cache = types[name = "@" + target.css_className])
         {
             result.push(name);
 
@@ -1299,7 +1299,7 @@
             switch (node.token)
             {
                 case "@":
-                    if (target.selector_rule !== node.name)
+                    if (target.css_className !== node.name)
                     {
                         return false;
                     }

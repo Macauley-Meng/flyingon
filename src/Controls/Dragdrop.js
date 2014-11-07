@@ -3,52 +3,43 @@
 
 
 
-    //是否可放下
-    var droppable;
 
+    var __ownerWindow = null,  //所属窗口
 
-    //所属窗口
-    this.ownerWindow = null;
+        __target = null, //目标控件
 
-    //拖动目标
-    this.dragTargets = null;
+        __dragTargets = null, //拖动目标
 
-    //目标控件
-    this.target = null;
+        __dropTarget = null, //接收目标
 
-    //接收目标
-    this.dropTarget = null;
+        __draggable = null,//拖动类型
 
-    //关联的按下时dom事件
-    this.pressdown = null;
+        __droppable, //是否可放下
 
-    //拖动类型
-    this.draggable = null;
+        __dom_proxy = document.createElement("div"); //代理dom
 
 
 
 
     //分发事件
-    this.dispatchEvent = function (target, type, dom_event) {
+    this.dispatchEvent = function (target, type, event, pressdown) {
 
-        var event = new flyingon.DragEvent(type, dom_event, this.pressdown);
+        event = new flyingon.DragEvent(type, event, pressdown);
+        event.dragTargets = __dragTargets;
+        event.dropTarget = __dropTarget;
 
-        event.dragTargets = this.dragTargets;
-        event.dropTarget = this.dropTarget;
-
-        target.dispatchEvent(event);
-
-        return event;
+        return target.dispatchEvent(event);
     };
 
 
     //开始拖动
-    this.start = function (target, draggable, pressdown) {
+    this.start = function (target, draggable, event) {
 
         //分发拖拉事件
-        var event = new flyingon.DragEvent("dragstart", pressdown);
+        var dom;
 
         //拖动目标
+        event = new flyingon.DragEvent("dragstart", event);
         event.dragTargets = [target];
 
         //取消则返回
@@ -57,80 +48,106 @@
             return false;
         }
 
+        //缓存状态
+        __ownerWindow = target.get_ownerWindow()
+        __target = target;
+        __draggable = draggable;
+
         //获取被拖动控件集合
-        this.dragTargets = event.dragTargets || [target];
+        __dragTargets = event.dragTargets || [target];
 
-        this.ownerWindow = target.get_ownerWindow();
+        //创建代理dom
+        for (var i = 0, _ = __dragTargets.length; i < _; i++)
+        {
+            if ((target = __dragTargets[i]) && target.dom)
+            {
+                dom = target.dom.cloneNode(true);
 
-        this.target = target;
-        this.draggable = draggable;
-        this.pressdown = pressdown;
+                __dom_proxy.appendChild(dom);
+            }
+        }
+
+        __dom_proxy.style.cssText = "position:absolute;left:0;top:0;"
+        __ownerWindow.dom_children.appendChild(__dom_proxy);
 
         return true;
     };
 
 
     //移动
-    this.move = function (dropTarget, dom_event) {
+    this.move = function (dropTarget, event, pressdown) {
 
-        var target = this.target;
+        //移到代理dom
+        if (__draggable !== "vertical")
+        {
+            __dom_proxy.style.left = event.clientX - pressdown.clientX + "px";
+        }
+
+        if (__draggable !== "horizontal")
+        {
+            __dom_proxy.style.top = event.clientY - pressdown.clientY + "px";
+        }
 
         //如果放置目标与当前对象相同则设置当前对象的父对象为drop对象
-        if (dropTarget === target)
+        if (dropTarget === __target)
         {
-            dropTarget = target.__parent;
+            dropTarget = __target.__parent;
         }
 
         //如果放置目标发生变化则分发相关事件
-        if (this.dropTarget !== dropTarget)
+        if (__dropTarget !== dropTarget)
         {
-            droppable = false;
+            __droppable = false;
 
-            if (this.dropTarget)
+            if (__dropTarget)
             {
-                this.dispatchEvent(this.dropTarget, "dragleave", dom_event);
+                this.dispatchEvent(__dropTarget, "dragleave", event, pressdown);
             }
 
             if (dropTarget && dropTarget.droppable)
             {
-                this.dropTarget = dropTarget;
+                __dropTarget = dropTarget;
 
-                if (this.dispatchEvent(dropTarget, "dragenter", dom_event) !== false)
+                if (this.dispatchEvent(dropTarget, "dragenter", event, pressdown) !== false)
                 {
-                    droppable = true;
+                    __droppable = true;
                 }
             }
             else
             {
-                this.dropTarget = null;
+                __dropTarget = null;
             }
         }
 
         //分发drag事件
-        var event = this.dispatchEvent(target, "drag", dom_event);
+        this.dispatchEvent(__target, "drag", event, pressdown);
 
         //分发dragover事件
         if (dropTarget)
         {
-            this.dispatchEvent(dropTarget, "dragover", dom_event);
+            this.dispatchEvent(dropTarget, "dragover", event, pressdown);
         }
     };
 
 
     //停止拖动
-    this.stop = function (dom_event, cancel) {
+    this.stop = function (event, pressdown, cancel) {
 
         //分发drop事件
-        if (cancel !== true && droppable && this.dropTarget)
+        if (cancel !== true && __droppable && __dropTarget)
         {
-            this.dispatchEvent(this.dropTarget, "drop", dom_event);
+            this.dispatchEvent(__dropTarget, "drop", event, pressdown);
         }
 
         //分发dragend事件
-        this.dispatchEvent(this.target, "dragend", dom_event);
+        this.dispatchEvent(__target, "dragend", event, pressdown);
+
+        //清空代理dom
+        __ownerWindow.dom_children.removeChild(__dom_proxy);
+        __dom_proxy.innerHTML = "";
 
         //清空缓存对象
-        this.dragTargets = this.dropTarget = this.ownerWindow = this.target = this.pressdown = null;
+        __ownerWindow = __target = __dragTargets = __dropTarget = null;
     };
 
 

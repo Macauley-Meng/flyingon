@@ -133,7 +133,7 @@ flyingon.defineClass("Control", function () {
                 this.__className1 = fields.className = "";
             }
 
-            if (this.dom.className !== (value = this.selector_rule + this.__className1 + this.__className2))
+            if (this.dom.className !== (value = this.css_className + this.__className1 + this.__className2))
             {
                 this.dom.className = value;
             }
@@ -231,7 +231,7 @@ flyingon.defineClass("Control", function () {
             var keys = [], cache;
 
             //添加类型class
-            keys.push(target.selector_rule);
+            keys.push(target.css_className);
 
             //class 后置优先
             if (cache = target.__class_list)
@@ -248,44 +248,53 @@ flyingon.defineClass("Control", function () {
         };
 
 
+        //获取当前状态的className
+        function class_name(target) {
+
+            var states = target.__states,
+                keys = target.__class_keys || class_keys(target),
+                className = "";
+
+            if (states.disabled)
+            {
+                className = " " + keys.join("--disabled");
+            }
+            else
+            {
+                if (states.checked)
+                {
+                    className += " " + keys.join("--checked");
+                }
+
+                if (states.focus)
+                {
+                    className += " " + keys.join("--focus");
+                }
+
+                if (states.hover)
+                {
+                    className += " " + keys.join("--hover");
+                }
+
+                if (states.active)
+                {
+                    className += " " + keys.join("--active");
+                }
+            }
+
+            return target.css_className + target.__className1 + (target.__className2 = className);
+        };
+
+
         //更新控件状态
         function update() {
 
             for (var id in registry_states)
             {
                 var target = registry_states[id],
-                    states = target.__states,
-                    keys = target.__class_keys || class_keys(target),
-                    className = "";
+                    className = class_name(target);
 
-                if (states.disabled)
-                {
-                    className = " " + keys.join("--disabled");
-                }
-                else
-                {
-                    if (states.checked)
-                    {
-                        className += " " + keys.join("--checked");
-                    }
-
-                    if (states.focus)
-                    {
-                        className += " " + keys.join("--focus");
-                    }
-
-                    if (states.hover)
-                    {
-                        className += " " + keys.join("--hover");
-                    }
-
-                    if (states.active)
-                    {
-                        className += " " + keys.join("--active");
-                    }
-                }
-
-                if (target.dom.className !== (className = target.selector_rule + target.__className1 + (target.__className2 = className)))
+                if (target.dom.className !== className)
                 {
                     target.dom.className = className;
 
@@ -311,19 +320,39 @@ flyingon.defineClass("Control", function () {
 
             this["__fn_to_" + name] = function (value) {
 
-                var states = this.__states || (this.__uniqueId = flyingon.newId(), this.__states = {});
+                var states = this.__states || (this.__states = {});
 
                 if (states[name] !== (value = !!value))
                 {
                     states[name] = value;
 
-                    (registry_states || (registry_states = {}))[this.__uniqueId] = this;
+                    (registry_states || (registry_states = {}))[this.__uniqueId || (this.__uniqueId = flyingon.newId())] = this;
                     (this.__ownerWindow || this.get_ownerWindow()).__fn_registry_update(this, update);
                 }
             };
 
         }, this);
 
+
+        ////IE7点击滚动条时修改className会造成滚动条无法拖动,需在改变className后设置focus获取焦点解决此问题
+        ////IE8以下无Object.defineProperty方法
+        if (flyingon.browser_MSIE && !Object.defineProperty)
+        {
+            this.__fn_to_active = (function (fn) {
+
+                return function (value) {
+
+                    fn.call(this, value);
+
+                    if (value)
+                    {
+                        this.dom.className = class_name(this);
+                        this.dom.focus(); //需设置焦点,否则无法拖动
+                    }
+                };
+
+            })(this.__fn_to_active);
+        }
 
 
 
@@ -355,6 +384,10 @@ flyingon.defineClass("Control", function () {
         //内容区大小(实际内容大小及开始渲染位置)
         this.contentWidth = 0;
         this.contentHeight = 0;
+
+
+        //上次滚动位置
+        this.__scrollLeft = this.__scrollTop = 0;
 
 
         //是否需要更新控件 0:不需要 1:需要更新 2:有子控件需要更新
@@ -1122,8 +1155,8 @@ flyingon.defineClass("Control", function () {
             dom = dom.cloneNode(true);
         }
 
-        //选择器名称
-        this.selector_rule = dom.className = Class.xtype.replace(/\./g, "-");
+        //css className
+        this.css_className = dom.className = Class.xtype.replace(/\./g, "-");
 
     };
 
