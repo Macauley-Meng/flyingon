@@ -5617,9 +5617,6 @@ flyingon.defineClass("Query", function () {
     var layout_base = flyingon.defineClass(function () {
 
 
-        ////滚动条在未操作操作下是否显示
-        //this.scroll_visible; 
-
         ////竖直滚动条宽度
         //this.scroll_width;   
 
@@ -5634,19 +5631,12 @@ flyingon.defineClass("Query", function () {
             var dom = document.createElement("div");
 
             dom.style.cssText = "overflow:scroll;width:100px;height:100px;border:0;padding:0;";
+            dom.innerHTML = "<div style=\"width:200px;height:200px;\"></div>";
+
             document.body.appendChild(dom);
 
-            if (this.scroll_visible = (this.scroll_height = dom.offsetHeight - dom.clientHeight) > 0)
-            {
-                this.scroll_width = dom.offsetWidth - dom.clientWidth;
-            }
-            else
-            {
-                dom.innerHTML = "<div style=\"width:100px;height:100px;\"></div>";
-
-                this.scroll_height = dom.offsetHeight - dom.clientHeight;
-                this.scroll_width = dom.offsetWidth - dom.clientWidth;
-            }
+            this.scroll_width = dom.offsetWidth - dom.clientWidth;
+            this.scroll_height = dom.offsetHeight - dom.clientHeight;
 
             flyingon.dispose_dom(dom);
 
@@ -5711,7 +5701,7 @@ flyingon.defineClass("Query", function () {
         };
 
 
-        function arrange1(target, items, clientWidth, clientHeight) {
+        function arrange1(target, items, clientWidth, clientHeight, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
                 x = 0;
@@ -5729,7 +5719,10 @@ flyingon.defineClass("Query", function () {
 
                     item.measure(clientWidth - x, clientHeight, false, true, true, false);
 
-                    x = item.locate(x, 0, null, clientHeight).x;
+                    if ((x = item.locate(x, 0, null, clientHeight).x) > clientWidth && !fixed) //超行需调整客户区后重排
+                    {
+                        return arrange1.call(this, target, items, clientWidth, clientHeight - this.scroll_height, true);
+                    }
                 }
             }
 
@@ -5738,7 +5731,7 @@ flyingon.defineClass("Query", function () {
         };
 
 
-        function arrange2(target, items, clientWidth, clientHeight) {
+        function arrange2(target, items, clientWidth, clientHeight, fixed) {
 
             var spacingHeight = target.compute_size(target.get_spacingHeight()),
                 y = 0;
@@ -5756,7 +5749,10 @@ flyingon.defineClass("Query", function () {
 
                     item.measure(clientWidth, clientHeight - y, true, false, false, true);
 
-                    y = item.locate(0, y, clientWidth).y;
+                    if ((y = item.locate(0, y, clientWidth).y) > clientHeight && !fixed) //超行需调整客户区后重排
+                    {
+                        return arrange2.call(this, target, items, clientWidth - this.scroll_width, clientHeight, true);
+                    }
                 }
             }
 
@@ -5780,7 +5776,7 @@ flyingon.defineClass("Query", function () {
         };
 
 
-        function arrange1(target, items, clientWidth, clientHeight) {
+        function arrange1(target, items, clientWidth, clientHeight, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
@@ -5819,6 +5815,11 @@ flyingon.defineClass("Query", function () {
 
                     var point = item.locate(x, y, null, align_height);
 
+                    if (point.y > clientHeight && !fixed) //超行需调整客户区后重排
+                    {
+                        return arrange1.call(this, target, items, clientWidth - this.scroll_width, clientHeight, true);
+                    }
+
                     if ((x = point.x) > contentWidth)
                     {
                         contentWidth = point.x;
@@ -5836,7 +5837,7 @@ flyingon.defineClass("Query", function () {
         };
 
 
-        function arrange2(target, items, clientWidth, clientHeight) {
+        function arrange2(target, items, clientWidth, clientHeight, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
@@ -5874,6 +5875,11 @@ flyingon.defineClass("Query", function () {
                     }
 
                     var point = item.locate(x, y, align_width);
+
+                    if (point.x > clientWidth && !fixed) //超行需调整客户区后重排
+                    {
+                        return arrange2.call(this, target, items, clientWidth, clientHeight - this.scroll_height, true);
+                    }
 
                     if (point.x > contentWidth)
                     {
@@ -6320,51 +6326,85 @@ flyingon.defineClass("Query", function () {
         };
 
 
-        function compute(target, name, size, spacing) {
+        function parse(value) {
 
-            var value = target["get_" + name]() || 3,
-                result = target[name = "__x_" + name];
+            var result = new layout_row(),
+                values = +value;
 
-            if (!result || result.__value !== value)
+            if (values > 0)
             {
-                result = target[name] = new layout_row();
-                result.__value = value;
-
-                if (+value > 0)
+                for (var i = 0; i < values; i++)
                 {
-                    for (var i = 0; i < value; i++)
-                    {
-                        result[result.length++] = new layout_column(0, "*");
-                    }
-                }
-                else
-                {
-                    var values;
-
-                    while ((values = regex.exec(value)) && values[0])
-                    {
-                        result[result.length++] = new layout_column(values[1], values[2], !values[3]);
-
-                        if (values[4])
-                        {
-                            result.loop((+values[5] | 0) || 10, +values[7] | 0); //不指定循环次数则默认循环10次
-                        }
-                    }
-
-                    regex.lastIndex = 0;
+                    result[result.length++] = new layout_column(0, "*");
                 }
             }
-
-            spacing = target.compute_size(spacing);
-
-            if (result.__size !== size || result.__spacing !== spacing)
+            else
             {
-                result.compute(target, size, spacing);
-                result.__size = size;
-                result.__spacing = spacing;
+                while ((values = regex.exec(value)) && values[0])
+                {
+                    result[result.length++] = new layout_column(values[1], values[2], !values[3]);
+
+                    if (values[4])
+                    {
+                        result.loop((+values[5] | 0) || 10, +values[7] | 0); //不指定循环次数则默认循环10次
+                    }
+                }
+
+                regex.lastIndex = 0;
             }
+
+            result.__cache_value = value;
 
             return result;
+        };
+
+
+        function compute(target, clientWidth, clientHeight) {
+
+            var value1 = target.get_layoutColumns() || 3,
+                value2 = target.get_layoutRows() || 3,
+                columns = this.__cache_value1,
+                rows = this.__cache_value2,
+                spacingWidth = target.compute_size(target.get_spacingWidth()),
+                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                keys = [clientWidth, clientHeight, spacingWidth, spacingHeight].join(" "),
+                fixed;
+
+            if (!columns || columns.__cache_value !== value1)
+            {
+                columns = this.__cache_value1 = parse(value1);
+            }
+
+            if (!rows || rows.__cache_value !== value2)
+            {
+                rows = this.__cache_value2 = parse(value2);
+            }
+
+            if (this.__cache_value !== keys)
+            {
+                columns.compute(target, clientWidth, spacingWidth);
+                rows.compute(target, clientHeight, spacingHeight);
+
+                if (columns.total > clientWidth)
+                {
+                    clientHeight -= this.scroll_height;
+                    fixed = true;
+                }
+
+                if (rows.total > clientHeight)
+                {
+                    clientWidth -= this.scroll_width;
+                    fixed = true;
+                }
+
+                if (fixed)
+                {
+                    columns.compute(target, clientWidth, spacingWidth);
+                    rows.compute(target, clientHeight, spacingHeight);
+                }
+            }
+
+            return [columns, rows];
         };
 
 
@@ -6418,13 +6458,13 @@ flyingon.defineClass("Query", function () {
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
 
-            var list1 = compute(target, "layoutColumns", clientWidth, target.get_spacingWidth()),
-                list2 = compute(target, "layoutRows", clientHeight, target.get_spacingHeight()),
+            var item = compute.call(this, target, clientWidth, clientHeight),
+                list1 = item[0],
+                list2 = item[1],
                 vertical = target.get_layoutVertical(),
                 index1 = 0,
                 index2 = 0,
                 locked,
-                item,
                 x,
                 y,
                 width,
@@ -6520,27 +6560,23 @@ flyingon.defineClass("Query", function () {
                     }
 
                     //处理跨列
+                    cache1 = index1; //记录当前列
+
                     if (column_span)
                     {
                         index1 = span_to(column_span, cache2 = index1, list1.length);
 
-                        cache1 = list1[index1];
-                        cache1 = cache1.start + cache1.size;
+                        cache2 = list1[index1];
+                        cache2 = cache2.start + cache2.size;
 
                         if (vertical)
                         {
-                            height = cache1 - y;
+                            height = cache2 - y;
                         }
                         else
                         {
-                            width = cache1 - x;
+                            width = cache2 - x;
                         }
-
-                        cache1 = index1 - cache2; //记录跨列数
-                    }
-                    else
-                    {
-                        cache1 = 1;
                     }
 
                     //处理跨行
@@ -6551,11 +6587,11 @@ flyingon.defineClass("Query", function () {
                             return items.hide(i);
                         }
 
-                        for (var j = index2; j < cache2; j++)
+                        for (var j = index2; j <= cache2; j++)
                         {
-                            for (var j2 = 0; j2 < cache1; j2++)
+                            for (var j2 = cache1; j2 <= index1; j2++)
                             {
-                                ((locked || (locked = {}))[j + 1] || (locked[j + 1] = {}))[index1 - j2] = true;
+                                ((locked || (locked = {}))[j] || (locked[j] = {}))[j2] = true;
                             }
                         }
 
@@ -6766,7 +6802,7 @@ flyingon.defineClass("Query", function () {
                     token,
                     cache;
 
-                this.__cache_keys = null;
+                this.__cache_value2 = null;
 
                 while (index < length)
                 {
@@ -6797,54 +6833,6 @@ flyingon.defineClass("Query", function () {
                             item = parent;
                             parent = this;
                             type = table_row;
-                            flag = true;
-                            break;
-
-                        case "{": //开始子表 
-                            cache = new table_define();
-                            index = cache.parse(tokens, index);
-
-                            if (item)
-                            {
-                                item.table = cache;
-                                cache.row = parent;
-                                cache.column = item;
-
-                                ((cache.root = this.root || this).tables || (cache.root.tables = [])).push(cache);
-                            }
-                            break;
-
-                        case "}": //结束子表
-                            flag = true;
-                            return index;
-
-                        case "(": //开始子表间距 以后可扩展成参数
-                            cache = [];
-
-                            while (index < length && (token = tokens[index++]) !== ")") //一直查找到")"
-                            {
-                                if (token === " ")
-                                {
-                                    cache.push("");
-                                }
-                                else
-                                {
-                                    cache[cache.length - 1] = cache[cache.length - 1] + token;
-                                }
-                            }
-
-                            if (cache.length > 0)
-                            {
-                                this.spacingWidth = +cache[0];
-                            }
-
-                            if (cache.length > 1)
-                            {
-                                this.spacingHeight = cache[1];
-                            }
-                            break;
-
-                        case ")":
                             flag = true;
                             break;
 
@@ -6886,6 +6874,42 @@ flyingon.defineClass("Query", function () {
                                 item.enable = false;
                                 flag = true;
                             }
+                            break;
+
+                        case "{": //开始子表 
+                            cache = new table_define();
+                            index = cache.parse(tokens, index);
+
+                            if (item)
+                            {
+                                item.table = cache;
+                                cache.row = parent;
+                                cache.column = item;
+
+                                ((cache.root = this.root || this).tables || (cache.root.tables = [])).push(cache);
+                            }
+                            break;
+
+                        case "}": //结束子表
+                            flag = true;
+                            return index;
+
+                        case "(": //开始子表间距 以后可扩展成参数
+                            cache = [];
+
+                            while (index < length && (token = tokens[index++]) !== ")") //一直查找到")"
+                            {
+                                cache.push(token);
+                            }
+
+                            cache = cache.join("").split(" ");
+
+                            this.spacingWidth = cache[0] || "100%";
+                            this.spacingHeight = cache[1] || "100%";
+                            break;
+
+                        case ")":
+                            flag = true;
                             break;
 
                         case "...": //循环 ...[n][->n]
@@ -6954,36 +6978,34 @@ flyingon.defineClass("Query", function () {
 
 
             //计算大小
-            this.compute = function (target, width, height, spacingWidth, spacingHeight, vertical) {
+            this.compute = function (target, layout, width, height, spacingWidth, spacingHeight, vertical) {
 
-                var keys = [].slice.call(arguments, 1).join(" ");
+                var keys = [].slice.call(arguments, 2).join(" "),
+                    fixed;
 
-                if (this.__cache_key2 !== keys)
+                if (this.__cache_value2 !== keys)
                 {
-                    if (vertical)
-                    {
-                        base.compute.call(this, target, width, spacingWidth);
+                    compute.apply(this, arguments);
 
-                        for (var i = 0, _ = this.length; i < _; i++)
-                        {
-                            this[i].compute(target, height, spacingHeight);
-                        }
+                    if (this.width > width)
+                    {
+                        arguments[3] -= layout.scroll_height;
+                        fixed = true;
                     }
-                    else
-                    {
-                        base.compute.call(this, target, height, spacingHeight);
 
-                        for (var i = 0, _ = this.length; i < _; i++)
-                        {
-                            this[i].compute(target, width, spacingWidth);
-                        }
+                    if (this.height > height)
+                    {
+                        arguments[2] -= layout.scroll_width;
+                        fixed = true;
+                    }
+
+                    if (fixed) //如果出现滚动条则调整内容区
+                    {
+                        compute.apply(this, arguments);
                     }
 
                     if (this.tables) //计算子表
                     {
-                        spacingWidth = spacing(target, spacingWidth, this.spacingWidth);
-                        spacingHeight = spacing(target, spacingHeight, this.spacingHeight);
-
                         for (var i = 0, _ = this.tables.length; i < _; i++)
                         {
                             var table = this.tables[i];
@@ -6991,11 +7013,59 @@ flyingon.defineClass("Query", function () {
                             width = table.column.size;
                             height = table.row.size;
 
-                            table.compute(target, vertical ? height : width, vertical ? width : height, spacingWidth, spacingHeight, vertical);
+                            table.compute(target,
+                                layout,
+                                vertical ? height : width,
+                                vertical ? width : height,
+                                spacing(target, spacingWidth, table.spacingWidth),
+                                spacing(target, spacingHeight, table.spacingHeight),
+                                vertical);
                         }
                     }
 
-                    this.__cache_key2 = keys;
+                    this.__cache_value2 = keys;
+                }
+            };
+
+
+            //计算大小
+            function compute(target, layout, width, height, spacingWidth, spacingHeight, vertical) {
+
+                var row, value = 0;
+
+                if (vertical)
+                {
+                    base.compute.call(this, target, width, spacingWidth);
+
+                    for (var i = 0, _ = this.length; i < _; i++)
+                    {
+                        (row = this[i]).compute(target, height, spacingHeight);
+
+                        if (row.total > value)
+                        {
+                            value = row.total;
+                        }
+                    }
+
+                    this.width = this.total;
+                    this.height = value;
+                }
+                else
+                {
+                    base.compute.call(this, target, height, spacingHeight);
+
+                    for (var i = 0, _ = this.length; i < _; i++)
+                    {
+                        (row = this[i]).compute(target, width, spacingWidth);
+
+                        if (row.total > value)
+                        {
+                            value = row.total;
+                        }
+                    }
+
+                    this.width = value;
+                    this.height = this.total;
                 }
             };
 
@@ -7030,14 +7100,17 @@ flyingon.defineClass("Query", function () {
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
                 vertical = target.get_layoutVertical();
 
-            if (!table || table.__cache_key1 !== value)
+            if (!table || table.__cache_value1 !== value)
             {
                 table = target.__x_layoutTable = new table_define();
-                table.__cache_key1 = value;
+                table.__cache_value1 = value;
                 table.parse(value.replace(/\s+/g, " ").match(regex_parse), 0);
             }
 
-            table.compute(target, clientWidth, clientHeight, spacingWidth, spacingHeight, vertical);
+            table.compute(target, this, clientWidth, clientHeight, spacingWidth, spacingHeight, vertical);
+
+            target.contentWidth = table.width;
+            target.contentHeight = table.height;
 
             var index = table.arrange(items, 0, 0, 0, vertical);
 

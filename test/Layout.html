@@ -33,26 +33,32 @@
             <span style="width: 10px"></span>
             <input type="button" value="Paint" onclick="paint()" />
 
-            <span style="width: 50px"></span>
-            <span style="margin-left: 10px;">spacingWidth<input id="panel1" type="text" style="width:50px;" value="10px" onchange="sync_panel()" /></span>
-            <span style="margin-left: 10px;">spacingHeight<input id="panel2" type="text" style="width:50px;" value="10px" onchange="sync_panel()" /></span>
-
-            <span style="width: 10px"></span>
-            <span style="margin-left: 10px;">alignX<input id="button1" type="text" style="width:50px;" value="center" onchange="sync_button()" /></span>
-            <span style="margin-left: 10px;">alignY<input id="button2" type="text" style="width:50px;" value="middle" onchange="sync_button()" /></span>
-
         </div>
 
-        <div id="detail" style="height:30px;">
-
+        <div id="panel_property">
+            Panel属性:
+            <span style="margin-left: 10px;">spacingWidth<input id="panel1" type="text" style="width:50px;" value="10px" onchange="sync_panel()" /></span>
+            <span style="margin-left: 10px;">spacingHeight<input id="panel2" type="text" style="width:50px;" value="10px" onchange="sync_panel()" /></span>
             <span style="margin-left: 10px;" tag="flow">layoutWidth<input type="text" style="width:50px;" value="0" onchange="sync_panel()" /></span>
             <span style="margin-left: 10px;" tag="flow">layoutHeight<input type="text" style="width:50px;" value="0" onchange="sync_panel()" /></span>
             <span style="margin-left: 10px; display: none;" tag="page">layoutPage<input type="text" style="width:50px;" value="0" onchange="sync_panel()" /></span>
             <span style="margin-left: 10px; display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="4" onchange="sync_panel()" /></span>
             <span style="margin-left: 10px; display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="4" onchange="sync_panel()" /></span>
-            <span style="margin-left: 10px; display: none;" tag="table">layoutTable<input type="text" style="width: 400px; " value="*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]" onchange="sync_panel()" /></span>
+            <span style="margin-left: 10px; display: none;" tag="table">layoutTable<input type="text" style="width: 600px; " value="*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]" onchange="sync_panel()" /></span>
+        </div>
 
-            <span style="width: 50px"></span>
+        <div id="detail">
+
+            Button属性:
+            <span style="margin-left: 10px;">width<input id="button1" type="text" style="width:50px;" value="center" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px;">alignY<input id="button2" type="text" style="width:50px;" value="middle" onchange="sync_button()" /></span>
+
+            <span style="margin-left: 10px;">alignX<input id="button1" type="text" style="width:50px;" value="center" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px;">alignY<input id="button2" type="text" style="width:50px;" value="middle" onchange="sync_button()" /></span>
+
+            <span style="margin-left: 10px;">alignX<input id="button1" type="text" style="width:50px;" value="center" onchange="sync_button()" /></span>
+            <span style="margin-left: 10px;">alignY<input id="button2" type="text" style="width:50px;" value="middle" onchange="sync_button()" /></span>
+
             <span style="margin-left: 10px;" tag="flow">newline<input type="text" style="width:50px;" value="false" onchange="sync_button()" /></span>
             <span style="margin-left: 10px; display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="sync_button()" /></span>
             <span style="margin-left: 10px; display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
