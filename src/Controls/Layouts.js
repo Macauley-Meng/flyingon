@@ -59,10 +59,23 @@
 
         };
 
-       
-        //查找指定位置的控件索引
-        this.findAt = function (target, items, x, y) {
 
+        //获取拖动放置控件索引
+        this.__fn_drag_index = function (target, items, offset) {
+
+            for (var i = items.length - 1; i >= 0; i--)
+            {
+                var item = items[i];
+
+                if (item.__visible &&
+                    item.offsetLeft + item.offsetWidth >= offset.x &&
+                    item.offsetTop + item.offsetHeight <= offset.y)
+                {
+                    return i;
+                }
+            }
+
+            return 0;
         };
 
 
@@ -180,13 +193,14 @@
                 contentHeight = 0,
                 align_height = target.compute_size(target.get_layoutWidth()),
                 x = 0,
-                y = 0;
+                y = 0,
+                item,
+                width,
+                offset;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__visible = (item.get_visibility() !== "collapse"))
+                if ((item = items[i]).__visible = (item.get_visibility() !== "collapse"))
                 {
                     if (x > 0)
                     {
@@ -201,7 +215,7 @@
                         }
                     }
 
-                    var width = item.measure(clientWidth > x ? clientWidth - x : clientWidth, align_height, false, false, true, false).width;
+                    width = item.measure(clientWidth > x ? clientWidth - x : clientWidth, align_height, false, false, true, false).width;
 
                     if (x > 0 && x + width > clientWidth) //是否超行
                     {
@@ -209,21 +223,21 @@
                         y = contentHeight + spacingHeight;
                     }
 
-                    var point = item.locate(x, y, null, align_height);
+                    offset = item.locate(x, y, null, align_height);
 
-                    if (point.y > clientHeight && !fixed) //超行需调整客户区后重排
+                    if (offset.y > clientHeight && !fixed) //超行需调整客户区后重排
                     {
                         return arrange1.call(this, target, items, clientWidth - this.scroll_width, clientHeight, true);
                     }
 
-                    if ((x = point.x) > contentWidth)
+                    if ((x = offset.x) > contentWidth)
                     {
-                        contentWidth = point.x;
+                        contentWidth = offset.x;
                     }
 
-                    if (point.y > contentHeight)
+                    if (offset.y > contentHeight)
                     {
-                        contentHeight = point.y;
+                        contentHeight = offset.y;
                     }
                 }
             }
@@ -241,13 +255,14 @@
                 y = 0,
                 align_width = target.compute_size(target.get_layoutHeight()),
                 contentWidth = 0,
-                contentHeight = 0;
+                contentHeight = 0,
+                item,
+                height,
+                offset;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__visible = (item.get_visibility() !== "collapse"))
+                if ((item = items[i]).__visible = (item.get_visibility() !== "collapse"))
                 {
                     if (y > 0)
                     {
@@ -262,7 +277,7 @@
                         }
                     }
 
-                    var height = item.measure(align_width, clientHeight > y ? clientHeight - y : clientHeight, false, false, true, false).height;
+                    height = item.measure(align_width, clientHeight > y ? clientHeight - y : clientHeight, false, false, true, false).height;
 
                     if (y > 0 && y + height > clientHeight) //超行
                     {
@@ -270,21 +285,21 @@
                         x = contentWidth + spacingWidth;
                     }
 
-                    var point = item.locate(x, y, align_width);
+                    offset = item.locate(x, y, align_width);
 
-                    if (point.x > clientWidth && !fixed) //超行需调整客户区后重排
+                    if (offset.x > clientWidth && !fixed) //超行需调整客户区后重排
                     {
                         return arrange2.call(this, target, items, clientWidth, clientHeight - this.scroll_height, true);
                     }
 
-                    if (point.x > contentWidth)
+                    if (offset.x > contentWidth)
                     {
-                        contentWidth = point.x;
+                        contentWidth = offset.x;
                     }
 
-                    if ((y = point.y) > contentHeight)
+                    if ((y = offset.y) > contentHeight)
                     {
-                        contentHeight = point.y;
+                        contentHeight = offset.y;
                     }
                 }
             }
@@ -321,13 +336,18 @@
         };
 
 
+        this.__fn_drag_index = function (target) {
+
+            return target.__children.length;
+        };
+
+
     });
 
 
 
     //单页显示(不支持竖排)
     flyingon.defineLayout("page", function () {
-
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -359,6 +379,13 @@
                 }
             }
         };
+
+
+        this.__fn_drag_index = function (target) {
+
+            return target.__children.length;
+        };
+
 
     });
 
@@ -476,26 +503,26 @@
         this.arrange = function (target, items, clientWidth, clientHeight) {
 
             var contentWidth = 0,
-                contentHeight = 0;
+                contentHeight = 0,
+                item,
+                offset;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__visible = (item.get_visibility() !== "collapse"))
+                if ((item = items[i]).__visible = (item.get_visibility() !== "collapse"))
                 {
                     item.measure(+item.get_width() || item.defaultWidth, +item.get_height() || item.defaultHeight, true, true);
 
-                    var point = item.locate(item.compute_size(item.get_left()) || 0, item.compute_size(item.get_top()) || 0);
+                    offset = item.locate(item.compute_size(item.get_left()) || 0, item.compute_size(item.get_top()) || 0);
 
-                    if (point.x > contentWidth)
+                    if (offset.x > contentWidth)
                     {
-                        contentWidth = point.x;
+                        contentWidth = offset.x;
                     }
 
-                    if (point.y > contentHeight)
+                    if (offset.y > contentHeight)
                     {
-                        contentHeight = point.y;
+                        contentHeight = offset.y;
                     }
                 }
             }
@@ -504,6 +531,12 @@
             target.contentHeight = contentHeight;
         };
 
+
+        //绝对定位拖动不处理
+        this.__fn_drag_index = function (target) {
+
+            return -1;
+        };
 
     });
 

@@ -827,6 +827,58 @@ flyingon.defineClass("Control", function () {
 
 
 
+
+        //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
+        //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
+        //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
+        var offset_fn = document.body.getBoundingClientRect || (function () {
+
+            var scroll = document.compatMode == "BackCompat" ? document.body : document.documentElement;
+
+            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
+            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
+            //问题2: 在table或iframe中offsetParent取值可能不准确
+            return function () {
+
+                var dom = this,
+                    x = 0,
+                    y = 0;
+
+                while (dom)
+                {
+                    x += dom.offsetLeft;
+                    y += dom.offsetTop;
+
+                    if (dom = dom.offsetParent)
+                    {
+                        x += dom.clientLeft;
+                        y += dom.clientTop;
+                    }
+                }
+
+                x -= scroll.scrollLeft;
+                y -= scroll.scrollTop;
+
+                return { left: x, top: y };
+            };
+
+        })();
+
+
+        //获取控件相对鼠标事件的偏移
+        this.offset = function (event) {
+
+            var offset = offset_fn.call(this.dom);
+
+            return {
+
+                x: event.clientX - offset.left,
+                y: event.clientY - offset.top
+            };
+        };
+
+
+
     }).call(this, flyingon);
 
 
@@ -971,6 +1023,33 @@ flyingon.defineClass("Control", function () {
         this.endInit = function () {
 
             flyingon.__initializing = false;
+            return this;
+        };
+
+
+
+        //销毁
+        this.dispose = function () {
+
+            var cache = this.__bindings;
+
+            if (cache)
+            {
+                for (var name in cache)
+                {
+                    cache[name].dispose();
+                }
+            }
+
+            if ((cache = this.dom).__has_dom_event) //如果绑定了自定义事件则清空以免内存泄露
+            {
+                cache.onscroll = null;
+                cache.onfocus = null;
+                cache.onblue = null;
+            }
+
+            flyingon.dispose_dom(cache);
+
             return this;
         };
 

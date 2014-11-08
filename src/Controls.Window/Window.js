@@ -29,7 +29,11 @@ flyingon.defineClass("Window", flyingon.Control, function (base) {
         dom.appendChild(this.dom);
 
         //绑定resize事件
-        flyingon.addEventListener(window, "resize", function (event) { self.update(true); });
+        flyingon.addEventListener(window, "resize", function (event) {
+
+            self.__render_items = null;
+            self.update(true);
+        });
 
         //设为活动窗口
         this.__activeWindow = this;

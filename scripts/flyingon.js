@@ -2361,14 +2361,13 @@ flyingon.defineClass("Collection", function () {
     //在指定位置插入子项
     this.insert = function (index, item) {
 
-        var length,
-            fn;
+        var length, fn;
 
         if (index >= 0 && (length = arguments.length) > 1)
         {
             fn = this.__fn_validate;
 
-            for (var i = 0; i < length; i++)
+            for (var i = 1; i < length; i++)
             {
                 if (!fn || (item = fn.call(this, index, arguments[i])) !== undefined)
                 {
@@ -3975,59 +3974,6 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
 
 
 
-
-
-    //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
-    //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
-    //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
-    var dom_offset = document.body.getBoundingClientRect || (function () {
-
-        var scroll = document.compatMode == "BackCompat" ? document.body : document.documentElement;
-
-        //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
-        //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
-        //问题2: 在table或iframe中offsetParent取值可能不准确
-        return function () {
-
-            var dom = this,
-                style,
-                x = 0,
-                y = 0;
-
-            while (dom)
-            {
-                x += dom.offsetLeft;
-                y += dom.offsetTop;
-
-                if (dom = dom.offsetParent)
-                {
-                    x += dom.clientLeft;
-                    y += dom.clientTop;
-                }
-            }
-
-            x -= scroll.scrollLeft;
-            y -= scroll.scrollTop;
-
-            return { left: x, top: y };
-        };
-
-    })();
-
-
-    //获取鼠标位置相对指定控件的偏移
-    this.offset = function (control) {
-
-        var rect = dom_offset.call(control.dom);
-
-        return {
-
-            x: this.clientX - rect.left,
-            y: this.clientY - rect.top
-        };
-    };
-
-
     //捕获鼠标
     this.setCapture = function (control) {
 
@@ -4076,7 +4022,7 @@ flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (base) {
 
     //接收目标
     this.dropTarget = null;
-    
+
 
 });
 
@@ -4796,11 +4742,6 @@ flyingon.IComponent = function () {
             {
                 bindings[name].dispose();
             }
-        }
-
-        if (this.dom)
-        {
-            flyingon.dispose_dom(this.dom);
         }
 
         return this;
@@ -5632,10 +5573,23 @@ flyingon.defineClass("Query", function () {
 
         };
 
-       
-        //查找指定位置的控件索引
-        this.findAt = function (target, items, x, y) {
 
+        //获取拖动放置控件索引
+        this.__fn_drag_index = function (target, items, offset) {
+
+            for (var i = items.length - 1; i >= 0; i--)
+            {
+                var item = items[i];
+
+                if (item.__visible &&
+                    item.offsetLeft + item.offsetWidth >= offset.x &&
+                    item.offsetTop + item.offsetHeight <= offset.y)
+                {
+                    return i;
+                }
+            }
+
+            return 0;
         };
 
 
@@ -5753,13 +5707,14 @@ flyingon.defineClass("Query", function () {
                 contentHeight = 0,
                 align_height = target.compute_size(target.get_layoutWidth()),
                 x = 0,
-                y = 0;
+                y = 0,
+                item,
+                width,
+                offset;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__visible = (item.get_visibility() !== "collapse"))
+                if ((item = items[i]).__visible = (item.get_visibility() !== "collapse"))
                 {
                     if (x > 0)
                     {
@@ -5774,7 +5729,7 @@ flyingon.defineClass("Query", function () {
                         }
                     }
 
-                    var width = item.measure(clientWidth > x ? clientWidth - x : clientWidth, align_height, false, false, true, false).width;
+                    width = item.measure(clientWidth > x ? clientWidth - x : clientWidth, align_height, false, false, true, false).width;
 
                     if (x > 0 && x + width > clientWidth) //是否超行
                     {
@@ -5782,21 +5737,21 @@ flyingon.defineClass("Query", function () {
                         y = contentHeight + spacingHeight;
                     }
 
-                    var point = item.locate(x, y, null, align_height);
+                    offset = item.locate(x, y, null, align_height);
 
-                    if (point.y > clientHeight && !fixed) //超行需调整客户区后重排
+                    if (offset.y > clientHeight && !fixed) //超行需调整客户区后重排
                     {
                         return arrange1.call(this, target, items, clientWidth - this.scroll_width, clientHeight, true);
                     }
 
-                    if ((x = point.x) > contentWidth)
+                    if ((x = offset.x) > contentWidth)
                     {
-                        contentWidth = point.x;
+                        contentWidth = offset.x;
                     }
 
-                    if (point.y > contentHeight)
+                    if (offset.y > contentHeight)
                     {
-                        contentHeight = point.y;
+                        contentHeight = offset.y;
                     }
                 }
             }
@@ -5814,13 +5769,14 @@ flyingon.defineClass("Query", function () {
                 y = 0,
                 align_width = target.compute_size(target.get_layoutHeight()),
                 contentWidth = 0,
-                contentHeight = 0;
+                contentHeight = 0,
+                item,
+                height,
+                offset;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__visible = (item.get_visibility() !== "collapse"))
+                if ((item = items[i]).__visible = (item.get_visibility() !== "collapse"))
                 {
                     if (y > 0)
                     {
@@ -5835,7 +5791,7 @@ flyingon.defineClass("Query", function () {
                         }
                     }
 
-                    var height = item.measure(align_width, clientHeight > y ? clientHeight - y : clientHeight, false, false, true, false).height;
+                    height = item.measure(align_width, clientHeight > y ? clientHeight - y : clientHeight, false, false, true, false).height;
 
                     if (y > 0 && y + height > clientHeight) //超行
                     {
@@ -5843,21 +5799,21 @@ flyingon.defineClass("Query", function () {
                         x = contentWidth + spacingWidth;
                     }
 
-                    var point = item.locate(x, y, align_width);
+                    offset = item.locate(x, y, align_width);
 
-                    if (point.x > clientWidth && !fixed) //超行需调整客户区后重排
+                    if (offset.x > clientWidth && !fixed) //超行需调整客户区后重排
                     {
                         return arrange2.call(this, target, items, clientWidth, clientHeight - this.scroll_height, true);
                     }
 
-                    if (point.x > contentWidth)
+                    if (offset.x > contentWidth)
                     {
-                        contentWidth = point.x;
+                        contentWidth = offset.x;
                     }
 
-                    if ((y = point.y) > contentHeight)
+                    if ((y = offset.y) > contentHeight)
                     {
-                        contentHeight = point.y;
+                        contentHeight = offset.y;
                     }
                 }
             }
@@ -5894,13 +5850,18 @@ flyingon.defineClass("Query", function () {
         };
 
 
+        this.__fn_drag_index = function (target) {
+
+            return target.__children.length;
+        };
+
+
     });
 
 
 
     //单页显示(不支持竖排)
     flyingon.defineLayout("page", function () {
-
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -5932,6 +5893,13 @@ flyingon.defineClass("Query", function () {
                 }
             }
         };
+
+
+        this.__fn_drag_index = function (target) {
+
+            return target.__children.length;
+        };
+
 
     });
 
@@ -6049,26 +6017,26 @@ flyingon.defineClass("Query", function () {
         this.arrange = function (target, items, clientWidth, clientHeight) {
 
             var contentWidth = 0,
-                contentHeight = 0;
+                contentHeight = 0,
+                item,
+                offset;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__visible = (item.get_visibility() !== "collapse"))
+                if ((item = items[i]).__visible = (item.get_visibility() !== "collapse"))
                 {
                     item.measure(+item.get_width() || item.defaultWidth, +item.get_height() || item.defaultHeight, true, true);
 
-                    var point = item.locate(item.compute_size(item.get_left()) || 0, item.compute_size(item.get_top()) || 0);
+                    offset = item.locate(item.compute_size(item.get_left()) || 0, item.compute_size(item.get_top()) || 0);
 
-                    if (point.x > contentWidth)
+                    if (offset.x > contentWidth)
                     {
-                        contentWidth = point.x;
+                        contentWidth = offset.x;
                     }
 
-                    if (point.y > contentHeight)
+                    if (offset.y > contentHeight)
                     {
-                        contentHeight = point.y;
+                        contentHeight = offset.y;
                     }
                 }
             }
@@ -6077,6 +6045,12 @@ flyingon.defineClass("Query", function () {
             target.contentHeight = contentHeight;
         };
 
+
+        //绝对定位拖动不处理
+        this.__fn_drag_index = function (target) {
+
+            return -1;
+        };
 
     });
 
@@ -7112,29 +7086,94 @@ flyingon.defineClass("Query", function () {
 
 
 
-    var __ownerWindow = null,  //所属窗口
+    var __ownerWindow,  //所属窗口
 
-        __target = null, //目标控件
+        __target,       //目标控件
 
-        __dragTargets = null, //拖动目标
+        __dragTargets,  //拖动目标
 
-        __dropTarget = null, //接收目标
+        __dropTarget,   //接收目标
 
-        __draggable = null,//拖动类型
+        __draggable,    //拖动类型
 
-        __droppable, //是否可放下
+        __execute,      //是否已执行拖动
 
         __dom_proxy = document.createElement("div"); //代理dom
 
 
 
 
+    //开始拖动 鼠标按下如果不移动则不处理拖动操作
+    function start(copy) {
+
+        //分发拖拉事件
+        var target,
+            dom,
+            length = __dragTargets.length,
+            x = 0,
+            y = 0;
+
+        //减去窗口边框
+        if (__ownerWindow && (target = __ownerWindow.__boxModel))
+        {
+            x = target.borderLeft;
+            y = target.borderTop
+        }
+
+        //创建代理dom
+        for (var i = 0; i < length; i++)
+        {
+            if ((target = __dragTargets[i]) && target.dom)
+            {
+                dom = target.dom.cloneNode(true);
+                offset(target, dom.style, x, y);
+
+                __dom_proxy.appendChild(dom);
+            }
+        }
+
+        if (!copy)
+        {
+            for (var i = length - 1; i >= 0; i--)
+            {
+                __dragTargets[i].remove();
+            }
+        }
+
+        __dom_proxy.style.cssText = "position:absolute;left:0;top:0;opacity:0.1;"
+        __ownerWindow.dom.appendChild(__dom_proxy);
+        __execute = true;
+    };
+
+
+    //获取相对window客户区的可视偏移
+    function offset(target, style, offsetX, offsetY) {
+
+        var x = target.offsetLeft,
+            y = target.offsetTop;
+
+        while (target = target.__parent)
+        {
+            x += target.clientLeft + target.offsetLeft;
+            y += target.clientTop + target.offsetTop;
+        }
+
+        style.left = x - offsetX + "px";
+        style.top = y - offsetY + "px";
+    };
+
+
     //分发事件
-    this.dispatchEvent = function (target, type, event, pressdown) {
+    this.dispatchEvent = function (target, type, event, pressdown, offset) {
 
         event = new flyingon.DragEvent(type, event, pressdown);
         event.dragTargets = __dragTargets;
         event.dropTarget = __dropTarget;
+
+        if (offset)
+        {
+            event.offset = offset;
+        }
 
         return target.dispatchEvent(event);
     };
@@ -7142,9 +7181,6 @@ flyingon.defineClass("Query", function () {
 
     //开始拖动
     this.start = function (target, draggable, event) {
-
-        //分发拖拉事件
-        var dom;
 
         //拖动目标
         event = new flyingon.DragEvent("dragstart", event);
@@ -7160,30 +7196,26 @@ flyingon.defineClass("Query", function () {
         __ownerWindow = target.get_ownerWindow()
         __target = target;
         __draggable = draggable;
+        __execute = false;
 
         //获取被拖动控件集合
         __dragTargets = event.dragTargets || [target];
-
-        //创建代理dom
-        for (var i = 0, _ = __dragTargets.length; i < _; i++)
-        {
-            if ((target = __dragTargets[i]) && target.dom)
-            {
-                dom = target.dom.cloneNode(true);
-
-                __dom_proxy.appendChild(dom);
-            }
-        }
-
-        __dom_proxy.style.cssText = "position:absolute;left:0;top:0;"
-        __ownerWindow.dom_children.appendChild(__dom_proxy);
 
         return true;
     };
 
 
     //移动
-    this.move = function (dropTarget, event, pressdown) {
+    this.move = function (event, pressdown) {
+
+        var offset = __ownerWindow.offset(event),
+            target = __ownerWindow.findAt(offset);
+
+        //如果未开启拖动则开启
+        if (!__execute)
+        {
+            start(event.shiftKey);
+        }
 
         //移到代理dom
         if (__draggable !== "vertical")
@@ -7196,34 +7228,30 @@ flyingon.defineClass("Query", function () {
             __dom_proxy.style.top = event.clientY - pressdown.clientY + "px";
         }
 
-        //如果放置目标与当前对象相同则设置当前对象的父对象为drop对象
-        if (dropTarget === __target)
+        //往上找出可放置拖放的对象(复制模式时不能放置在目标控件上)
+        while (target && (target === __target || !target.get_droppable()))
         {
-            dropTarget = __target.__parent;
+            offset.x += target.offsetLeft;
+            offset.y += target.offsetTop;
+
+            if (target = target.__parent)
+            {
+                offset.x += target.clientLeft;
+                offset.y += target.clientTop;
+            }
         }
 
         //如果放置目标发生变化则分发相关事件
-        if (__dropTarget !== dropTarget)
+        if (__dropTarget !== target)
         {
-            __droppable = false;
-
             if (__dropTarget)
             {
                 this.dispatchEvent(__dropTarget, "dragleave", event, pressdown);
             }
 
-            if (dropTarget && dropTarget.droppable)
+            if (__dropTarget = target)
             {
-                __dropTarget = dropTarget;
-
-                if (this.dispatchEvent(dropTarget, "dragenter", event, pressdown) !== false)
-                {
-                    __droppable = true;
-                }
-            }
-            else
-            {
-                __dropTarget = null;
+                this.dispatchEvent(target, "dragenter", event, pressdown, offset);
             }
         }
 
@@ -7231,9 +7259,9 @@ flyingon.defineClass("Query", function () {
         this.dispatchEvent(__target, "drag", event, pressdown);
 
         //分发dragover事件
-        if (dropTarget)
+        if (__dropTarget)
         {
-            this.dispatchEvent(dropTarget, "dragover", event, pressdown);
+            this.dispatchEvent(__dropTarget, "dragover", event, pressdown, offset);
         }
     };
 
@@ -7241,21 +7269,31 @@ flyingon.defineClass("Query", function () {
     //停止拖动
     this.stop = function (event, pressdown, cancel) {
 
-        //分发drop事件
-        if (cancel !== true && __droppable && __dropTarget)
+        var result = __execute;
+
+        //如果已拖动则处理
+        if (result)
         {
-            this.dispatchEvent(__dropTarget, "drop", event, pressdown);
+            //分发drop事件
+            if (cancel !== true && __dropTarget)
+            {
+                this.dispatchEvent(__dropTarget, "drop", event, pressdown);
+            }
+
+            //分发dragend事件
+            this.dispatchEvent(__target, "dragend", event, pressdown);
+
+            //清空代理dom
+            __ownerWindow.dom.removeChild(__dom_proxy);
+            __dom_proxy.innerHTML = "";
+            __execute = false;
         }
-
-        //分发dragend事件
-        this.dispatchEvent(__target, "dragend", event, pressdown);
-
-        //清空代理dom
-        __ownerWindow.dom_children.removeChild(__dom_proxy);
-        __dom_proxy.innerHTML = "";
 
         //清空缓存对象
         __ownerWindow = __target = __dragTargets = __dropTarget = null;
+
+        //返回是否拖动过
+        return result;
     };
 
 
@@ -8323,6 +8361,11 @@ flyingon.defineClass("Query", function () {
     flyingon.__fn_compute_css = function (target) {
 
         var result = Object.create(null);
+
+        if (!target.__has_dom_event) //检测是否绑定了不可冒泡事件
+        {
+            flyingon.__fn_dom_event(target);
+        }
 
         if ((target.__css_types || get_css_types(target)).rule) //是否使用css
         {
@@ -9982,6 +10025,58 @@ flyingon.defineClass("Control", function () {
 
 
 
+
+        //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
+        //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
+        //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
+        var offset_fn = document.body.getBoundingClientRect || (function () {
+
+            var scroll = document.compatMode == "BackCompat" ? document.body : document.documentElement;
+
+            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
+            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
+            //问题2: 在table或iframe中offsetParent取值可能不准确
+            return function () {
+
+                var dom = this,
+                    x = 0,
+                    y = 0;
+
+                while (dom)
+                {
+                    x += dom.offsetLeft;
+                    y += dom.offsetTop;
+
+                    if (dom = dom.offsetParent)
+                    {
+                        x += dom.clientLeft;
+                        y += dom.clientTop;
+                    }
+                }
+
+                x -= scroll.scrollLeft;
+                y -= scroll.scrollTop;
+
+                return { left: x, top: y };
+            };
+
+        })();
+
+
+        //获取控件相对鼠标事件的偏移
+        this.offset = function (event) {
+
+            var offset = offset_fn.call(this.dom);
+
+            return {
+
+                x: event.clientX - offset.left,
+                y: event.clientY - offset.top
+            };
+        };
+
+
+
     }).call(this, flyingon);
 
 
@@ -10126,6 +10221,33 @@ flyingon.defineClass("Control", function () {
         this.endInit = function () {
 
             flyingon.__initializing = false;
+            return this;
+        };
+
+
+
+        //销毁
+        this.dispose = function () {
+
+            var cache = this.__bindings;
+
+            if (cache)
+            {
+                for (var name in cache)
+                {
+                    cache[name].dispose();
+                }
+            }
+
+            if ((cache = this.dom).__has_dom_event) //如果绑定了自定义事件则清空以免内存泄露
+            {
+                cache.onscroll = null;
+                cache.onfocus = null;
+                cache.onblue = null;
+            }
+
+            flyingon.dispose_dom(cache);
+
             return this;
         };
 
@@ -10603,48 +10725,6 @@ flyingon.IChildren = function (base) {
 
 
 
-    //处理拖放进入
-    this.__fn_drag_enter = function () {
-
-    };
-
-
-    //处理拖放移动
-    this.__fn_drag_over = function () {
-
-    };
-
-
-    //处理拖放放下
-    this.__fn_drag_drop = function (copy) {
-
-        var target = this.dropTarget,
-            items = this.dragTargets,
-            length;
-
-        if (target && items && (length = items.length) > 0)
-        {
-            if (copy)
-            {
-                var children = target.children;
-
-                for (var i = 0; i < length; i++)
-                {
-                    children.append(items[i].copy());
-                }
-            }
-            else
-            {
-                for (var i = 0; i < length; i++)
-                {
-                    items[i].parent = target;
-                }
-            }
-        }
-    };
-
-
-
 
     //this.focus = function () {
 
@@ -10751,12 +10831,60 @@ flyingon.IPanel = function (base) {
 
 
     var layouts = flyingon.layouts,         //缓存布局服务
-        layout_unkown = layouts["flow"];    //默认布局类型      
-
+        layout_unkown = layouts["flow"],    //默认布局类型      
+        drag_proxy = new flyingon.Control();
 
 
     //扩展子控件接口
     flyingon.extend(this, flyingon.IChildren, base);
+
+
+
+
+    //默认拖放移动事件处理
+    this.__event_bubble_dragover = function (event) {
+
+        var target = drag_proxy,
+            items = this.__render_items || this.__children,
+            index = this.__current_layout.__fn_drag_index(this, items, event.offset);
+
+        if (index >= 0 && items[index] !== target)
+        {
+            target.remove();
+            this.__children.insert(index, target);
+        }
+
+        event.stopPropagation();
+    };
+
+
+    //默认拖放放下事件处理
+    this.__event_bubble_drop = function (event) {
+
+        //var target = this.dropTarget,
+        //    items = this.dragTargets,
+        //    length;
+
+        //if (target && items && (length = items.length) > 0)
+        //{
+        //    if (copy)
+        //    {
+        //        var children = target.children;
+
+        //        for (var i = 0; i < length; i++)
+        //        {
+        //            children.append(items[i].copy());
+        //        }
+        //    }
+        //    else
+        //    {
+        //        for (var i = 0; i < length; i++)
+        //        {
+        //            items[i].parent = target;
+        //        }
+        //    }
+        //}
+    };
 
 
 
@@ -10853,8 +10981,40 @@ flyingon.IPanel = function (base) {
 
         if (items && items.length > 0)
         {
-            (this.current_layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this, items);
+            (this.__current_layout = this.current_layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this, items);
         }
+    };
+
+
+
+    //查找指定偏移位置(不含滚动条)的控件
+    //offset: { x: x, y: y }
+    this.findAt = function (offset) {
+
+        var items = this.__render_items || this.__children,
+            x1 = offset.x + this.__scrollLeft - this.clientLeft,
+            y1 = offset.y + this.__scrollTop - this.clientTop,
+            x2,
+            y2,
+            item;
+
+        for (var i = 0, _ = items.length; i < _; i++)
+        {
+            if ((item = items[i]) &&
+                item.__visible &&
+                x1 >= (x2 = item.offsetLeft) &&
+                y1 >= (y2 = item.offsetTop) &&
+                x1 <= x2 + item.offsetWidth &&
+                y1 <= y2 + item.offsetHeight)
+            {
+                offset.x -= this.clientLeft + x2; //输出控件相对位置
+                offset.y -= this.clientTop + y2;
+
+                return item.findAt ? item.findAt(offset) : item;
+            }
+        }
+
+        return this;
     };
 
 
@@ -11397,42 +11557,21 @@ flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
             //可调整大小 触控版目前不支持调整大小
             if (resize_side)
             {
-                //转换target
-                target = resize_side.target;
-
-                //禁止点击事件
-                flyingon.__disable_click = flyingon.__disable_dbclick = true;
-
-                //记录鼠标按下dom事件
-                save_pressdown(target, event);
+                target = resize_side.target; //转换target
+                flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
+                save_pressdown(target, event); //记录鼠标按下位置
             }
             else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
             {
-                //记录状态
-                draggable = cache;
-
-                //禁止点击事件
-                flyingon.__disable_click = flyingon.__disable_dbclick = true;
-
-                //记录鼠标按下dom事件
-                save_pressdown(target, event);
+                draggable = cache; //记录状态
+                save_pressdown(target, event); //记录鼠标按下位置
             }
             else if (target && target.get_enabled())
             {
-                //如果未绑定自定义事件则绑定
-                if (!target.dom.onscroll)
-                {
-                    target.dom.onscroll = onscroll;
-                }
+                target.__fn_to_active(true); //设置活动状态
+                target.dispatchEvent(new MouseEvent("mousedown", event)); //分发事件
 
-                //记录鼠标按下dom事件
-                save_pressdown(target, event);
-
-                //设置活动状态
-                target.__fn_to_active(true);
-
-                //分发事件
-                target.dispatchEvent(new MouseEvent("mousedown", event));
+                save_pressdown(target, event); //记录鼠标按下位置
             }
         };
 
@@ -11451,9 +11590,9 @@ flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
                 }
                 else if (draggable) //处理拖动
                 {
-                    dragdrop.move(dom_target(event), event, pressdown);
+                    dragdrop.move(event, pressdown);
                 }
-                else  //启用捕获
+                else if (target = dom_target(event))  //启用捕获
                 {
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
                 }
@@ -11495,24 +11634,34 @@ flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
                 resize_side.target = null;
                 resizable = null;
                 resize_side = null;
+                pressdown = null;
+                return;
             }
-            else if (draggable) //如果处于拖动状态则停止拖动
+
+            if (draggable) //如果处于拖动状态则停止拖动
             {
-                //停止拖动
-                dragdrop.stop(event, pressdown, this === host);
                 draggable = null;
+
+                if (dragdrop.stop(event, pressdown, this === host)) //如果拖动过则取消相关鼠标事件
+                {
+                    flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
+                    pressdown = null;
+                    return;
+                }
+
+                if (target = pressdown.capture) //否则补上mousedown事件并继续执行mouseup事件
+                {
+                    target.__fn_to_active(true); //设置活动状态
+                    target.dispatchEvent(new MouseEvent("mousedown", event)); //分发事件 
+                }
             }
-            else if (pressdown && (target = pressdown.capture))
+
+            if (pressdown && (target || (target = pressdown.capture)))
             {
-                //分发事件
                 target.dispatchEvent(new MouseEvent("mouseup", event, pressdown));
-
-                //取消活动状态
-                target.__fn_to_active(false);
+                target.__fn_to_active(false); //取消活动状态
+                pressdown = null;
             }
-
-            //清空关联的按下事件
-            pressdown = null;
         };
 
 
@@ -11597,17 +11746,6 @@ flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
         };
 
 
-        events.focus = function (event) {
-
-            return dom_target(event || fix_event(window.event)).dispatchEvent("focus");
-        };
-
-
-        events.blur = function (event) {
-
-            return dom_target(event || fix_event(window.event)).dispatchEvent("blur");
-        };
-
 
         events.contextmenu = function (event) {
 
@@ -11618,6 +11756,19 @@ flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
 
 
         //直接绑定事件至dom, 解决某些事件(如scroll)无法在父控件正确捕获的问题
+        flyingon.__fn_dom_event = function (target) {
+
+            var dom = target.dom;
+
+            dom.onscroll = onscroll;
+            dom.onfocus = onfocus;
+            dom.onblur = onblur;
+
+            target.__has_dom_event = true;
+        };
+
+
+
         function onscroll(event) {
 
             var target = dom_target(event || fix_event(window.event)),
@@ -11630,6 +11781,25 @@ flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
 
             return result;
         };
+
+
+        function onfocus(event) {
+
+            var target = dom_target(event || fix_event(window.event));
+
+            return target.dispatchEvent("focus");
+        };
+
+
+        function onblur(event) {
+
+            var target = dom_target(event || fix_event(window.event));
+     
+
+            return target.dispatchEvent("blur");
+        };
+
+
 
 
 
@@ -12018,7 +12188,11 @@ flyingon.defineClass("Window", flyingon.Control, function (base) {
         dom.appendChild(this.dom);
 
         //绑定resize事件
-        flyingon.addEventListener(window, "resize", function (event) { self.update(true); });
+        flyingon.addEventListener(window, "resize", function (event) {
+
+            self.__render_items = null;
+            self.update(true);
+        });
 
         //设为活动窗口
         this.__activeWindow = this;

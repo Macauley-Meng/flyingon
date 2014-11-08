@@ -1057,6 +1057,11 @@
 
         var result = Object.create(null);
 
+        if (!target.__has_dom_event) //检测是否绑定了不可冒泡事件
+        {
+            flyingon.__fn_dom_event(target);
+        }
+
         if ((target.__css_types || get_css_types(target)).rule) //是否使用css
         {
             if (target.__css_names)

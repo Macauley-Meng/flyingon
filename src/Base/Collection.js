@@ -95,14 +95,13 @@ flyingon.defineClass("Collection", function () {
     //在指定位置插入子项
     this.insert = function (index, item) {
 
-        var length,
-            fn;
+        var length, fn;
 
         if (index >= 0 && (length = arguments.length) > 1)
         {
             fn = this.__fn_validate;
 
-            for (var i = 0; i < length; i++)
+            for (var i = 1; i < length; i++)
             {
                 if (!fn || (item = fn.call(this, index, arguments[i])) !== undefined)
                 {

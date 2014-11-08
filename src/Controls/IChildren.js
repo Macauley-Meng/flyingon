@@ -134,48 +134,6 @@ flyingon.IChildren = function (base) {
 
 
 
-    //处理拖放进入
-    this.__fn_drag_enter = function () {
-
-    };
-
-
-    //处理拖放移动
-    this.__fn_drag_over = function () {
-
-    };
-
-
-    //处理拖放放下
-    this.__fn_drag_drop = function (copy) {
-
-        var target = this.dropTarget,
-            items = this.dragTargets,
-            length;
-
-        if (target && items && (length = items.length) > 0)
-        {
-            if (copy)
-            {
-                var children = target.children;
-
-                for (var i = 0; i < length; i++)
-                {
-                    children.append(items[i].copy());
-                }
-            }
-            else
-            {
-                for (var i = 0; i < length; i++)
-                {
-                    items[i].parent = target;
-                }
-            }
-        }
-    };
-
-
-
 
     //this.focus = function () {
 

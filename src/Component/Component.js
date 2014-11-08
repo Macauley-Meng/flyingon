@@ -528,11 +528,6 @@ flyingon.IComponent = function () {
             }
         }
 
-        if (this.dom)
-        {
-            flyingon.dispose_dom(this.dom);
-        }
-
         return this;
     };
 

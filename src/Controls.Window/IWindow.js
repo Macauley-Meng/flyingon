@@ -82,42 +82,21 @@
             //可调整大小 触控版目前不支持调整大小
             if (resize_side)
             {
-                //转换target
-                target = resize_side.target;
-
-                //禁止点击事件
-                flyingon.__disable_click = flyingon.__disable_dbclick = true;
-
-                //记录鼠标按下dom事件
-                save_pressdown(target, event);
+                target = resize_side.target; //转换target
+                flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
+                save_pressdown(target, event); //记录鼠标按下位置
             }
             else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
             {
-                //记录状态
-                draggable = cache;
-
-                //禁止点击事件
-                flyingon.__disable_click = flyingon.__disable_dbclick = true;
-
-                //记录鼠标按下dom事件
-                save_pressdown(target, event);
+                draggable = cache; //记录状态
+                save_pressdown(target, event); //记录鼠标按下位置
             }
             else if (target && target.get_enabled())
             {
-                //如果未绑定自定义事件则绑定
-                if (!target.dom.onscroll)
-                {
-                    target.dom.onscroll = onscroll;
-                }
+                target.__fn_to_active(true); //设置活动状态
+                target.dispatchEvent(new MouseEvent("mousedown", event)); //分发事件
 
-                //记录鼠标按下dom事件
-                save_pressdown(target, event);
-
-                //设置活动状态
-                target.__fn_to_active(true);
-
-                //分发事件
-                target.dispatchEvent(new MouseEvent("mousedown", event));
+                save_pressdown(target, event); //记录鼠标按下位置
             }
         };
 
@@ -136,9 +115,9 @@
                 }
                 else if (draggable) //处理拖动
                 {
-                    dragdrop.move(dom_target(event), event, pressdown);
+                    dragdrop.move(event, pressdown);
                 }
-                else  //启用捕获
+                else if (target = dom_target(event))  //启用捕获
                 {
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
                 }
@@ -180,24 +159,34 @@
                 resize_side.target = null;
                 resizable = null;
                 resize_side = null;
+                pressdown = null;
+                return;
             }
-            else if (draggable) //如果处于拖动状态则停止拖动
+
+            if (draggable) //如果处于拖动状态则停止拖动
             {
-                //停止拖动
-                dragdrop.stop(event, pressdown, this === host);
                 draggable = null;
+
+                if (dragdrop.stop(event, pressdown, this === host)) //如果拖动过则取消相关鼠标事件
+                {
+                    flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
+                    pressdown = null;
+                    return;
+                }
+
+                if (target = pressdown.capture) //否则补上mousedown事件并继续执行mouseup事件
+                {
+                    target.__fn_to_active(true); //设置活动状态
+                    target.dispatchEvent(new MouseEvent("mousedown", event)); //分发事件 
+                }
             }
-            else if (pressdown && (target = pressdown.capture))
+
+            if (pressdown && (target || (target = pressdown.capture)))
             {
-                //分发事件
                 target.dispatchEvent(new MouseEvent("mouseup", event, pressdown));
-
-                //取消活动状态
-                target.__fn_to_active(false);
+                target.__fn_to_active(false); //取消活动状态
+                pressdown = null;
             }
-
-            //清空关联的按下事件
-            pressdown = null;
         };
 
 
@@ -282,17 +271,6 @@
         };
 
 
-        events.focus = function (event) {
-
-            return dom_target(event || fix_event(window.event)).dispatchEvent("focus");
-        };
-
-
-        events.blur = function (event) {
-
-            return dom_target(event || fix_event(window.event)).dispatchEvent("blur");
-        };
-
 
         events.contextmenu = function (event) {
 
@@ -303,6 +281,19 @@
 
 
         //直接绑定事件至dom, 解决某些事件(如scroll)无法在父控件正确捕获的问题
+        flyingon.__fn_dom_event = function (target) {
+
+            var dom = target.dom;
+
+            dom.onscroll = onscroll;
+            dom.onfocus = onfocus;
+            dom.onblur = onblur;
+
+            target.__has_dom_event = true;
+        };
+
+
+
         function onscroll(event) {
 
             var target = dom_target(event || fix_event(window.event)),
@@ -315,6 +306,25 @@
 
             return result;
         };
+
+
+        function onfocus(event) {
+
+            var target = dom_target(event || fix_event(window.event));
+
+            return target.dispatchEvent("focus");
+        };
+
+
+        function onblur(event) {
+
+            var target = dom_target(event || fix_event(window.event));
+     
+
+            return target.dispatchEvent("blur");
+        };
+
+
 
 
 
