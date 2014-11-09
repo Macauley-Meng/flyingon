@@ -3,96 +3,191 @@
 控件集合
 
 */
-flyingon.defineClass("ControlCollection", flyingon.Collection, function (base) {
+flyingon.defineClass("ControlCollection", function (base) {
 
 
 
+    Class.create = function (target) {
 
-    Class.create_mode = "merge";
-
-    Class.create = function (parent) {
-
-        this.__parent = parent;
+        this.target = target;
     };
 
 
 
+    //引入数组的方法
+    var push, splice;
 
-    //隐藏子项
-    this.hide = function (item) {
 
-        var children = this.__dom_children || (this.__dom_children = document.createDocumentFragment());
+    //子项数
+    this.length = 0;
 
-        if (item.dom)
+
+    //引入数组方法
+    (function (Array) {
+
+
+        push = Array.push;
+
+        splice = Array.splice;
+
+        this.forEach = Array.forEach;
+
+        this.indexOf = Array.indexOf;
+
+        this.lastIndexOf = Array.lastIndexOf;
+
+
+    }).call(this, Array.prototype);
+
+
+
+
+    //添加子项
+    this.append = function (item) {
+
+        var length = arguments.length,
+            change = !flyingon.__initializing;
+
+        if (length > 0)
         {
-            children.appendChild(item.dom);
-        }
-        else
-        {
-            for (var i = +item, _ = this.length; i < _; i++)
+            for (var i = 0; i < length; i++)
             {
-                children.appendChild(this[i].dom);
+                if ((item = arguments[i]) && validate(this, arguments[i], change))
+                {
+                    push.call(this, item);
+                }
             }
+
+            this.target.__dom_dirty = true; //标记需要重排dom
+        }
+    };
+
+
+    //在指定位置插入子项
+    this.insert = function (index, item) {
+
+        var length = arguments.length,
+            change = !flyingon.__initializing;
+
+        if (length > 1)
+        {
+            if (index < 0)
+            {
+                index = 0;
+            }
+            else if (index >= this.length)
+            {
+                index = this.length;
+            }
+
+            for (var i = 1; i < length; i++)
+            {
+                if ((item = arguments[i]) && validate(this, arguments[i], change))
+                {
+                    splice.call(this, index++, 0, item);
+                }
+            }
+
+            this.target.__dom_dirty = true; //标记需要重排dom
+        }
+    };
+
+
+    //移除指定子项
+    this.remove = function (item) {
+
+        var parent, index;
+
+        for (var i = 0, _ = arguments.length; i < _; i++)
+        {
+            if ((item = arguments[i]) && (index = this.indexOf(item)) >= 0)
+            {
+                remove_item(parent || (parent = this.target), item);
+                splice.call(this, index, 1);
+            }
+        }
+
+        if (parent)
+        {
+            parent.update(true);
+        }
+    };
+
+
+    //移除指定位置的子项
+    this.removeAt = function (index, length) {
+
+        if (this.length > index)
+        {
+            var parent = this.target;
+
+            if (!(length > 0))
+            {
+                length = 1;
+            }
+
+            for (var i = 0; i < length; i++)
+            {
+                remove_item(parent, this[index + i]);
+            }
+
+            splice.call(this, index, length);
+
+            parent.update(true);
         }
     };
 
 
     //添加进集合时进行验证
-    this.__fn_validate = function (index, item) {
+    function validate(target, item, change) {
 
         if (item instanceof flyingon.Control)
         {
-            var parent = this.__parent,
+            var parent = target.target,
                 oldValue = item.__parent;
 
             if (oldValue) //从原有父控件中删除
             {
-                item.remove();
+                if (oldValue !== parent)
+                {
+                    item.remove();
+                }
+                else
+                {
+                    splice.call(target, target.indexOf(item), 1);
+                }
             }
 
             //添加上下级关系
             item.__parent = parent;
             item.__ownerWindow = parent.__ownerWindow;
 
-            //添加至临时集合
-            (this.__dom_children || (this.__dom_children = document.createDocumentFragment())).appendChild(item.dom);
-
             //非初始化状态则触发事件
-            if (!flyingon.__initializing)
+            if (change)
             {
                 item.dispatchEvent(new flyingon.PropertyChangeEvent("parent", parent, oldValue));
+                parent.update(true);
             }
 
-            return item;
+            return true;
         }
-        else
-        {
-            throw new flyingon.Exception("只能添加Control类型的子控件!");
-        }
-    };
 
-
-    //移除
-    this.__fn_remove = function (index, item) {
-
-        var parent = this.__parent;
-
-        remove_item(parent, item);
-
-        parent.update(true);
+        throw new flyingon.Exception("只能添加Control类型的子控件!");
     };
 
 
     //清除
-    this.__fn_clear = function () {
+    this.clear = function () {
 
-        var parent = this.__parent;
+        var parent = this.target,
+            length = this.length;
 
-        for (var i = this.length - 1; i >= 0; i--)
+        for (var i = 0; i < length; i++)
         {
             remove_item(parent, this[i]);
         }
 
+        splice.call(this, 0, length);
         parent.update(true);
     };
 
@@ -100,7 +195,7 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (base) {
     //移除子项
     function remove_item(parent, item) {
 
-        var dom = this.dom;
+        var dom = item.dom;
 
         item.__parent = null;
 
@@ -133,6 +228,28 @@ flyingon.defineClass("ControlCollection", flyingon.Collection, function (base) {
                 clear_cache(item[i]);
             }
         }
+    };
+
+
+
+    var dom_cache = document.createDocumentFragment();
+
+    //隐藏子项
+    this.hide = function (item) {
+
+        if (item.dom)
+        {
+            dom_cache.appendChild(item.dom);
+        }
+        else
+        {
+            for (var i = +item, _ = this.length; i < _; i++)
+            {
+                dom_cache.appendChild(this[i].dom);
+            }
+        }
+
+        this.target.__dom_dirty = true;
     };
 
 

@@ -26,8 +26,8 @@
             <input type="button" value="Paint" onclick="paint()" />
 
             <input type="text" id="selector" value=".class3,.class4" />
-            <input type="text" id="propertyname" value="offsetWidth" />
-            <input type="text" id="propertyvalue" value="5" />
+            <input type="text" id="propertyname" value="border" />
+            <input type="text" id="propertyvalue" value="1px solid blue" />
 
             <input type="button" value="query" onclick="query()" />
             <input type="button" value="performance" onclick="performance()" />
@@ -77,8 +77,8 @@
 
                 var ctrl = new flyingon.Button().sets({
 
-                    id: "button" + (k * 200) + i + "px",
-                    className: "class" + (i % 20) + "px",
+                    id: "button" + (k * 200) + i,
+                    className: "class" + (i % 20),
                     left: i % 5 * 120 + "px",
                     top: i / 5 * 30 + "px",
                     width: "100px",

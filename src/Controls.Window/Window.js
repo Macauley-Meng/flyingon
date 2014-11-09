@@ -39,7 +39,7 @@ flyingon.defineClass("Window", flyingon.Control, function (base) {
         this.__activeWindow = this;
 
         //子控件集合
-        this.__children = new flyingon.ControlCollection(this, 1);
+        this.__children = new flyingon.ControlCollection(this);
 
         //初始化状态
         this.__states = { active: true };

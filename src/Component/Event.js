@@ -44,45 +44,39 @@ flyingon.defineClass("Event", function () {
 
 
     //阻止事件冒泡
-    this.stopPropagation = function () {
-
-        var event = this.dom_event;
+    this.stopPropagation = function (dom_event) {
 
         this.cancelBubble = true;
 
-        if (event)
+        if (dom_event && (dom_event = this.dom_event))
         {
-            event.stopPropagation();
+            dom_event.stopPropagation();
         }
     };
 
 
     //阻止事件冒泡及禁止默认事件
-    this.stopImmediatePropagation = function () {
-
-        var event = this.dom_event;
+    this.stopImmediatePropagation = function (dom_event) {
 
         this.cancelBubble = true;
         this.defaultPrevented = true;
 
-        if (event)
+        if (dom_event && (dom_event = this.dom_event))
         {
-            event.preventDefault();
-            event.stopPropagation();
+            dom_event.preventDefault();
+            dom_event.stopPropagation();
         }
     };
 
 
     //禁止默认事件
-    this.preventDefault = function () {
-
-        var event = this.dom_event;
+    this.preventDefault = function (dom_event) {
 
         this.defaultPrevented = true;
 
-        if (event)
+        if (dom_event && (dom_event = this.dom_event))
         {
-            event.preventDefault();
+            dom_event.preventDefault();
         }
     };
 
@@ -189,11 +183,21 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
 flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (base) {
 
 
-    //拖动目标
+    //拖动目标控件
+    this.dragTarget = null;
+
+    //拖动控件集合
     this.dragTargets = null;
 
     //接收目标
     this.dropTarget = null;
+
+
+    //拖动目标x偏移
+    this.offsetLeft = 0;
+
+    //拖动目标y偏移
+    this.offsetTop = 0;
 
 
 });

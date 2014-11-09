@@ -6,25 +6,8 @@
 </head>
 <body>
 
-    <div style="width: 100%; height: 600px;">
 
-        <div id="drag" style="background-color: yellow;">
-
-            <input type="button" value="horizontalLine" onclick="layoutVertical(false)" />
-            <input type="button" value="verticalLine" onclick="layoutVertical(true)" />
-
-            <input type="button" value="ltr" onclick="direction('ltr')" />
-            <input type="button" value="rtl" onclick="direction('rtl')" />
-
-        </div>
-
-        <div id="message">
-
-        </div>
-
-        <div id="host" style="width: 100%; height: 100%;">
-        </div>
-
+    <div id="host" style="width: 100%; height: 600px;">
     </div>
 
 
@@ -43,19 +26,32 @@
             spacingHeight: "10px"
         });
 
-        
-        var panel = new flyingon.SplitPanel2().sets({
+
+        var panel1 = new flyingon.SplitPanel2().sets({
 
             border: "4px solid blue",
             width: "fill"
         });
 
 
-        w.appendChild(panel);
+        panel1.panel1.set("border", "1px solid red").set("width", "200px");
+        panel1.panel2.set("border", "1px solid red");
+        panel1.panel3.set("border", "1px solid red").set("width", "200px");
 
-        panel.panel1.set("border", "1 solid red").set("width", "20%");
-        panel.panel2.set("border", "1 solid red");
-        panel.panel3.set("border", "1 solid red").set("width", "20%");
+
+        var panel2 = new flyingon.SplitPanel2().sets({
+
+            border: "4px solid blue",
+            vertical: true,
+            height: "500px"
+        });
+
+        panel2.panel2.set("border", "1px solid red").set("height", "200px");
+        panel2.panel2.set("border", "1px solid red");
+        panel2.panel3.set("border", "1px solid red").set("height", "200px");
+
+
+        w.appendChild(panel2, panel1);
 
 
     </script>

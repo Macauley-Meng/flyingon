@@ -5,9 +5,13 @@
 
 
 
+    //绑定事件方法
+    var binding_event;
+
+
 
     //注册的事件列表
-    var events = (function (events) {
+    (function (events) {
 
 
 
@@ -22,7 +26,6 @@
 
             draggable,          //拖动方式
             resizable,          //调整大小的方式
-            resize_side,        //可调整大小的边
 
             mousemove_time = new Date(),
 
@@ -80,9 +83,8 @@
             }
 
             //可调整大小 触控版目前不支持调整大小
-            if (resize_side)
+            if (resizable)
             {
-                target = resize_side.target; //转换target
                 flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
                 save_pressdown(target, event); //记录鼠标按下位置
             }
@@ -103,17 +105,17 @@
 
         events.mousemove = function (event) {
 
-            var target;
+            var target, cache;
 
             event || (event = fix_event(window.event));
 
             if (pressdown && (target = pressdown.capture))
             {
-                if (resize_side) //处理调整大小
+                if (resizable) //调整大小
                 {
-                    execute_resize(target, event);
+                    target.__fn_resize(resizable, event, pressdown);
                 }
-                else if (draggable) //处理拖动
+                else if (draggable) //拖动
                 {
                     dragdrop.move(event, pressdown);
                 }
@@ -122,16 +124,15 @@
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
                 }
             }
-            else if ((target = dom_target(event)) && target.get_enabled() && !resize_check(target, event)) //调整大小状态不触发相关事件
+            else if ((target = dom_target(event)) && target.get_enabled() &&
+                ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event)))) //调整大小状态不触发相关事件
             {
-                var source = hover_control;
-
-                if (target !== source)
+                if (target !== (cache = hover_control))
                 {
-                    if (source)
+                    if (cache)
                     {
-                        source.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
-                        source.__fn_to_hover(false);
+                        cache.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
+                        cache.__fn_to_hover(false);
                     }
 
                     hover_control = target;
@@ -152,16 +153,14 @@
 
             var target;
 
-            event || (event = fix_event(window.event));
-
-            if (resize_side)
+            if (resizable)
             {
-                resize_side.target = null;
                 resizable = null;
-                resize_side = null;
                 pressdown = null;
                 return;
             }
+
+            event || (event = fix_event(window.event));
 
             if (draggable) //如果处于拖动状态则停止拖动
             {
@@ -319,31 +318,12 @@
         function onblur(event) {
 
             var target = dom_target(event || fix_event(window.event));
-     
+
 
             return target.dispatchEvent("blur");
         };
 
 
-
-
-
-        //保存鼠标按下事件
-        function save_pressdown(target, event) {
-
-
-            return pressdown = {
-
-                capture: target,
-                clientX: event.clientX,
-                clientY: event.clientY,
-                which: event.which,
-                offsetLeft: target.offsetLeft,
-                offsetTop: target.offsetTop,
-                offsetWidth: target.offsetWidth,
-                offsetHeight: target.offsetHeight
-            };
-        };
 
 
         //获取dom目标控件
@@ -365,127 +345,41 @@
         };
 
 
-        //检查是否可调整大小
-        function resize_check(target, event) {
 
-            //附加控件不可以调整大小
-            while (target.__additions)
-            {
-                target = target.__parent;
-            }
-
-            return (resizable = target.get_resizable()) === "none" ? false : resize_side_check(target, event);
-        };
+        //保存鼠标按下事件
+        function save_pressdown(target, event) {
 
 
-        //调整大小边界检查
-        function resize_side_check(target, event) {
+            return pressdown = {
 
-            var offset = event.offset(target),
-                style = target.dom.style,
-                width = target.offsetWidth,
-                height = target.offsetHeight,
-                resize,
-                cursor;
-
-            if (resizable !== "vertical")
-            {
-                if (offset.x >= 0 && offset.x < 4)
-                {
-                    cursor = "w-resize";
-                    resize = { left: true };
-                }
-                else if (offset.x <= width && offset.x > width - 4)
-                {
-                    cursor = "e-resize";
-                    resize = { right: true };
-                }
-            }
-
-            if (resizable !== "horizontal")
-            {
-                if (offset.y >= 0 && offset.y < 4)
-                {
-                    if (resize)
-                    {
-                        cursor = resize.left ? "nw-resize" : "ne-resize";
-                        resize.top = true;
-                    }
-                    else
-                    {
-                        cursor = "n-resize";
-                        resize = { top: true };
-                    }
-                }
-                else if (offset.y <= height && offset.y > height - 4)
-                {
-                    if (resize)
-                    {
-                        cursor = resize.left ? "sw-resize" : "se-resize";
-                        resize.bottom = true;
-                    }
-                    else
-                    {
-                        cursor = "s-resize";
-                        resize = { bottom: true };
-                    }
-                }
-            }
-
-            if (resize_side = resize)
-            {
-                resize_side.target = target;
-
-                style.cursor = cursor;
-                event.stopImmediatePropagation();
-
-                return true;
-            }
-
-            style.cursor = target.__styles && target.__styles.cursor || "";
-            return false;
-        };
-
-
-        //执行调整大小
-        function execute_resize(target, event) {
-
-            var start = pressdown,
-                side = resize_side,
-                x = event.clientX - start.clientX,
-                y = event.clientY - start.clientY;
-
-            if (side.left)
-            {
-                target.set_left(start.offsetLeft + x);
-                target.set_width(start.offsetWidth - x);
-            }
-            else if (side.right)
-            {
-                target.set_width(start.offsetWidth + x);
-            }
-
-            if (side.top)
-            {
-                target.set_top(start.offsetTop + y);
-                target.set_height(start.offsetHeight - y);
-            }
-            else if (side.bottom)
-            {
-                target.set_height(start.offsetHeight + y);
-            }
-
-            event.stopImmediatePropagation();
+                capture: target,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                which: event.which,
+                offsetLeft: target.offsetLeft,
+                offsetTop: target.offsetTop,
+                offsetWidth: target.offsetWidth,
+                offsetHeight: target.offsetHeight
+            };
         };
 
 
 
-        return events;
+
+
+        //初始化绑定事件方法
+        binding_event = function (dom) {
+
+            for (var name in events)
+            {
+                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
+            }
+        };
+
 
 
 
     })(Object.create(null));
-
 
 
 
@@ -566,10 +460,7 @@
             this.__ownerWindow = dom.flyingon = this;
 
             //绑定事件       
-            for (var name in events)
-            {
-                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
-            }
+            binding_event(dom);
 
             //注册自动更新服务
             delay_update(this);
@@ -655,20 +546,6 @@
             }
         };
 
-
-
-        this.update = function (arrange) {
-
-            flyingon.__initializing = false;
-
-            if (arrange)
-            {
-                this.__arrange_dirty = arrange;
-            }
-
-            this.__update_dirty = 1;
-            this.__fn_registry_update(this);
-        };
 
 
     };

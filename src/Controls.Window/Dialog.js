@@ -117,7 +117,7 @@ flyingon.defineClass("Dialog", flyingon.Control, function (base) {
             parent.set_left(x);
             parent.set_top(y);
 
-            event.stopImmediatePropagation();
+            event.stopImmediatePropagation(true);
         }
     };
 
@@ -162,6 +162,7 @@ flyingon.defineClass("Dialog", flyingon.Control, function (base) {
 
         //注册窗口
         flyingon.__all_windows.push(this);
+        flyingon.__initializing = false;
 
         this.render();
     };

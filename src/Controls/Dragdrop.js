@@ -6,13 +6,17 @@
 
     var __ownerWindow,  //所属窗口
 
-        __target,       //目标控件
+        __dragTarget,   //拖动目标控件
 
-        __dragTargets,  //拖动目标
+        __dragTargets,  //拖动控件集合
 
         __dropTarget,   //接收目标
 
         __draggable,    //拖动类型
+
+        __offsetLeft,   //拖动目标x偏移
+
+        __offsetTop,    //拖动目标y偏移
 
         __execute,      //是否已执行拖动
 
@@ -44,13 +48,28 @@
             if ((target = __dragTargets[i]) && target.dom)
             {
                 dom = target.dom.cloneNode(true);
-                offset(target, dom.style, x, y);
+
+                offset_fn(target, dom.style, x, y);
 
                 __dom_proxy.appendChild(dom);
             }
         }
 
-        if (!copy)
+        if (copy)
+        {
+            for (var i = length - 1; i >= 0; i--)
+            {
+                target = __dragTargets[i];
+
+                if (target.__parent && target.copy)
+                {
+                    target = target.copy();
+                }
+
+                __dragTargets[i] = target;
+            }
+        }
+        else
         {
             for (var i = length - 1; i >= 0; i--)
             {
@@ -58,22 +77,22 @@
             }
         }
 
-        __dom_proxy.style.cssText = "position:absolute;left:0;top:0;opacity:0.1;"
+        __dom_proxy.style.cssText = "position:absolute;left:0;top:0;"
         __ownerWindow.dom.appendChild(__dom_proxy);
         __execute = true;
     };
 
 
     //获取相对window客户区的可视偏移
-    function offset(target, style, offsetX, offsetY) {
+    function offset_fn(target, style, offsetX, offsetY) {
 
         var x = target.offsetLeft,
             y = target.offsetTop;
 
         while (target = target.__parent)
         {
-            x += target.clientLeft + target.offsetLeft;
-            y += target.clientTop + target.offsetTop;
+            x += target.clientLeft + target.offsetLeft - target.__scrollLeft;
+            y += target.clientTop + target.offsetTop - target.__scrollTop;
         }
 
         style.left = x - offsetX + "px";
@@ -82,16 +101,16 @@
 
 
     //分发事件
-    this.dispatchEvent = function (target, type, event, pressdown, offset) {
+    this.dispatchEvent = function (target, type, event, pressdown) {
 
         event = new flyingon.DragEvent(type, event, pressdown);
+
+        event.dragTarget = __dragTarget;
         event.dragTargets = __dragTargets;
         event.dropTarget = __dropTarget;
 
-        if (offset)
-        {
-            event.offset = offset;
-        }
+        event.offsetLeft = __offsetLeft;
+        event.offsetTop = __offsetTop;
 
         return target.dispatchEvent(event);
     };
@@ -100,9 +119,15 @@
     //开始拖动
     this.start = function (target, draggable, event) {
 
+        var offset = target.offset(event.clientX, event.clientY);
+
         //拖动目标
         event = new flyingon.DragEvent("dragstart", event);
+
         event.dragTargets = [target];
+
+        event.offsetLeft = __offsetLeft = offset.x;
+        event.offsetTop = __offsetTop = offset.y;
 
         //取消则返回
         if (target.dispatchEvent(event) === false)
@@ -112,7 +137,7 @@
 
         //缓存状态
         __ownerWindow = target.get_ownerWindow()
-        __target = target;
+        __dragTarget = target;
         __draggable = draggable;
         __execute = false;
 
@@ -126,14 +151,20 @@
     //移动
     this.move = function (event, pressdown) {
 
-        var offset = __ownerWindow.offset(event),
-            target = __ownerWindow.findAt(offset);
-
         //如果未开启拖动则开启
         if (!__execute)
         {
+            if (Math.abs(event.clientX - pressdown.clientX) <= 2 &&
+                Math.abs(event.clientY - pressdown.clientY) <= 2) //未移动大于2像素则退出
+            {
+                return;
+            }
+
             start(event.shiftKey);
         }
+
+        var offset = __ownerWindow.offset(event.clientX, event.clientY),
+            target = __ownerWindow.findAt(offset.x, offset.y);
 
         //移到代理dom
         if (__draggable !== "vertical")
@@ -147,16 +178,9 @@
         }
 
         //往上找出可放置拖放的对象(复制模式时不能放置在目标控件上)
-        while (target && (target === __target || !target.get_droppable()))
+        while (target && (target === __dragTarget || !target.get_droppable()))
         {
-            offset.x += target.offsetLeft;
-            offset.y += target.offsetTop;
-
-            if (target = target.__parent)
-            {
-                offset.x += target.clientLeft;
-                offset.y += target.clientTop;
-            }
+            target = target.__parent;
         }
 
         //如果放置目标发生变化则分发相关事件
@@ -169,17 +193,17 @@
 
             if (__dropTarget = target)
             {
-                this.dispatchEvent(target, "dragenter", event, pressdown, offset);
+                this.dispatchEvent(target, "dragenter", event, pressdown);
             }
         }
 
         //分发drag事件
-        this.dispatchEvent(__target, "drag", event, pressdown);
+        this.dispatchEvent(__dragTarget, "drag", event, pressdown);
 
         //分发dragover事件
         if (__dropTarget)
         {
-            this.dispatchEvent(__dropTarget, "dragover", event, pressdown, offset);
+            this.dispatchEvent(__dropTarget, "dragover", event, pressdown);
         }
     };
 
@@ -199,7 +223,7 @@
             }
 
             //分发dragend事件
-            this.dispatchEvent(__target, "dragend", event, pressdown);
+            this.dispatchEvent(__dragTarget, "dragend", event, pressdown);
 
             //清空代理dom
             __ownerWindow.dom.removeChild(__dom_proxy);
@@ -208,7 +232,7 @@
         }
 
         //清空缓存对象
-        __ownerWindow = __target = __dragTargets = __dropTarget = null;
+        __ownerWindow = __dragTarget = __dragTargets = __dropTarget = null;
 
         //返回是否拖动过
         return result;

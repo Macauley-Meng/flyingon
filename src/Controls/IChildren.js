@@ -7,6 +7,9 @@ flyingon.IChildren = function (base) {
     //是否需要重新排列子控件
     this.__arrange_dirty = true;
 
+    //是否需要重新处理子dom
+    this.__dom_dirty = true;
+
 
 
     //子控件集合
@@ -14,6 +17,8 @@ flyingon.IChildren = function (base) {
 
         return this.__children;
     });
+
+
 
 
     //添加子控件
@@ -24,11 +29,26 @@ flyingon.IChildren = function (base) {
     };
 
 
+    //在指定位置插入子控件
+    this.insertChild = function (index, item) {
+
+        var children = this.__children;
+        children.insert.apply(children, arguments);
+    };
+
+
     //移除子控件
     this.removeChild = function (item) {
 
         var children = this.__children;
         children.remove.apply(children, arguments);
+    };
+
+
+    //移除指定位置的子控件
+    this.removeAt = function (index, length) {
+
+        this.__children.removeAt.apply(index, length);
     };
 
 
@@ -72,16 +92,23 @@ flyingon.IChildren = function (base) {
 
         if (items && items.length > 0)
         {
-            //如果有未处理子dom则添加
-            if (cache = items.__dom_children)
-            {
-                this.dom_children.appendChild(cache);
-                items.__dom_children = null;
-            }
-
             //重排
-            if (cache || this.__arrange_dirty)
+            if (this.__arrange_dirty)
             {
+                //处理子dom
+                if (this.__dom_dirty)
+                {
+                    cache = document.createDocumentFragment();
+
+                    for (var i = 0, _ = items.length; i < _; i++)
+                    {
+                        cache.appendChild(items[i].dom);
+                    }
+
+                    this.dom_children.appendChild(cache);
+                    this.__dom_dirty = false;
+                }
+
                 if ((cache = this.get_fontSize()) !== this.__compute_style.fontSize)
                 {
                     this.__compute_style.fontSize = cache;
@@ -208,6 +235,10 @@ flyingon.IChildren = function (base) {
             {
                 this.__children.append(reader.read_object(value[i]));
             }
+        }
+        else
+        {
+            base.deserialize_property.call(this, reader, name, value);
         }
     };
 

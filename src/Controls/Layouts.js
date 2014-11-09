@@ -61,21 +61,27 @@
 
 
         //获取拖动放置控件索引
-        this.__fn_drag_index = function (target, items, offset) {
+        this.__fn_drag_index = function (target, x, y) {
 
-            for (var i = items.length - 1; i >= 0; i--)
+            var items = target.__children,
+                item;
+
+            x += target.__scrollLeft - target.clientLeft;
+            y += target.__scrollTop - target.clientTop;
+
+            for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__visible &&
-                    item.offsetLeft + item.offsetWidth >= offset.x &&
-                    item.offsetTop + item.offsetHeight <= offset.y)
+                if ((item = items[i]).__visible &&
+                    item.offsetLeft <= x &&
+                    item.offsetTop <= y &&
+                    item.offsetLeft + item.offsetWidth >= x &&
+                    item.offsetTop + item.offsetHeight >= y)
                 {
                     return i;
                 }
             }
 
-            return 0;
+            return -1;
         };
 
 
@@ -106,7 +112,7 @@
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
 
-            (target.get_layoutVertical() ? arrange2 : arrange1).apply(this, arguments);
+            (target.get_vertical() ? arrange2 : arrange1).apply(this, arguments);
         };
 
 
@@ -181,7 +187,7 @@
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
 
-            (target.get_layoutVertical() ? arrange2 : arrange1).apply(this, arguments);
+            (target.get_vertical() ? arrange2 : arrange1).apply(this, arguments);
         };
 
 
@@ -535,7 +541,7 @@
         //绝对定位拖动不处理
         this.__fn_drag_index = function (target) {
 
-            return -1;
+            return target.__children.length;
         };
 
     });
@@ -890,7 +896,7 @@
             var item = compute.call(this, target, clientWidth, clientHeight),
                 list1 = item[0],
                 list2 = item[1],
-                vertical = target.get_layoutVertical(),
+                vertical = target.get_vertical(),
                 index1 = 0,
                 index2 = 0,
                 locked,
@@ -1527,7 +1533,7 @@
                 value = target.get_layoutTable() || "*[* * *] ...2",
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
-                vertical = target.get_layoutVertical();
+                vertical = target.get_vertical();
 
             if (!table || table.__cache_value1 !== value)
             {

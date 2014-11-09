@@ -364,10 +364,10 @@
             change_code: "this.dom.scrollLeft = this.dom.scrollTop = 0;"
         });
 
-        //是否竖排布局
+        //是否竖排
         //true      竖排
         //false     横排
-        style("layout-vertical", false, "last-value");
+        style("vertical", false, "last-value");
 
         //布局间隔宽度
         //length	规定以具体单位计的值 比如像素 厘米等
@@ -510,8 +510,7 @@
         //number%   父控件客户区宽或高度的百分比
         styles("?", ["width", "height"], "default", {
 
-            attributes: "layout|no",
-            check_code: "value = (cache = +value) >= 0 ? cache : (cache < 0 ? 0 : \"\" + value);"
+            attributes: "layout|no"
         });
 
         //控件最小宽度和最小高度

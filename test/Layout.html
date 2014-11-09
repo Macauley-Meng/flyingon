@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <!--以IE的当前版本渲染,如果安装了ChromeFrame则优先使用-->
     <!--<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />-->
-    <meta http-equiv="X-UA-Compatible" content="IE=7" />
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=7" />-->
     <title></title>
     <style type="text/css">
         * {
@@ -39,8 +39,8 @@
                 <input type="button" value="absolute" onclick="layout('absolute')" />
 
                 <span style="width: 10px"></span>
-                <input type="button" value="horizontalLine" onclick="layoutVertical(false)" />
-                <input type="button" value="verticalLine" onclick="layoutVertical(true)" />
+                <input type="button" value="horizontalLine" onclick="vertical(false)" />
+                <input type="button" value="verticalLine" onclick="vertical(true)" />
 
                 <span style="width: 10px"></span>
                 <input type="button" value="ltr" onclick="direction('ltr')" />
@@ -48,7 +48,8 @@
 
                 <span style="width: 10px"></span>
                 <input type="button" value="Paint" onclick="paint()" />
-
+                <span style="width: 10px"></span>
+                <span style="color:red;">可拖动Button调整位置或大小</span>
             </div>
 
             <div id="panel_property" style="padding:2px;">
@@ -58,8 +59,8 @@
                 <span tag="flow">layoutWidth<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
                 <span tag="flow">layoutHeight<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
                 <span style="display: none;" tag="page">layoutPage<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
-                <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="4" onchange="sync_panel()" /></span>
-                <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="4" onchange="sync_panel()" /></span>
+                <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
+                <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
                 <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 600px; " value="*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]" onchange="sync_panel()" /></span>
             </div>
 
@@ -81,6 +82,11 @@
                 <span>alignX<input type="text" style="width:40px;" value="center" onchange="sync_button()" /></span>
                 <span>alignY<input type="text" style="width:40px;" value="middle" onchange="sync_button()" /></span>
 
+                <span>marginLeft<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                <span>marginTop<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                <span>marginRight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                <span>marginBottom<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+
                 <span tag="flow">newline<input type="text" style="width:40px;" value="false" onchange="sync_button()" /></span>
                 <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="sync_button()" /></span>
                 <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
@@ -95,10 +101,6 @@
         </div>
 
         <div id="host" style="width: 100%; height: 600px;">
-        </div>
-
-        <div id="message" style="overflow:auto;">
-
         </div>
 
     </div>
@@ -154,8 +156,8 @@
                 spacingWidth: "10px",
                 spacingHeight: "10px",
 
-                layoutColumns: "6", //4
-                layoutRows: "6",   //4
+                layoutColumns: "8", //4
+                layoutRows: "8",   //4
 
                 layoutTable: "*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]"
             });
@@ -168,6 +170,7 @@
                     left: i % 5 * 120 + "px",
                     top: i / 5 * 30 + "px",
                     draggable: "both",
+                    resizable: "both",
                     text: "button" + i
                 });
 
@@ -265,7 +268,7 @@
         };
 
 
-        function layoutVertical(value) {
+        function vertical(value) {
 
             var date = new Date();
 
@@ -274,7 +277,7 @@
             for (var i = 0; i < children.length; i++)
             {
                 var panel = children[i];
-                panel.set_layoutVertical(value);
+                panel.set_vertical(value);
             }
 
             w.render();
@@ -377,24 +380,6 @@
             }
 
         });
-
-
-
-        if (!window.console)
-        {
-            window.console = {
-
-                log: function (text) {
-
-                    message.innerHTML += text + "<br/>";
-                }
-            };
-
-            message.ondblclick = function () {
-
-                message.innerHTML = "";
-            };
-        }
 
 
 

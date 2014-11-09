@@ -5,6 +5,12 @@
 flyingon.IComponent = function () {
 
 
+    var id = 1;
+
+    flyingon.newId = function () {
+
+        return id++;
+    };
 
 
     //扩展事件支持
@@ -469,38 +475,24 @@ flyingon.IComponent = function () {
         //反序列化属性
         for (var i = 0, _ = names.length; i < _; i++)
         {
-            if (fn = this["set_" + (name = names[i])])
+            switch (name = names[i])
             {
-                fn.call(this, data[name], true);
-            }
-            else
-            {
-                switch (name)
-                {
-                    case "bindings":
-                        reader.read_bindings(this, data.bindings);
-                        break;
+                case "bindings":
+                    reader.read_bindings(this, data.bindings);
+                    break;
 
-                    case "events":
-                        excludes.events = this.__events = data.events;
+                case "events":
+                    excludes.events = this.__events = data.events;
 
-                        for (var name in data.events)
-                        {
-                            this.on(name, data.events[name]);
-                        }
-                        break;
+                    for (var name in data.events)
+                    {
+                        this.on(name, data.events[name]);
+                    }
+                    break;
 
-                    default:
-                        if (fn = this.deserialize_property)
-                        {
-                            fn.call(this, reader, name, data[name]);
-                        }
-                        else
-                        {
-                            this[name] = data[name];
-                        }
-                        break;
-                }
+                default:
+                    this.deserialize_property(reader, name, data[name]);
+                    break;
             }
         }
 
@@ -511,6 +503,22 @@ flyingon.IComponent = function () {
         }
 
         return this;
+    };
+
+
+    //序列化属性
+    this.deserialize_property = function (reader, name, value) {
+
+        var fn = this["set_" + name];
+
+        if (fn)
+        {
+            fn.call(this, value, true);
+        }
+        else
+        {
+            this[name] = value;
+        }
     };
 
 

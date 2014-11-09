@@ -12,13 +12,17 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (base) {
         this.panel1 = new flyingon.Panel();
         this.panel2 = new flyingon.Panel();
 
-        (this.__children = new flyingon.ControlCollection(this, 1)).append(
+        (this.__children = new flyingon.ControlCollection(this)).append(
             this.panel1,
             this.splitter1 = this.__fn_create_splitter(this.panel1),
             this.panel2);
 
     };
 
+
+
+    //扩展子控件接口
+    flyingon.extend(this, flyingon.IChildren, base);
 
 
     //修改默认宽高
@@ -52,7 +56,7 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (base) {
         {
             var target = this.__parent,
                 end = event.target !== target.splitter1,
-                vertical = target.get_layoutVertical(),
+                vertical = target.get_vertical(),
                 panel = end ? target.panel3 : target.panel1,
                 start = pressdown.start || (pressdown.start = vertical ? panel.offsetHeight : panel.offsetWidth),
                 size;
@@ -70,7 +74,7 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (base) {
                     size = target.clientHeight - this.offsetHeight;
                 }
 
-                panel.set_height(size);
+                panel.set_height(size + "px");
             }
             else
             {
@@ -85,10 +89,10 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (base) {
                     size = target.clientWidth - this.offsetWidth;
                 }
 
-                panel.set_width(size);
+                panel.set_width(size + "px");
             }
 
-            event.stopImmediatePropagation();
+            event.stopImmediatePropagation(true);
         }
     };
 
@@ -97,7 +101,7 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (base) {
     //排列子控件
     this.arrange = function () {
 
-        var vertical = this.get_layoutVertical(),
+        var vertical = this.get_vertical(),
             cursor = vertical ? "n-resize" : "w-resize";
 
         this.panel1.__visible = this.splitter1.__visible = this.panel1.get_visibility() !== "collapse";
@@ -112,8 +116,6 @@ flyingon.defineClass("SplitPanel", flyingon.Control, function (base) {
         }
 
         (vertical ? arrange_vertical : arrange_horizontal).call(this);
-
-        base.arrange.call(this);
     };
 
 

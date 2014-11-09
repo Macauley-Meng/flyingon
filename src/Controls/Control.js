@@ -27,7 +27,7 @@ flyingon.defineClass("Control", function () {
     //所属窗口
     this.defineProperty("ownerWindow", function () {
 
-        return this.__ownerWindow || (this.__ownerWindow = this.__parent.get_ownerWindow());
+        return this.__ownerWindow || (this.__parent ? (this.__ownerWindow = this.__parent.get_ownerWindow()) : null);
     });
 
 
@@ -320,14 +320,19 @@ flyingon.defineClass("Control", function () {
 
             this["__fn_to_" + name] = function (value) {
 
-                var states = this.__states || (this.__states = {});
+                var states = this.__states || (this.__states = {}),
+                    ownerWindow;
 
                 if (states[name] !== (value = !!value))
                 {
                     states[name] = value;
 
                     (registry_states || (registry_states = {}))[this.__uniqueId || (this.__uniqueId = flyingon.newId())] = this;
-                    (this.__ownerWindow || this.get_ownerWindow()).__fn_registry_update(this, update);
+
+                    if (ownerWindow = this.__ownerWindow || this.get_ownerWindow())
+                    {
+                        ownerWindow.__fn_registry_update(this, update);
+                    }
                 }
             };
 
@@ -552,7 +557,7 @@ flyingon.defineClass("Control", function () {
                     break;
 
                 default:  //其它值
-                    width = fn(value);
+                    width = value && value.charAt(value.length - 1) === "%" ? (usable_width * parseFloat(value) / 100 | 0) : fn(value);
                     break;
             }
 
@@ -607,7 +612,7 @@ flyingon.defineClass("Control", function () {
                     break;
 
                 default:  //其它值
-                    height = fn(value);
+                    height = value && value.charAt(value.length - 1) === "%" ? (usable_height * parseFloat(value) / 100 | 0) : fn(value);
                     break;
             }
 
@@ -830,10 +835,10 @@ flyingon.defineClass("Control", function () {
 
         //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
         //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
-        //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
+        //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
         var offset_fn = document.body.getBoundingClientRect || (function () {
 
-            var scroll = document.compatMode == "BackCompat" ? document.body : document.documentElement;
+            var body = document.compatMode == "BackCompat" ? document.body : document.documentElement;
 
             //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
             //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
@@ -856,8 +861,8 @@ flyingon.defineClass("Control", function () {
                     }
                 }
 
-                x -= scroll.scrollLeft;
-                y -= scroll.scrollTop;
+                x -= body.scrollLeft;
+                y -= body.scrollTop;
 
                 return { left: x, top: y };
             };
@@ -865,17 +870,117 @@ flyingon.defineClass("Control", function () {
         })();
 
 
-        //获取控件相对鼠标事件的偏移
-        this.offset = function (event) {
+        //获取控件相对浏览器视口坐标的偏移
+        this.offset = function (clientX, clientY) {
 
             var offset = offset_fn.call(this.dom);
 
             return {
 
-                x: event.clientX - offset.left,
-                y: event.clientY - offset.top
+                x: clientX - offset.left,
+                y: clientY - offset.top
             };
         };
+
+
+
+
+        //获取可调整大小边
+        this.__fn_resize_side = function(resizable, event) {
+
+            var offset = this.offset(event.clientX, event.clientY),
+                style = this.dom.style,
+                width = this.offsetWidth,
+                height = this.offsetHeight,
+                resize,
+                cursor;
+
+            if (resizable !== "vertical")
+            {
+                if (offset.x >= 0 && offset.x < 4)
+                {
+                    cursor = "w-resize";
+                    resize = { left: true };
+                }
+                else if (offset.x <= width && offset.x > width - 4)
+                {
+                    cursor = "e-resize";
+                    resize = { right: true };
+                }
+            }
+
+            if (resizable !== "horizontal")
+            {
+                if (offset.y >= 0 && offset.y < 4)
+                {
+                    if (resize)
+                    {
+                        cursor = resize.left ? "nw-resize" : "ne-resize";
+                        resize.top = true;
+                    }
+                    else
+                    {
+                        cursor = "n-resize";
+                        resize = { top: true };
+                    }
+                }
+                else if (offset.y <= height && offset.y > height - 4)
+                {
+                    if (resize)
+                    {
+                        cursor = resize.left ? "sw-resize" : "se-resize";
+                        resize.bottom = true;
+                    }
+                    else
+                    {
+                        cursor = "s-resize";
+                        resize = { bottom: true };
+                    }
+                }
+            }
+
+            if (resize)
+            {
+                style.cursor = cursor;
+                event.stopImmediatePropagation(true);
+
+                return resize;
+            }
+
+            style.cursor = this.__styles && this.__styles.cursor || "";
+        };
+
+
+        //调整大小
+        this.__fn_resize = function (side, event, pressdown) {
+
+            var x = event.clientX - pressdown.clientX,
+                y = event.clientY - pressdown.clientY;
+
+            if (side.left)
+            {
+                this.set_left(pressdown.offsetLeft + x + "px");
+                this.set_width(pressdown.offsetWidth - x + "px");
+            }
+            else if (side.right)
+            {
+                this.set_width(pressdown.offsetWidth + x + "px");
+            }
+
+            if (side.top)
+            {
+                this.set_top(pressdown.offsetTop + y + "px");
+                this.set_height(pressdown.offsetHeight - y + "px");
+            }
+            else if (side.bottom)
+            {
+                this.set_height(pressdown.offsetHeight + y + "px");
+            }
+
+            event.stopImmediatePropagation(true);
+        };
+
+
 
 
 
