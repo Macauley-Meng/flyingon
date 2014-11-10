@@ -88,6 +88,19 @@
 
 
 
+    function default_rule() {
+
+        var value = "-moz-user-select:text;-khtml-user-select:text;user-select:text;outline:none;";
+
+        add_rule("div", "-moz-user-select:none;-khtml-user-select:none;user-select:none;outline:none;");
+        add_rule("span", value); //IE7不支持span,input写法
+        add_rule("input", value);
+    };
+
+
+    default_rule();
+
+
 
     //样式表
     flyingon.styleSheets = (function () {
@@ -119,6 +132,7 @@
             registry_names = Object.create(null);
 
             remove_rule();
+            default_rule();
 
             for (var i = 0, _ = this.length; i < length; i++)
             {
@@ -251,7 +265,7 @@
             {
                 style_no_names[key] = true;
             }
-            else
+            else if (!attributes.end_code)
             {
                 attributes.end_code = "this.dom.style[name] = value !== undefined ? value : \"\";";
             }
@@ -404,11 +418,23 @@
         style("layout-columns", "3", "last-value");
 
         //表格布局定义(此值仅对表格布局(table)有效)
-        //行列格式: row[column ...] ...
-        //row,column可选值: 整数(固定行高或列宽) 数字%(总宽度或高度的百分比) [数字]*(剩余空间的百分比,数字表示权重,省略时权重默认为100)
-        //column可嵌套表,嵌套表格式: {(spacing-x spacing-y) row[column ...] ...} spacing-x,spacing-y为横或纵向留空(可省略,默认与父表相等),整数值或百分比
-        //九宫格正中内嵌九宫格(留空为父表的一半)示例: "*[* * *] *[* * {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * *]"
+        //行列格式: row[column ...] ... row,column可选值: 
+        //整数            固定行高或列宽 
+        //数字+%          总宽度或高度的百分比 
+        //数字+*          剩余空间的百分比, 数字表示权重, 省略时权重默认为100
+        //数字+css单位    指定单位的行高或列宽
+        //列可嵌套表或表组 表或表组可指定参数
+        //参数集: (name1=value1, ...)   多个参数之间用逗号分隔
+        //嵌套表: {(参数集) row[column ...] ...} 参数集可省略
+        //嵌套表组: <(参数集) { ... } ...> 参数集可省略 多个嵌套表之间用空格分隔
+        //示例(九宫格正中内嵌九宫格,留空为父表的一半): "*[* * *] *[* * {(spacingWidth=50% spacingHeight=50%) *[* * *] *[* * *] *[* * *]} *] *[* * *]"
         style("layout-table", "*[* * *] *[* * *] *[* * *]", "last-value");
+
+        //自动表格布局 根据可用空间自动选择的表格布局
+        //null:     不启用自动表格布局
+        //Array:    格式: [[width, height, layout-table] ...]
+        //请注意从前到后的书写顺序
+        style("layout-tables", null, "last-value");
 
 
 
@@ -663,7 +689,7 @@
         //控件阅读方向
         //ltr	    从左到右 
         //rtl	    从右到左 
-        style("direction", "ltr", "inherit");
+        style("direction", "ltr", "arrange|inherit");
 
 
 
@@ -716,11 +742,20 @@
         //visible	默认值 元素是可见的 
         //hidden	元素是不可见的 
         //collapse	当在表格元素中使用时, 此值可删除一行或一列, 但是它不会影响表格的布局 被行或列占据的空间会留给其他内容使用 如果此值被用在其他的元素上, 会呈现为 "hidden" 
-        style("visibility", "visible", "layout|inherit|no");
+        style("visibility", "visible", {
+
+            attributes: "layout|inherit",
+            end_code: "this.dom.style.display = (this.dom.style[name] = value !== undefined ? value : \"\") !== \"collapse\" ? \"\" : \"none\";"
+        });
 
         //控件透明度
         //number	0(完全透明)到1(完全不透明)之间数值
-        style("opacity", 1);
+        style("opacity", 1, {
+
+            end_code: "var style = this.dom.style;\t\n"
+                + "style.filter = \"alpha(opacity=\" + (value * 100) + \")\";\t\n"
+                + "style.opacity = value;\t\n"
+        });
 
         //控件鼠标样式
         //url	    需使用的自定义光标的 URL     注释：请在此列表的末端始终定义一种普通的光标, 以防没有由 URL 定义的可用光标 
@@ -1498,115 +1533,112 @@
 
 
 
+    //定义标准css样式
+    flyingon.css = function (styles) {
 
-    //定义样式
-    flyingon.defineStyle = function (styles) {
+        flyingon.style(styles, true);
+    };
+
+
+    //定义系统扩展样式
+    flyingon.style = function (styles, css_style) {
 
         //预处理样式集
         if (styles)
         {
-            var selector_list = [],
+            var rules = [],
                 style,
                 cssText;
 
             //解析样式(处理引入及合并)
             for (var selector in styles)
             {
-                if ((style = styles[selector]) && style.constructor !== Function)
+                if ((style = styles[selector]) && (style = parse_style(Object.create(null), style, styles, cssText = [], css_style)))
                 {
-                    //处理样式
-                    style = parse_style(Object.create(null), style, styles, cssText = []);
+                    cssText = cssText.join("");
 
-                    //有合法样式值才处理
-                    if (cssText.__style)
+                    //解析选择器
+                    selector = flyingon.parse_selector(selector);
+
+                    if (selector.forks) //如果存在分支则拆分分支为独立选择器
                     {
-                        cssText = cssText.join("");
+                        selector = split_selector(selector);
 
-                        //解析选择器
-                        selector = flyingon.parse_selector(selector);
-
-                        if (selector.forks) //如果存在分支则拆分分支为独立选择器
+                        for (var i = 0, _ = selector.length ; i < _; i++)
                         {
-                            selector = split_selector(selector);
-
-                            for (var i = 0, _ = selector.length ; i < _; i++)
-                            {
-                                selector_list.push(handle_selector(selector[i], style, cssText));
-                            }
+                            rules.push(handle_selector(selector[i], style, cssText, css_style));
                         }
-                        else
-                        {
-                            selector_list.push(handle_selector(selector, style, cssText));
-                        }
+                    }
+                    else
+                    {
+                        rules.push(handle_selector(selector, style, cssText, css_style));
                     }
                 }
             }
 
             //存储样式表
-            flyingon.styleSheets.push(selector_list);
+            flyingon.styleSheets.push(rules);
 
             //处理样式
-            for (var i = 0, _ = selector_list.length; i < _; i++)
+            for (var i = 0, _ = rules.length; i < _; i++)
             {
-                handle_style(selector_list[i]);
+                handle_style(rules[i]);
             }
         }
     };
 
 
     //解析样式(处理引入及合并)
-    function parse_style(target, style, styles, cssText) {
+    function parse_style(target, style, styles, cssText, css_style) {
 
-        var values;
-
-        if (!style)
+        if (style)
         {
-            return target;
-        }
+            var values, value;
 
-        for (var name in style)
-        {
-            if (name)
+            for (var name in style)
             {
-                if (name === "import")
+                if (name && ((value = style[name]) || value === 0))
                 {
-                    if (values = style[name])
+                    if (name === "import")
                     {
-                        if (values.constructor === Array) //引入
+                        if (value.constructor === Array) //引入
                         {
-                            for (var i = 0, _ = values.length; i < _; i++)
+                            for (var i = 0, _ = value.length; i < _; i++)
                             {
-                                parse_style(target, styles[values[i]], styles, cssText);
+                                parse_style(target, styles[value[i]], styles, cssText, css_style);
                             }
                         }
                         else
                         {
-                            parse_style(target, styles[values], styles, cssText);
+                            parse_style(target, styles[value], styles, cssText, css_style);
                         }
                     }
-                }
-                else if (name in style_split)
-                {
-                    values = style_split[name](style[name]);
-
-                    for (var key in values)
+                    else if (name in style_split)
                     {
-                        handle_value(target, key, values[key], cssText);
+                        values = style_split[name](value);
+
+                        for (var key in values)
+                        {
+                            handle_value(target, key, values[key], cssText, css_style);
+                        }
+                    }
+                    else
+                    {
+                        handle_value(target, name, value, cssText, css_style);
                     }
                 }
-                else
-                {
-                    handle_value(target, name, style[name], cssText);
-                }
+            }
+
+            for (var name in target)
+            {
+                return target;
             }
         }
-
-        return target;
     };
 
 
     //处理样式值
-    function handle_value(style, name, value, cssText) {
+    function handle_value(style, name, value, cssText, css_style) {
 
         if (value || value === 0)
         {
@@ -1631,10 +1663,25 @@
             }
 
             style[name] = value;
-            cssText.__style = true; //标记是否有style
 
-            if (!(name in style_no_names))
+            if (css_style || !(name in style_no_names))
             {
+                switch (name) //修改css值
+                {
+                    case "visibility":
+                        if (value === "collapse")
+                        {
+                            cssText.push("display:none;");
+                        }
+                        break;
+
+                    case "opacity":
+                        cssText.push("filter:alpha(opacity=" + (value * 100) + ");");
+                        cssText.push("-moz-opacity:" + value + ";");
+                        cssText.push("-khtml-opacity:" + value + ";");
+                        break;
+                }
+
                 cssText.push((original_names[name] || name) + ":" + value + ";");
             }
         }
@@ -1692,7 +1739,7 @@
 
 
     //处理选择器
-    function handle_selector(selector, style, cssText) {
+    function handle_selector(selector, style, cssText, css_style) {
 
         var length = selector.length,
             value = selector[length - 1];
@@ -1705,21 +1752,28 @@
         //如果控件dom使用css方式关联样式
         if (selector.cssText = cssText)
         {
-            var values = [];
-
-            for (var i = 0; i < length; i++)
+            if (selector.css_style = css_style) //css样式直接按原样生成规则
             {
-                if (value = selector_rule(selector[i]))
-                {
-                    values.push(value);
-                }
-                else
-                {
-                    return selector;
-                }
+                selector.rule = "" + selector;
             }
+            else
+            {
+                var values = [];
 
-            selector.rule = values.join(""); //复用且保存css
+                for (var i = 0; i < length; i++)
+                {
+                    if (value = selector_rule(selector[i]))
+                    {
+                        values.push(value);
+                    }
+                    else
+                    {
+                        return selector;
+                    }
+                }
+
+                selector.rule = values.join(""); //复用且保存css
+            }
         }
         else
         {
@@ -1826,6 +1880,16 @@
 
     //保存样式
     function handle_style(selector) {
+
+        if (selector.css_style) //如果是css样式直接生成css规则
+        {
+            if (selector.rule) //复用且保存css
+            {
+                add_rule(selector.rule, selector.cssText);
+            }
+
+            return;
+        }
 
         var style = selector.style,
             type = selector.type,

@@ -847,7 +847,7 @@ window.flyingon = (function () {
         //类初始化完毕方法
         if (prototype.__Class_initialize__)
         {
-            prototype.__Class_initialize__(Class, base);
+            prototype.__Class_initialize__(Class);
         }
 
 

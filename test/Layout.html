@@ -27,7 +27,7 @@
 
         <div id="tool">
 
-            <div id="drag" style="background-color: yellow;">
+            <div id="drag" style="border:1px solid black; padding:2px; background-color: yellow;">
 
                 <input type="button" value="line" onclick="layout('line')" />
                 <input type="button" value="flow" onclick="layout('flow')" />
@@ -39,8 +39,8 @@
                 <input type="button" value="absolute" onclick="layout('absolute')" />
 
                 <span style="width: 10px"></span>
-                <input type="button" value="horizontalLine" onclick="vertical(false)" />
-                <input type="button" value="verticalLine" onclick="vertical(true)" />
+                <input type="button" value="horizontal" onclick="vertical(false)" />
+                <input type="button" value="vertical" onclick="vertical(true)" />
 
                 <span style="width: 10px"></span>
                 <input type="button" value="ltr" onclick="direction('ltr')" />
@@ -49,54 +49,61 @@
                 <span style="width: 10px"></span>
                 <input type="button" value="Paint" onclick="paint()" />
                 <span style="width: 10px"></span>
-                <span style="color:red;">可拖动Button调整位置或大小</span>
+                <span style="color:red;">可点击Button选择控件及调整参数 可拖动Panel或Button调整位置或大小</span>
             </div>
 
-            <div id="panel_property" style="padding:2px;">
-                Panel:
-                <span>spacingWidth<input type="text" style="width:40px;" value="10px" onchange="sync_panel()" /></span>
-                <span>spacingHeight<input type="text" style="width:40px;" value="10px" onchange="sync_panel()" /></span>
-                <span tag="flow">layoutWidth<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
-                <span tag="flow">layoutHeight<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
-                <span style="display: none;" tag="page">layoutPage<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
-                <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
-                <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
-                <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 600px; " value="*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]" onchange="sync_panel()" /></span>
-            </div>
+            <table style="border:1px solid black;">
+                <tr>
+                    <td style="width:60px;">面板参数:</td>
+                    <td>
+                        <div id="panel_property" style="padding:2px;">
+                            <span>spacingWidth<input type="text" style="width:40px;" value="10px" onchange="sync_panel()" /></span>
+                            <span>spacingHeight<input type="text" style="width:40px;" value="10px" onchange="sync_panel()" /></span>
+                            <span tag="flow">layoutWidth<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
+                            <span tag="flow">layoutHeight<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="page">layoutPage<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 400px; " value="*[50% * *] *[* 50% {(spacingWidth=50%,spacingHeight=50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="table">layoutTables<input type="text" style="width: 400px; " value="[ [300, 300, '*[* * *] ...2' ], [ 400, 400, '*[* * * *] ...3'] ]" onchange="sync_panel()" /></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:60px;">控件参数:</td>
+                    <td>
+                        <div id="button_property" style="padding:2px;">
 
-            <div id="button_property" style="padding:2px;">
+                            <span>minWidth<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>maxWidth<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
 
-                Button:
-                <span>width<input type="text" style="width:40px;" value="default" onchange="sync_button()" /></span>
-                <span>height<input type="text" style="width:40px;" value="default" onchange="sync_button()" /></span>
+                            <span>minHeight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>maxHeight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
 
-                <span>minWidth<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                <span>maxWidth<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>offsetX<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>offsetY<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
 
-                <span>minHeight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                <span>maxHeight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>alignX<input type="text" style="width:40px;" value="center" onchange="sync_button()" /></span>
+                            <span>alignY<input type="text" style="width:40px;" value="middle" onchange="sync_button()" /></span>
 
-                <span>offsetX<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                <span>offsetY<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>marginLeft<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>marginTop<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>marginRight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>marginBottom<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
 
-                <span>alignX<input type="text" style="width:40px;" value="center" onchange="sync_button()" /></span>
-                <span>alignY<input type="text" style="width:40px;" value="middle" onchange="sync_button()" /></span>
+                            <span tag="flow">newline<input type="text" style="width:40px;" value="false" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="grid">columnIndex<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="absolute">left<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
 
-                <span>marginLeft<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                <span>marginTop<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                <span>marginRight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                <span>marginBottom<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-
-                <span tag="flow">newline<input type="text" style="width:40px;" value="false" onchange="sync_button()" /></span>
-                <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="sync_button()" /></span>
-                <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
-                <span style="display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
-                <span style="display: none;" tag="grid">columnIndex<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                <span style="display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
-                <span style="display: none;" tag="absolute">left<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                <span style="display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
-
-            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
 
         </div>
 
@@ -147,11 +154,10 @@
             var panel = new flyingon.Panel().sets({
 
                 width: "500px",
-                height: "400px",
                 border: "4px solid red",
                 padding: "10px",
                 droppable: true,
-
+                resizable: "both",
                 layoutType: "flow",
                 spacingWidth: "10px",
                 spacingHeight: "10px",
@@ -159,7 +165,8 @@
                 layoutColumns: "8", //4
                 layoutRows: "8",   //4
 
-                layoutTable: "*[50% * *] *[* 50% {(50% 50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]"
+                layoutTable: "*[50% * *] *[* 50% {(spacingWidth=50%,spacingHeight=50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]",
+                layoutTables: "[ [300, 300, '*[* * *] ...2' ], [ 400, 400, '*[* * * *] ...3'] ]"
             });
 
             for (var i = 0; i < 100; i++)

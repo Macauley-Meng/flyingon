@@ -61,6 +61,14 @@ flyingon.defineClass("Control", function () {
 
 
 
+    //获取父控件中的索引位置
+    this.childIndex = function () {
+
+        var parent = this.__parent;
+        return parent && parent.__children.indexOf(this) || -1;
+    };
+
+
     //从父控件中移除自身
     this.remove = function () {
 
@@ -886,7 +894,7 @@ flyingon.defineClass("Control", function () {
 
 
         //获取可调整大小边
-        this.__fn_resize_side = function(resizable, event) {
+        this.__fn_resize_side = function (resizable, event) {
 
             var offset = this.offset(event.clientX, event.clientY),
                 style = this.dom.style,
@@ -942,7 +950,7 @@ flyingon.defineClass("Control", function () {
             if (resize)
             {
                 style.cursor = cursor;
-                event.stopImmediatePropagation(true);
+                event.stopPropagation(false);
 
                 return resize;
             }
@@ -977,7 +985,7 @@ flyingon.defineClass("Control", function () {
                 this.set_height(pressdown.offsetHeight + y + "px");
             }
 
-            event.stopImmediatePropagation(true);
+            event.stopPropagation(false);
         };
 
 
@@ -1231,6 +1239,7 @@ flyingon.defineClass("Control", function () {
 
             //创建dom模板(使用上次的dom创建节点时在某些浏览器性能较差,故重新创建dom节点作为模板)
             dom = this.dom_template = document.createElement(tagName);
+            dom.className = this.xtype.replace(/\./g, "-") + " " + dom.className;
 
             //处理属性
             if (attributes)
@@ -1328,20 +1337,15 @@ flyingon.defineClass("Control", function () {
 
 
     //类初始化方法
-    this.__Class_initialize__ = function (Class, base) {
+    this.__Class_initialize__ = function (Class) {
 
         //处理className
-        var dom = this.dom_template,
-            className;
+        var className = this.css_className = Class.xtype.replace(/\./g, "-");
 
-        if (dom === base.dom_template)
+        if (this.dom_template.className !== className)
         {
-            dom = dom.cloneNode(true);
+            (this.dom_template = this.dom_template.cloneNode(true)).className = className;
         }
-
-        //css className
-        this.css_className = dom.className = Class.xtype.replace(/\./g, "-");
-
     };
 
 

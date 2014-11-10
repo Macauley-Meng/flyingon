@@ -15,7 +15,7 @@
 
 
 
-        var host = document.documentElement,  //主容器
+        var host = document.documentElement,        //主容器
 
             KeyEvent = flyingon.KeyEvent,
             MouseEvent = flyingon.MouseEvent,
@@ -24,40 +24,184 @@
 
             dragdrop = flyingon.dragdrop,
 
-            draggable,          //拖动方式
-            resizable,          //调整大小的方式
+            draggable,                              //拖动方式
+            resizable,                              //调整大小的方式
 
             mousemove_time = new Date(),
 
-            hover_control,      //鼠标指向控件
-            pressdown;          //按下时dom事件
+            hover_control,                          //鼠标指向控件
+
+            setCapture,                             //捕获鼠标
+            releaseCapture,                         //释放鼠标
+            capture_dom,                            //捕获的dom
+
+            pressdown;                              //按下时dom事件
 
 
 
 
-        //捕获全局mousemove事件
-        flyingon.addEventListener(host, "mousemove", function (event) {
+        //初始化绑定事件方法
+        binding_event = function (dom) {
 
-            if (pressdown)
+            for (var name in events)
             {
-                events.mousemove.call(this, event || fix_event(window.event));
+                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
             }
-            else if (hover_control)
+        };
+
+
+
+
+        //捕获或释放鼠标
+        if (host.setCapture)
+        {
+
+            setCapture = function (dom) {
+
+                dom.setCapture();
+            };
+
+            releaseCapture = function (dom) {
+
+                dom.releaseCapture();
+            };
+
+        }
+        else
+        {
+
+            var cursor_list;
+
+            //设置捕获鼠标以避免拖动时鼠标闪烁
+            var set_cursor = function (dom) {
+
+                var parent = dom,
+                    cursor = dom.style.cursor,
+                    style;
+
+                cursor_list = [];
+
+                while ((parent = parent.parentNode) && (style = parent.style))
+                {
+                    cursor_list.push(style);
+                    cursor_list.push(style.cursor);
+
+                    style.cursor = cursor;
+                }
+            };
+
+            //恢复鼠标状态
+            var load_cursor = function (dom) {
+
+                if (cursor_list)
+                {
+                    for (var i = 0, _ = cursor_list.length; i < _; i++)
+                    {
+                        cursor_list[i++].cursor = cursor_list[i];
+                    }
+                }
+            };
+
+
+            if (window.captureEvents)
             {
-                hover_control.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
-                hover_control.__fn_to_hover(false);
+
+                var capture_data = Event.MOUSEMOVE | Event.MOUSEUP;
+
+                setCapture = function (dom) {
+
+                    set_cursor(dom);
+                    window.captureEvents(capture_data);
+                };
+
+                releaseCapture = function (dom) {
+
+                    load_cursor(dom);
+                    window.releaseEvents(capture_data);
+                };
+
             }
-        });
-
-
-        //捕获全局mouseup事件
-        flyingon.addEventListener(host, "mouseup", function (event) {
-
-            if (pressdown)
+            else
             {
-                events.mouseup.call(this, event || fix_event(window.event));
+                var host_mousemove = false;
+
+                setCapture = set_cursor;
+
+                releaseCapture = load_cursor;
+
+                //捕获全局mousemove事件
+                flyingon.addEventListener(host, "mousemove", function (event) {
+
+                    if (host_mousemove)
+                    {
+                        host_mousemove = false;
+                    }
+                    else if (pressdown)
+                    {
+                        events.mousemove.call(this, event || fix_event(window.event));
+                    }
+                    else if (hover_control)
+                    {
+                        hover_control.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
+                        hover_control.__fn_to_hover(false);
+                    }
+                });
+
+
+                //捕获全局mouseup事件
+                flyingon.addEventListener(host, "mouseup", function (event) {
+
+                    if (pressdown)
+                    {
+                        events.mouseup.call(this, event || fix_event(window.event));
+                    }
+                });
+
             }
-        });
+
+        };
+
+
+
+
+        //获取dom目标控件
+        function dom_target(event) {
+
+            var dom = event.target;
+
+            while (dom)
+            {
+                if (dom.flyingon)
+                {
+                    return dom.flyingon;
+                }
+
+                dom = dom.parentNode
+            }
+
+            return host.flyingon;
+        };
+
+
+
+        //保存鼠标按下事件
+        function save_pressdown(target, event) {
+
+            setCapture(capture_dom = target.dom);
+
+            return pressdown = {
+
+                capture: target,
+                clientX: event.clientX,
+                clientY: event.clientY,
+                which: event.which,
+                offsetLeft: target.offsetLeft,
+                offsetTop: target.offsetTop,
+                offsetWidth: target.offsetWidth,
+                offsetHeight: target.offsetHeight
+            };
+        };
+
 
 
 
@@ -93,7 +237,7 @@
                 draggable = cache; //记录状态
                 save_pressdown(target, event); //记录鼠标按下位置
             }
-            else if (target && target.get_enabled())
+            else if (target)
             {
                 target.__fn_to_active(true); //设置活动状态
                 target.dispatchEvent(new MouseEvent("mousedown", event)); //分发事件
@@ -119,13 +263,12 @@
                 {
                     dragdrop.move(event, pressdown);
                 }
-                else if (target = dom_target(event))  //启用捕获
+                else  //启用捕获
                 {
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
                 }
             }
-            else if ((target = dom_target(event)) && target.get_enabled() &&
-                ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event)))) //调整大小状态不触发相关事件
+            else if ((target = dom_target(event)) && ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event)))) //调整大小状态不触发相关事件
             {
                 if (target !== (cache = hover_control))
                 {
@@ -144,14 +287,23 @@
                 target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
             }
 
-            //禁止冒泡
-            event.stopPropagation();
+            //防止host处理
+            if (this !== host)
+            {
+                host_mousemove = true;
+            }
         };
 
 
         events.mouseup = function (event) {
 
             var target;
+
+            if (capture_dom)
+            {
+                releaseCapture(capture_dom);
+                capture_dom = null;
+            }
 
             if (resizable)
             {
@@ -198,7 +350,7 @@
             {
                 flyingon.__disable_click = false;
             }
-            else if ((target = dom_target(event || (event = fix_event(window.event)))) && target.get_enabled())
+            else if (target = dom_target(event || (event = fix_event(window.event))))
             {
                 return target.dispatchEvent(new MouseEvent("click", event));
             }
@@ -213,7 +365,7 @@
             {
                 flyingon.__disable_dbclick = false;
             }
-            else if ((target = dom_target(event || (event = fix_event(window.event)))) && target.get_enabled())
+            else if (target = dom_target(event || (event = fix_event(window.event))))
             {
                 return target.dispatchEvent(new MouseEvent("dblclick", event));
             }
@@ -223,17 +375,13 @@
         //DOMMouseScroll:firefox滚动事件
         events.mousewheel = events.DOMMouseScroll = function (event) {
 
-            var target = dom_target(event || (event = fix_event(window.event)));
+            var target = dom_target(event || (event = fix_event(window.event))),
+                value = event.wheelDelta || (-event.detail * 40);//鼠标滚轮数据
 
-            if (target && target.get_enabled())
-            {
-                var value = event.wheelDelta || (-event.detail * 40);//鼠标滚轮数据
+            event = new MouseEvent("mousewheel", event, pressdown);
+            event.wheelDelta = value;
 
-                event = new MouseEvent("mousewheel", event, pressdown);
-                event.wheelDelta = value;
-
-                return target.dispatchEvent(event);
-            }
+            return target.dispatchEvent(event);
         };
 
 
@@ -322,60 +470,6 @@
 
             return target.dispatchEvent("blur");
         };
-
-
-
-
-        //获取dom目标控件
-        function dom_target(event) {
-
-            var dom = event.target;
-
-            while (dom)
-            {
-                if (dom.flyingon)
-                {
-                    return dom.flyingon;
-                }
-
-                dom = dom.parentNode
-            }
-
-            return host.flyingon;
-        };
-
-
-
-        //保存鼠标按下事件
-        function save_pressdown(target, event) {
-
-
-            return pressdown = {
-
-                capture: target,
-                clientX: event.clientX,
-                clientY: event.clientY,
-                which: event.which,
-                offsetLeft: target.offsetLeft,
-                offsetTop: target.offsetTop,
-                offsetWidth: target.offsetWidth,
-                offsetHeight: target.offsetHeight
-            };
-        };
-
-
-
-
-
-        //初始化绑定事件方法
-        binding_event = function (dom) {
-
-            for (var name in events)
-            {
-                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
-            }
-        };
-
 
 
 

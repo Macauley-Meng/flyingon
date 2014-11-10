@@ -1,7 +1,7 @@
 ﻿
 
 //主窗口
-flyingon.defineClass("Window", flyingon.Control, function (base) {
+flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
 
 
@@ -69,9 +69,6 @@ flyingon.defineClass("Window", flyingon.Control, function (base) {
     this.create_dom_template("div", null, "<div style=\"position:relative;overflow:hidden;\"></div>");
 
 
-
-    //扩展面板接口
-    flyingon.extend(this, flyingon.IPanel, base);
 
 
     //扩展窗口接口

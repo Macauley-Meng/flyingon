@@ -46,7 +46,7 @@
 
             var win = new flyingon.Dialog().set("border", "2 solid blue");
 
-            win.body.init({
+            win.init({
 
                 layoutType: "flow",
                 padding: "10px",
@@ -55,7 +55,7 @@
 
                 children: [{
 
-                    xtype: "Fieldset",
+                    xtype: "flyingon.Fieldset",
                     legend: "title",
                     border: "1px solid red",
                     spacingWidth: "10px",
@@ -63,26 +63,26 @@
 
                     children: [{
 
-                        xtype: "Label",
+                        xtype: "flyingon.Label",
                         text: "label",
                         textAlign: "center",
                         border: "1px solid red"
                     }, {
 
-                        xtype: "TextBox",
+                        xtype: "flyingon.TextBox",
                         border: "1px solid red",
                         value: "textbox",
                         readOnly: true
                     }, {
 
-                        xtype: "CheckBox",
+                        xtype: "flyingon.CheckBox",
                         border: "1px solid red",
                         value: "checkbox",
                         text: "checkbox",
                         readOnly: true
                     }, {
 
-                        xtype: "RadioButton",
+                        xtype: "flyingon.RadioButton",
                         border: "1px solid red",
                         value: "radio",
                         text: "radio",
@@ -94,8 +94,6 @@
             });
 
             win[showDialog ? "showDialog" : "show"](w);
-
-            win.header.get_backgroundColor();
         };
 
 

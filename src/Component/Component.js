@@ -155,7 +155,7 @@ flyingon.IComponent = function () {
         //控件刷新
         if (attributes.layout) //需要重新布局
         {
-            body.push("\n\t(this.__parent || this).update(true);");
+            body.push("\n\t(this.__parent || this).update(true);\n\t" + "this.__update_dirty = 1;\t");
         }
         else if (attributes.arrange) //是否需要重新排列
         {

@@ -1,6 +1,73 @@
 ﻿
 /*
 
+//定义标准css样式
+
+注: 不能定义扩展控件样式,扩展控件样式请使用flyingon.style定义,与标准css定义类同
+
+
+//可引入其它样式, 示例如下:
+".class2": {
+
+    import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
+    border: "1px solid blue"
+}
+
+*/
+flyingon.css({
+
+
+    //弹出窗口标题栏样式
+    ".flyingon-Dialog-header": {
+
+        backgroundColor: "silver",
+        height: "25px"
+    },
+
+
+    //弹出窗口内容样式
+    ".flyingon-Dialog-body": {
+
+        padding: "2px",
+        top: "25px",
+        backgroundColor: "white"
+    }
+
+});
+
+
+
+
+
+
+
+/*
+
+//定义扩展控件样式
+
+注: 不能定义dom样式,定义dom样式请使用flyingon.css定义,跨浏览器兼容
+
+
+//定义样式示例: 定义扩展控件样式 "@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式如下
+"@flyingon-Button": {
+
+    backgroundColor: "red",
+}
+
+//定义样式示例: 定义名为.class1样式
+".class1": {
+
+    backgroundColor: "red",
+}
+
+//定义样式示例: 定义名为.class2样式,并引入其它样式
+".class2": {
+
+    import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
+    border: "1px solid blue"
+}
+
+
 
 本系统支持的基础选择器如下(注:本系统不支持html标签选择器):
 
@@ -62,33 +129,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 */
-
-
-
-
-//定义控件样式 "@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式如下
-//"@flyingon-Button": {
-
-//    backgroundColor: "red",
-//}
-
-//定义样式示例: 定义名为.class1样式
-//".class1": {
-
-//    backgroundColor: "red",
-//}
-
-//定义样式示例: 定义名为.class2样式,并引入其它样式
-//".class2": {
-
-//    import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
-//    border: "1px solid blue"                  //带参数
-//}
-
-
-
-//默认样式
-flyingon.defineStyle({
+flyingon.style({
 
 
     //面板控件样式
@@ -97,6 +138,22 @@ flyingon.defineStyle({
         overflow: "auto",
         backgroundColor: "white"
     },
+
+
+    //面板控件样式
+    "@flyingon-DesignPanel": {
+
+        overflow: "auto",
+        backgroundColor: "white"
+    },
+
+
+    //设计时选中控件样式
+    "@flyingon-DesignPanel .design-selected": {
+
+        backgroundColor: "blue"
+    },
+
 
 
     //主窗口样式
@@ -110,23 +167,6 @@ flyingon.defineStyle({
     //弹出窗口样式
     "@flyingon-Dialog": {
 
-        overflow: "auto",
-        backgroundColor: "white"
-    },
-
-
-    //弹出窗口标题栏样式
-    ".flyingon-Dialog-header": {
-
-        backgroundColor: "silver",
-        height: "25px"
-    },
-
-
-    //弹出窗口内容样式
-    ".flyingon-Dialog-body": {
-
-        padding: "2px"
     },
 
 

@@ -10,6 +10,8 @@
 
         __dragTargets,  //拖动控件集合
 
+        __drag_original,//原始位置
+
         __dropTarget,   //接收目标
 
         __draggable,    //拖动类型
@@ -71,6 +73,15 @@
         }
         else
         {
+            __drag_original = [];
+
+            //记录原始位置及父对象
+            for (var i = length - 1; i >= 0; i--)
+            {
+                __drag_original.push([target = __dragTargets[i], target.__parent, target.childIndex()]);
+            }
+
+            //从父控件中移除
             for (var i = length - 1; i >= 0; i--)
             {
                 __dragTargets[i].remove();
@@ -211,7 +222,8 @@
     //停止拖动
     this.stop = function (event, pressdown, cancel) {
 
-        var result = __execute;
+        var result = __execute,
+            cache;
 
         //如果已拖动则处理
         if (result)
@@ -219,11 +231,25 @@
             //分发drop事件
             if (cancel !== true && __dropTarget)
             {
-                this.dispatchEvent(__dropTarget, "drop", event, pressdown);
+                this.dispatchEvent(__dropTarget, "drop", event, pressdown); //返回false则不处理回退
             }
 
             //分发dragend事件
             this.dispatchEvent(__dragTarget, "dragend", event, pressdown);
+
+            //处理回退
+            if (__drag_original)
+            {
+                for (var i = 0, _ = __drag_original.length; i < _; i++)
+                {
+                    if (!(cache = __drag_original[i])[0].__parent)
+                    {
+                        cache[1].__children.insert(cache[2], cache[0]);
+                    }
+                }
+
+                __drag_original = null;
+            }
 
             //清空代理dom
             __ownerWindow.dom.removeChild(__dom_proxy);

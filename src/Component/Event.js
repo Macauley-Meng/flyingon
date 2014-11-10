@@ -48,7 +48,7 @@ flyingon.defineClass("Event", function () {
 
         this.cancelBubble = true;
 
-        if (dom_event && (dom_event = this.dom_event))
+        if (dom_event !== false && (dom_event = this.dom_event))
         {
             dom_event.stopPropagation();
         }
@@ -61,7 +61,7 @@ flyingon.defineClass("Event", function () {
         this.cancelBubble = true;
         this.defaultPrevented = true;
 
-        if (dom_event && (dom_event = this.dom_event))
+        if (dom_event !== false && (dom_event = this.dom_event))
         {
             dom_event.preventDefault();
             dom_event.stopPropagation();
@@ -74,7 +74,7 @@ flyingon.defineClass("Event", function () {
 
         this.defaultPrevented = true;
 
-        if (dom_event && (dom_event = this.dom_event))
+        if (dom_event !== false && (dom_event = this.dom_event))
         {
             dom_event.preventDefault();
         }
@@ -138,26 +138,6 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
 
     };
 
-
-
-    //捕获鼠标
-    this.setCapture = function (control) {
-
-        if (this.pressdown)
-        {
-            this.pressdown.capture = control;
-        }
-    };
-
-
-    //取消鼠标捕获
-    this.releaseCapture = function () {
-
-        if (this.pressdown)
-        {
-            this.pressdown.capture = null;
-        }
-    };
 
 
     //禁止或开启单击事件

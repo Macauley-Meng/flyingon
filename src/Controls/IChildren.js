@@ -115,6 +115,7 @@ flyingon.IChildren = function (base) {
                 }
 
                 this.arrange();
+
                 this.__arrange_dirty = false;
             }
 
@@ -162,6 +163,45 @@ flyingon.IChildren = function (base) {
 
 
 
+
+    //沿x中心轴进行排列变换
+    this.__fn_transform_axis_x = function (items, width, height) {
+
+        var item;
+
+        for (var i = 0, _ = items.length; i < _; i++)
+        {
+            (item = items[i]).dom.style.top = height - item.offsetTop - item.offsetHeight;
+        }
+    };
+
+    //沿y中心轴进行排列变换
+    this.__fn_transform_axis_y = function (items, width, height) {
+
+        var item;
+
+        for (var i = 0, _ = items.length; i < _; i++)
+        {
+            (item = items[i]).dom.style.left = width - item.offsetLeft - item.offsetWidth + "px";
+        }
+    };
+
+    //沿坐标原点进行排列变换
+    this.__fn_transform_axis_origin = function (items, width, height) {
+
+        var item, style;
+
+        for (var i = 0, _ = items.length; i < _; i++)
+        {
+            style = (item = items[i]).dom.style;
+            style.left = width - item.offsetLeft - item.offsetWidth;
+            style.top = height - item.offsetTop - item.offsetHeight;
+        }
+    };
+
+
+
+    
     //this.focus = function () {
 
 

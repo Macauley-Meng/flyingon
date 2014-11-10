@@ -1,7 +1,7 @@
 ﻿/*
 
 */
-flyingon.defineClass("Fieldset", flyingon.Control, function (base) {
+flyingon.defineClass("Fieldset", flyingon.Panel, function (base) {
 
 
 
@@ -22,13 +22,9 @@ flyingon.defineClass("Fieldset", flyingon.Control, function (base) {
     this.defaultWidth = this.defaultHeight = 400;
 
 
-    //扩展面板接口
-    flyingon.extend(this, flyingon.IPanel, base);
-
-
 
     //创建dom元素模板
-    this.create_dom_template("fieldset", null, "<legend style=\"\"></legend><div style=\"position:relative;\"></div>");
+    this.create_dom_template("fieldset", null, "<legend style=\"\"></legend><div style=\"position:relative;overflow:hidden;direction:ltr;\"></div>");
 
 
 
