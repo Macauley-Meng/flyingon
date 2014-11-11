@@ -29,8 +29,9 @@
 
             <div id="drag" style="border:1px solid black; padding:2px; background-color: yellow;">
 
-                <input type="button" value="line" onclick="layout('line')" />
                 <input type="button" value="flow" onclick="layout('flow')" />
+                <input type="button" value="line" onclick="layout('line')" />
+                <input type="button" value="split" onclick="layout('split')" />
                 <input type="button" value="dock" onclick="layout('dock')" />
                 <input type="button" value="cascade" onclick="layout('cascade')" />
                 <input type="button" value="page" onclick="layout('page')" />
@@ -57,15 +58,19 @@
                     <td style="width:60px;">面板参数:</td>
                     <td>
                         <div id="panel_property" style="padding:2px;">
-                            <span>spacingWidth<input type="text" style="width:40px;" value="10px" onchange="sync_panel()" /></span>
-                            <span>spacingHeight<input type="text" style="width:40px;" value="10px" onchange="sync_panel()" /></span>
+                            <span>spacingWidth<input type="text" style="width:40px;" value="2px" onchange="sync_panel()" /></span>
+                            <span>spacingHeight<input type="text" style="width:40px;" value="2px" onchange="sync_panel()" /></span>
+
                             <span tag="flow">layoutWidth<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
                             <span tag="flow">layoutHeight<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
+
                             <span style="display: none;" tag="page">layoutPage<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
+
                             <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
                             <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
-                            <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 400px; " value="*[50% * *] *[* 50% {(spacingWidth=50%,spacingHeight=50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]" onchange="sync_panel()" /></span>
-                            <span style="display: none;" tag="table">layoutTables<input type="text" style="width: 400px; " value="[ [300, 300, '*[* * *] ...2' ], [ 400, 400, '*[* * * *] ...3'] ]" onchange="sync_panel()" /></span>
+
+                            <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 500px; " value="*[50% 4px *  4px*] 4px[*] *[* 4px 50%{(spacingWidth=50%,spacingHeight=50%) *[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1} 4px *] 4px[*] *[* 4px * 4px * 4px *]" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="table">layoutTables<input type="text" style="width: 500px; " value="[ [300, 300, '*[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1' ], [ 400, 400, '*[* 4px * 4px * 4px *] 4px[*] *[* 4px * 4px * 4px *] ...2&1'] ]" onchange="sync_panel()" /></span>
                         </div>
                     </td>
                 </tr>
@@ -73,6 +78,9 @@
                     <td style="width:60px;">控件参数:</td>
                     <td>
                         <div id="button_property" style="padding:2px;">
+
+                            <span>width<input type="text" style="width:40px;" value="default" onchange="sync_button()" /></span>
+                            <span>height<input type="text" style="width:40px;" value="default" onchange="sync_button()" /></span>
 
                             <span>minWidth<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
                             <span>maxWidth<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
@@ -92,11 +100,16 @@
                             <span>marginBottom<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
 
                             <span tag="flow">newline<input type="text" style="width:40px;" value="false" onchange="sync_button()" /></span>
+
+                            <span style="display: none;" tag="split">layoutSplit<input type="text" style="width: 50px; " value="before" onchange="sync_button()" /></span>
+
                             <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="sync_button()" /></span>
+
                             <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
                             <span style="display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
                             <span style="display: none;" tag="grid">columnIndex<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
                             <span style="display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
+
                             <span style="display: none;" tag="absolute">left<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
                             <span style="display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
 
@@ -149,7 +162,7 @@
         });
 
 
-        for (var k = 0; k < 100; k++)
+        for (var i = 0; i < 100; i++)
         {
             var panel = new flyingon.Panel().sets({
 
@@ -159,53 +172,68 @@
                 droppable: true,
                 resizable: "both",
                 layoutType: "flow",
-                spacingWidth: "10px",
-                spacingHeight: "10px",
+                spacingWidth: "2px",
+                spacingHeight: "2px",
 
                 layoutColumns: "8", //4
                 layoutRows: "8",   //4
 
-                layoutTable: "*[50% * *] *[* 50% {(spacingWidth=50%,spacingHeight=50%) *[* * *] *[* * *] *[* * *]} *] *[* * * *]",
-                layoutTables: "[ [300, 300, '*[* * *] ...2' ], [ 400, 400, '*[* * * *] ...3'] ]"
+                layoutTable: "*[50% 4px *  4px*] 4px[*] *[* 4px 50%{(spacingWidth=50%,spacingHeight=50%) *[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1} 4px *] 4px[*] *[* 4px * 4px * 4px *]",
+                layoutTables: "[ [300, 300, '*[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1' ], [ 400, 400, '*[* 4px * 4px * 4px *] 4px[*] *[* 4px * 4px * 4px *] ...2&1'] ]"
             });
 
-            for (var i = 0; i < 100; i++)
+
+            for (var j = 0; j < 50; j++)
             {
 
                 var ctrl = new flyingon.Button().sets({
 
-                    left: i % 5 * 120 + "px",
-                    top: i / 5 * 30 + "px",
+                    left: j % 5 * 120 + "px",
+                    top: j / 5 * 30 + "px",
                     draggable: "both",
                     resizable: "both",
-                    text: "button" + i
+                    text: "button" + j
                 });
 
-                switch (i % 5)
+                switch (j % 5)
                 {
                     case 0:
                         ctrl.set_dock("left");
+                        ctrl.set_layoutSplit("before");
                         break;
 
                     case 1:
                         ctrl.set_dock("top");
+                        ctrl.set_layoutSplit("after");
                         break;
 
                     case 2:
                         ctrl.set_dock("right");
+                        ctrl.set_layoutSplit("before");
                         break;
 
                     case 3:
                         ctrl.set_dock("bottom");
+                        ctrl.set_layoutSplit("after");
                         break;
 
                     case 4:
                         ctrl.set_dock("fill");
+                        ctrl.set_layoutSplit("center");
                         break;
                 }
 
                 panel.appendChild(ctrl);
+
+                if (j < 50 - 1)
+                {
+                    panel.appendChild(new flyingon.Splitter()
+                        .set_draggable("both")
+                        .set_dock(ctrl.get_dock())
+                        .set_layoutSplit(ctrl.get_layoutSplit())); //添加分隔条
+                }
             }
+
 
             w.appendChild(panel);
         }

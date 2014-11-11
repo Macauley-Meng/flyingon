@@ -64,8 +64,8 @@ flyingon.defineClass("Control", function () {
     //获取父控件中的索引位置
     this.childIndex = function () {
 
-        var parent = this.__parent;
-        return parent && parent.__children.indexOf(this) || -1;
+        var cache = this.__arrange_index; //排列过则直接取索引
+        return cache >= 0 ? cache : (cache = this.__parent) && parent.__children.indexOf(this) || -1;
     };
 
 
@@ -565,7 +565,7 @@ flyingon.defineClass("Control", function () {
                     break;
 
                 default:  //其它值
-                    width = value && value.charAt(value.length - 1) === "%" ? (usable_width * parseFloat(value) / 100 | 0) : fn(value);
+                    width = value && value.charAt(value.length - 1) === "%" ? (this.__parent.clientWidth * parseFloat(value) / 100 | 0) : fn(value);
                     break;
             }
 
@@ -620,7 +620,7 @@ flyingon.defineClass("Control", function () {
                     break;
 
                 default:  //其它值
-                    height = value && value.charAt(value.length - 1) === "%" ? (usable_height * parseFloat(value) / 100 | 0) : fn(value);
+                    height = value && value.charAt(value.length - 1) === "%" ? (this.__parent.clientHeight * parseFloat(value) / 100 | 0) : fn(value);
                     break;
             }
 
@@ -718,7 +718,6 @@ flyingon.defineClass("Control", function () {
                 style.width = this.clientWidth + "px";
                 style.height = this.clientHeight + "px";
             }
-
 
             //排列完毕使用
             if (this.after_measure)

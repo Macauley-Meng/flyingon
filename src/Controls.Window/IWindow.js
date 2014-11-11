@@ -67,13 +67,16 @@
             };
 
         }
-        else
+        else //window.captureEvents方式效果不好,不要使用
         {
 
-            var cursor_list;
+            //是否允许host处理mousemove事件
+            var host_mousemove = true,
+                cursor_list,
+
 
             //设置捕获鼠标以避免拖动时鼠标闪烁
-            var set_cursor = function (dom) {
+            setCapture = function (dom) {
 
                 var parent = dom,
                     cursor = dom.style.cursor,
@@ -90,8 +93,9 @@
                 }
             };
 
+
             //恢复鼠标状态
-            var load_cursor = function (dom) {
+            releaseCapture = function (dom) {
 
                 if (cursor_list)
                 {
@@ -103,61 +107,35 @@
             };
 
 
-            if (window.captureEvents)
-            {
 
-                var capture_data = Event.MOUSEMOVE | Event.MOUSEUP;
+            //捕获全局mousemove事件
+            flyingon.addEventListener(host, "mousemove", function (event) {
 
-                setCapture = function (dom) {
-
-                    set_cursor(dom);
-                    window.captureEvents(capture_data);
-                };
-
-                releaseCapture = function (dom) {
-
-                    load_cursor(dom);
-                    window.releaseEvents(capture_data);
-                };
-
-            }
-            else
-            {
-                var host_mousemove = false;
-
-                setCapture = set_cursor;
-
-                releaseCapture = load_cursor;
-
-                //捕获全局mousemove事件
-                flyingon.addEventListener(host, "mousemove", function (event) {
-
-                    if (host_mousemove)
-                    {
-                        host_mousemove = false;
-                    }
-                    else if (pressdown)
-                    {
-                        events.mousemove.call(this, event || fix_event(window.event));
-                    }
-                    else if (hover_control)
-                    {
-                        hover_control.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
-                        hover_control.__fn_to_hover(false);
-                    }
-                });
+                if (!host_mousemove)
+                {
+                    host_mousemove = true;
+                }
+                else if (pressdown)
+                {
+                    events.mousemove.call(this, event || fix_event(window.event));
+                }
+                else if (hover_control)
+                {
+                    hover_control.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
+                    hover_control.__fn_to_hover(false);
+                }
+            });
 
 
-                //捕获全局mouseup事件
-                flyingon.addEventListener(host, "mouseup", function (event) {
+            //捕获全局mouseup事件
+            flyingon.addEventListener(host, "mouseup", function (event) {
 
-                    if (pressdown)
-                    {
-                        events.mouseup.call(this, event || fix_event(window.event));
-                    }
-                });
+                if (pressdown)
+                {
+                    events.mouseup.call(this, event || fix_event(window.event));
+                }
+            });
 
-            }
 
         };
 
@@ -184,26 +162,6 @@
 
 
 
-        //保存鼠标按下事件
-        function save_pressdown(target, event) {
-
-            setCapture(capture_dom = target.dom);
-
-            return pressdown = {
-
-                capture: target,
-                clientX: event.clientX,
-                clientY: event.clientY,
-                which: event.which,
-                offsetLeft: target.offsetLeft,
-                offsetTop: target.offsetTop,
-                offsetWidth: target.offsetWidth,
-                offsetHeight: target.offsetHeight
-            };
-        };
-
-
-
 
         //注:IE6/7/8的鼠标事件的event中鼠标数据是全局的,不能直接记录,需要把相关的数据存储至pressdown对象中
         events.mousedown = function (event) {
@@ -226,23 +184,46 @@
                 event.which = event.button & 1 ? 1 : (event.button & 2 ? 3 : 2);
             }
 
-            //可调整大小 触控版目前不支持调整大小
-            if (resizable)
+            //先分发mousedown事件,如果取消默认行为则不执行后续处理
+            if (target)
             {
-                flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
-                save_pressdown(target, event); //记录鼠标按下位置
-            }
-            else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
-            {
-                draggable = cache; //记录状态
-                save_pressdown(target, event); //记录鼠标按下位置
-            }
-            else if (target)
-            {
-                target.__fn_to_active(true); //设置活动状态
-                target.dispatchEvent(new MouseEvent("mousedown", event)); //分发事件
+                //捕获dom
+                setCapture(capture_dom = target.dom);
 
-                save_pressdown(target, event); //记录鼠标按下位置
+                //记录鼠标按下位置
+                pressdown = {
+
+                    capture: target,
+                    clientX: event.clientX,
+                    clientY: event.clientY,
+                    which: event.which,
+                    offsetLeft: target.offsetLeft,
+                    offsetTop: target.offsetTop,
+                    offsetWidth: target.offsetWidth,
+                    offsetHeight: target.offsetHeight
+                };
+
+                if (target.dispatchEvent(new MouseEvent("mousedown", event)) !== false)
+                {
+                    //可调整大小 触控版目前不支持调整大小
+                    if (resizable)
+                    {
+                        flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
+                    }
+                    else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
+                    {
+                        draggable = cache; //记录状态
+                    }
+                    else
+                    {
+                        target.__fn_to_active(true); //设置活动状态
+                    }
+                }
+                else
+                {
+                    resizable = null;
+                    target.__fn_to_active(true); //设置活动状态
+                }
             }
         };
 
@@ -290,7 +271,7 @@
             //防止host处理
             if (this !== host)
             {
-                host_mousemove = true;
+                host_mousemove = false;
             }
         };
 
@@ -322,13 +303,6 @@
                 {
                     flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
                     pressdown = null;
-                    return;
-                }
-
-                if (target = pressdown.capture) //否则补上mousedown事件并继续执行mouseup事件
-                {
-                    target.__fn_to_active(true); //设置活动状态
-                    target.dispatchEvent(new MouseEvent("mousedown", event)); //分发事件 
                 }
             }
 
@@ -382,6 +356,13 @@
             event.wheelDelta = value;
 
             return target.dispatchEvent(event);
+        };
+
+
+        //拖动操作结果需释放鼠标触发mouseup事件(浏览器会有默认拖放动作且不会触发mouseup事件)
+        events.dragend = function (event) {
+
+            events.mouseup.call(this, event);
         };
 
 

@@ -146,7 +146,7 @@ flyingon.IChildren = function (base) {
 
 
     //当前布局类型
-    this.current_layout = flyingon.layouts["line"];
+    this.__layout = flyingon.layouts["line"];
 
 
     //排列子控件
@@ -156,7 +156,7 @@ flyingon.IChildren = function (base) {
 
         if (items && items.length > 0)
         {
-            this.current_layout.__fn_arrange(this, items);
+            this.__layout.__fn_arrange(this);
         }
     };
 
@@ -201,7 +201,7 @@ flyingon.IChildren = function (base) {
 
 
 
-    
+
     //this.focus = function () {
 
 
@@ -229,6 +229,36 @@ flyingon.IChildren = function (base) {
     //    return this.containsFocused ? base.blur.call(this, event) : false;
     //};
 
+
+
+
+    //隐藏dom暂存器
+    var hide_dom = document.createDocumentFragment();
+
+
+    //隐藏子项
+    this.__fn_hide = function (item) {
+
+        hide_dom.appendChild(item.dom);
+
+        item.__visible = false;
+        this.__dom_dirty = true;
+    };
+
+
+    //隐藏指定索引后的子项
+    this.__fn_hide_after = function (items, index) {
+
+        var item;
+
+        for (var i = index, _ = items.length; i < _; i++)
+        {
+            (item = items[i]).__visible = false;
+            hide_dom.appendChild(item.dom);
+        }
+
+        this.__dom_dirty = true;
+    };
 
 
 

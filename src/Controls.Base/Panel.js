@@ -121,7 +121,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
     //当前布局
-    this.current_layout = null;
+    this.layout = null;
 
 
     //排列子控件
@@ -131,7 +131,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
         if (items && items.length > 0)
         {
-            (this.__current_layout = this.current_layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this, items);
+            (this.__layout = this.layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this);
         }
 
         this.__render_items = null;
@@ -183,7 +183,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
             var items = this.__children,
                 offset = this.offset(event.clientX, event.clientY),
-                index = items.length > 0 ? this.__current_layout.__fn_drag_index(this, offset.x - event.offsetLeft, offset.y - event.offsetTop) : 0;
+                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft, offset.y - event.offsetTop) : 0;
 
             if (index >= 0 && insert_index !== index)
             {
@@ -270,8 +270,9 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
         //复制对象属性
         function copy_property(source, target) {
 
-            target.set_dock(source.get_dock());
             target.set_newline(source.get_newline());
+            target.set_layoutSplit(source.get_layoutSplit());
+            target.set_dock(source.get_dock());
             target.set_columnIndex(source.get_columnIndex());
             target.set_spacingCells(source.get_spacingCells());
         };

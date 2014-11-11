@@ -95,6 +95,9 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
 
     Class.create = function (type, dom_event, pressdown) {
 
+        //触事件的dom对象
+        this.dom = dom_event.target;
+
         //关联的原始dom事件
         this.dom_event = dom_event;
 
@@ -244,6 +247,9 @@ flyingon.defineClass("KeyEvent", flyingon.Event, function (base) {
 
     Class.create = function (type, dom_event) {
 
+        //触事件的dom对象
+        this.dom = dom_event.target;
+
         //关联的原始dom事件
         this.dom_event = dom_event;
 
@@ -336,33 +342,5 @@ flyingon.defineClass("PropertyChangeEvent", flyingon.Event, function (base) {
 
 });
 
-
-
-//滚动事件
-flyingon.defineClass("ScrollEvent", flyingon.Event, function (base) {
-
-
-
-    Class.create_mode = "replace";
-
-    Class.create = function (distanceX, distanceY) {
-
-        this.distanceX = distanceX || 0;
-        this.distanceY = distanceY || 0;
-    };
-
-
-
-    //事件类型
-    this.type = "scroll";
-
-    //x方向滚动距离
-    this.distanceX = 0;
-
-    //y方向滚动距离
-    this.distanceY = 0;
-
-
-});
 
 

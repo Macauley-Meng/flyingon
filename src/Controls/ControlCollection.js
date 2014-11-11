@@ -230,29 +230,7 @@ flyingon.defineClass("ControlCollection", function (base) {
         }
     };
 
-
-
-    var dom_cache = document.createDocumentFragment();
-
-    //隐藏子项
-    this.hide = function (item) {
-
-        if (item.dom)
-        {
-            dom_cache.appendChild(item.dom);
-        }
-        else
-        {
-            for (var i = +item, _ = this.length; i < _; i++)
-            {
-                dom_cache.appendChild(this[i].dom);
-            }
-        }
-
-        this.target.__dom_dirty = true;
-    };
-
-
+    
 
 });
 

@@ -363,8 +363,9 @@
 
 
         //布局类型
-        //line:         线性布局(支持竖排)
         //flow:         流式布局(支持竖排)
+        //line:         线性布局(支持竖排)
+        //split:        拆分布局(支持竖排)
         //dock:         停靠布局(不支持竖排)
         //cascade:      层叠布局(不支持竖排)
         //page:         单页显示(不支持竖排)
@@ -402,6 +403,12 @@
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   控件客户区高度的百分比
         style("layout-height", "0", "last-value");
+
+        //拆分布局位置(此值仅对拆分布局(split)有效)
+        //before    前面位置
+        //after     后面位置
+        //center    中间位置
+        style("layout-split", "before", "last-value");
 
         //单页显示布局当前布局页(此值仅对单页显示布局(page)有效)
         //number	整数值 

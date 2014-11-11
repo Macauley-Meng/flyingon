@@ -17,6 +17,15 @@
 flyingon.css({
 
 
+    //分隔条内容
+    ".flyingon-Splitter-content": {
+
+        width: "100%",
+        height: "100%",
+        backgroundColor: "silver"
+    },
+
+
     //弹出窗口标题栏样式
     ".flyingon-Dialog-header": {
 
@@ -137,6 +146,16 @@ flyingon.style({
 
         overflow: "auto",
         backgroundColor: "white"
+    },
+
+
+    //分隔条控件样式
+    "@flyingon-Splitter": {
+
+        //overflow: "hidden", //防止IE怪异模式下无法设置小于字体大小的高度
+        padding: "1px",
+        width: "4px",
+        height: "4px"
     },
 
 
