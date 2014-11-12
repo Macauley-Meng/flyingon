@@ -584,7 +584,7 @@
         //控件上右下左内边距
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   父控件客户区宽或高度的百分比
-        styles("padding-?", items, "0", "arrange");
+        styles("padding-?", items, "0", "arrange|no");
 
 
 
@@ -656,7 +656,7 @@
         complex("border-color", items, split_sides("border-?-color"), "border-?-color");
 
         //控件边框颜色
-        styles("border-?-color", items, "black", "arrange");
+        styles("border-?-color", items, "black");
 
 
         //控件上右下左边框圆角简写方式
@@ -665,7 +665,7 @@
         //控件边框圆角
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   父控件客户区宽或高度的百分比
-        styles("border-?-radius", items, "0", "arrange");
+        styles("border-?-radius", items, "0");
 
 
 

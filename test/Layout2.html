@@ -1,0 +1,463 @@
+﻿
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!--以IE的当前版本渲染,如果安装了ChromeFrame则优先使用-->
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />-->
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=7" />-->
+    <title></title>
+    <style type="text/css">
+        * {
+            font-size: 12px;
+            font-family: Arial;
+        }
+
+        #tool span {
+            padding-left: 2px;
+        }
+
+        #tool input {
+            margin-left: 2px;
+        }
+    </style>
+</head>
+<body style="margin: 0;">
+
+    <div style="width: 100%; height: 100%;">
+
+        <div id="tool">
+
+            <div id="drag" style="border:1px solid black; padding:2px; background-color: yellow;">
+
+                <input type="button" value="horizontal" onclick="vertical(false)" />
+                <input type="button" value="vertical" onclick="vertical(true)" />
+
+                <span style="width: 10px"></span>
+                <input type="button" value="ltr" onclick="direction('ltr')" />
+                <input type="button" value="rtl" onclick="direction('rtl')" />
+
+                <span style="width: 10px"></span>
+                <input type="button" value="Paint" onclick="paint()" />
+                <span style="width: 10px"></span>
+                <span style="color:red;">可拖动分隔条调整布局</span>
+            </div>
+
+            <table style="border:1px solid black;">
+                <tr>
+                    <td style="width:60px;">面板参数:</td>
+                    <td>
+                        <div id="panel_property" style="padding:2px;">
+
+                            <span>layoutType<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
+
+                            <span>spacingWidth<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
+                            <span>spacingHeight<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
+
+                            <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " readonly="readonly" value="" /></span>
+                            <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " readonly="readonly" value="" /></span>
+
+                            <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 500px; " readonly="readonly" value="" /></span>
+                            <span style="display: none;" tag="table">layoutTables<input type="text" style="width: 500px; " readonly="readonly" value="" /></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:60px;">控件参数:</td>
+                    <td>
+                        <div id="control_property" style="padding:2px;">
+
+                            <span>width<input type="text" style="width:50px;" value="default" onchange="to_control()" /></span>
+                            <span>height<input type="text" style="width:50px;" value="default" onchange="to_control()" /></span>
+
+                            <span>minWidth<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>maxWidth<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+
+                            <span>minHeight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>maxHeight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+
+                            <span>offsetX<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>offsetY<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+
+                            <span>alignX<input type="text" style="width:50px;" value="center" onchange="to_control()" /></span>
+                            <span>alignY<input type="text" style="width:50px;" value="middle" onchange="to_control()" /></span>
+
+                            <span>resizable<input type="text" style="width:50px;" value="both" onchange="to_control()" /></span>
+                            <span>draggable<input type="text" style="width:50px;" value="both" onchange="to_control()" /></span>
+
+                            <span>marginLeft<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginTop<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginRight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginBottom<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+
+                            <span tag="flow">newline<input type="text" style="width:50px;" value="false" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="split">layoutSplit<input type="text" style="width: 50px; " value="before" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">columnIndex<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="absolute">left<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="to_control()" /></span>
+
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+        <div id="host" style="width: 100%; height: 600px;">
+        </div>
+
+    </div>
+
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+    <script type="text/javascript">
+
+
+
+
+        var date = new Date();
+
+
+        var w = new flyingon.Window(host).sets({
+
+            layoutType: "flow",
+            padding: "10px",
+            border: "4px solid blue",
+            spacingWidth: "10px",
+            spacingHeight: "10px"
+        });
+
+
+        for (var i = 0; i < 6; i++)
+        {
+            var panel = new flyingon.Panel().sets({
+
+                width: "500px",
+                border: "4px solid red",
+                padding: "10px",
+                droppable: true,
+                resizable: "both",
+                layoutType: "flow",
+                spacingWidth: "10px",
+                spacingHeight: "10px",
+
+                layoutColumns: "* 4px * ...2&1", //4
+                layoutRows: "* 4px * ...2&1",   //4
+
+                layoutTable: "*[* 4px * 4px * 4px * 4px *] 4px[*] *[* 4px * 4px * 4px * 4px *] ...3&1",
+                layoutTables: "[ [300, 300, '*[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1' ], [ 400, 400, '*[* 4px * 4px * 4px *] 4px[*] *[* 4px * 4px * 4px *] ...2&1'] ]"
+            });
+
+
+            switch (i)
+            {
+                case 1:
+                    panel.set_layoutType("line");
+                    create_html(50);
+                    break;
+
+                case 2:
+                    panel.set_layoutType("split");
+                    create_html(50);
+                    break;
+
+                case 3:
+                    panel.set_layoutType("dock");
+                    create_html(50);
+                    break;
+
+                case 4:
+                    panel.set_layoutType("grid");
+                    create_html(50);
+                    panel.get_children()[7].set_columnSpan(6);
+                    panel.get_children()[15].set_columnSpan(6);
+                    panel.get_children()[23].set_columnSpan(6);
+                    break;
+
+                case 5:
+                    panel.set_layoutType("table");
+                    create_html(50);
+                    break;
+
+                default:
+                    create_html(100);
+                    break;
+            }
+
+            w.appendChild(panel);
+        }
+
+
+
+        function create_html(length) {
+
+            for (var j = 0; j < length; j++)
+            {
+
+                var ctrl = new flyingon.HtmlControl().sets({
+
+                    left: j % 5 * 120 + "px",
+                    top: j / 5 * 30 + "px",
+                    border: "1px solid black",
+                    paddingTop: "2px",
+                    backgroundColor: "white",
+                    cursor: "pointer",
+                    draggable: "both",
+                    textAlign: "center",
+                    text: "html " + j
+                });
+
+                switch (j % 5)
+                {
+                    case 0:
+                        ctrl.set_dock("left");
+                        ctrl.set_layoutSplit("before");
+                        break;
+
+                    case 1:
+                        ctrl.set_dock("top");
+                        ctrl.set_layoutSplit("after");
+                        break;
+
+                    case 2:
+                        ctrl.set_dock("right");
+                        ctrl.set_layoutSplit("before");
+                        break;
+
+                    case 3:
+                        ctrl.set_dock("bottom");
+                        ctrl.set_layoutSplit("after");
+                        break;
+
+                    case 4:
+                        ctrl.set_dock("fill");
+                        ctrl.set_layoutSplit("center");
+                        break;
+                }
+
+                panel.appendChild(ctrl);
+
+                if (i < length - 1)
+                {
+                    panel.appendChild(new flyingon.Splitter().sets({
+
+                        dock: ctrl.get_dock(),
+                        layoutSplit: ctrl.get_layoutSplit()
+                    }));
+                }
+            }
+        };
+
+
+
+
+
+
+
+        alert(new Date() - date);
+
+
+
+
+
+
+        var inputs = tool.getElementsByTagName("input");
+
+        for (var i = 0; i < inputs.length; i++)
+        {
+            inputs[i].onkeydown = function (event) {
+
+                event = event || window.event;
+
+                if (event.keyCode === 13)
+                {
+                    this.blur();
+                }
+            };
+        }
+
+
+
+        function paint() {
+
+            var date = new Date();
+
+            w.update(true);
+            w.render();
+
+            alert(new Date() - date);
+        };
+
+
+        function vertical(value) {
+
+            var date = new Date();
+
+            var children = w.get_children();
+
+            for (var i = 0; i < children.length; i++)
+            {
+                var panel = children[i];
+                panel.set_vertical(value);
+            }
+
+            w.render();
+
+            alert(new Date() - date);
+        };
+
+
+        function direction(value) {
+
+            var date = new Date();
+
+            var children = w.get_children();
+
+            for (var i = 0; i < children.length; i++)
+            {
+                var panel = children[i];
+                panel.set_direction(value);
+            }
+
+            w.render();
+
+            alert(new Date() - date);
+        };
+
+
+
+
+        var panel = w.get_children()[0];
+        var control = panel.get_children()[0];
+
+
+        function from_panel() {
+
+            var nodes = panel_property.getElementsByTagName("span");
+
+            for (var i = 0; i < nodes.length; i++)
+            {
+                var node = nodes[i];
+                var name = node.innerText || node.textContent;
+                var attr = node.getAttribute("tag");
+
+                node.children[0].value = panel.get(name);
+                node.style.display = attr && attr !== panel.get_layoutType() ? "none" : "";
+            }
+        };
+
+        from_panel();
+
+
+        function from_control() {
+
+            var nodes = control_property.getElementsByTagName("span");
+
+            for (var i = 0; i < nodes.length; i++)
+            {
+                var node = nodes[i];
+                var name = node.innerText || node.textContent;
+
+                node.children[0].value = control.get(name);
+            }
+        };
+
+        from_control();
+
+
+        function to_control() {
+
+            if (control)
+            {
+                var nodes = control_property.getElementsByTagName("span");
+
+                for (var i = 0; i < nodes.length; i++)
+                {
+                    var node = nodes[i],
+                        name = node.innerText || node.textContent,
+                        value = node.children[0].value;
+
+                    switch (name)
+                    {
+                        case "newline":
+                            control.set(name, value && value !== "false");
+                            break;
+
+                        case "alignX":
+                            if (value !== "left" && value !== "center" && value !== "right")
+                            {
+                                alert("可选值: left, center, right");
+                            }
+                            else
+                            {
+                                control.set(name, value);
+                            }
+                            break;
+
+                        case "alignY":
+                            if (value !== "top" && value !== "middle" && value !== "bottom")
+                            {
+                                alert("可选值: top, middle, bottom");
+                            }
+                            else
+                            {
+                                control.set(name, value);
+                            }
+                            break;
+
+                        case "draggable":
+                        case "resizable":
+                            if (value !== "none" && value !== "both" && value !== "horizontal" && value !== "vertical")
+                            {
+                                alert("可选值: none, both, horizontal, vertical");
+                            }
+                            else
+                            {
+                                control.set(name, value);
+                            }
+                            break;
+
+                        default:
+                            control.set(name, value);
+                            break;
+                    }
+
+                }
+            }
+        };
+
+
+
+
+        w.on("mousedown", function (event) {
+
+            if (event.target.is(flyingon.HtmlControl))
+            {
+                control = event.target;
+                from_panel();
+            }
+            else if (event.target.is(flyingon.Panel))
+            {
+                panel = event.target;
+                from_panel();
+            }
+
+        });
+
+
+
+
+
+    </script>
+
+</body>
+</html>

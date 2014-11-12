@@ -24,6 +24,63 @@ flyingon.defineClass("Control", function () {
 
 
 
+
+    //打印指定dom
+    flyingon.print_dom = (function () {
+
+        var iframe;
+
+        return function (dom, children_only) {
+
+            iframe = iframe || (iframe = document.createElement("iframe"));
+            iframe.style.cssText = "position:absolute;width:0px;height:0px;";
+
+            document.body.appendChild(iframe);
+
+            var target = iframe.contentWindow;
+
+            target.document.write(children_only ? dom.innerHTML : "");
+            target.document.close();
+
+            if (!children_only)
+            {
+                target.document.body.appendChild(dom.cloneNode(true));
+            }
+
+            target.focus();
+            target.print();
+
+            document.body.removeChild(iframe);
+            target.document.write("");  //清空iframe的内容
+        };
+
+    })();
+
+
+    //销毁dom节点
+    //注:IE6/7/8使用removeChild方法无法回收内存及清空parentNode
+    flyingon.dispose_dom = (function () {
+
+        var div = document.createElement("div");
+
+        return function (dom) {
+
+            if (dom)
+            {
+                if (dom.parentNode)
+                {
+                    div.appendChild(dom);
+                }
+
+                div.innerHTML = "";
+            }
+        };
+
+    })();
+
+
+
+
     //所属窗口
     this.defineProperty("ownerWindow", function () {
 
@@ -455,7 +512,7 @@ flyingon.defineClass("Control", function () {
 
             compute_style2 = compute_dom2.style,
 
-            cssText = "position:absolute;left:0;top:0;height:0;visibility:hidden;";
+            cssText = "position:absolute;left:0;top:0;height:0;overflow:hidden;visibility:hidden;";
 
         compute_style1.cssText = cssText + "width:0;";
         compute_style2.cssText = cssText + "width:0;";
@@ -479,19 +536,6 @@ flyingon.defineClass("Control", function () {
 
 
 
-        function boxModel() { };
-
-
-        (function () {
-
-
-            this.marginLeft = this.marginTop = this.marginRight = this.marginBottom = 0;
-
-
-        }).call(boxModel.prototype = Object.create(null));
-
-
-
         //测量大小
         //usable_width              可用宽度 整数值
         //usable_height             可用高度 整数值
@@ -503,7 +547,7 @@ flyingon.defineClass("Control", function () {
         this.measure = function (usable_width, usable_height, defaultWidth_to_fill, defaultHeight_to_fill, less_width_to_default, less_height_to_default) {
 
 
-            var box = this.__boxModel || (this.__boxModel = new boxModel()),
+            var box = this.__boxModel || (this.__boxModel = {}),
                 fn = this.compute_size,
                 dom = this.dom,
                 style = dom.style,
@@ -523,10 +567,10 @@ flyingon.defineClass("Control", function () {
             box.borderRight = fn(style.borderRightWidth || this.get_borderRightWidth());
             box.borderBottom = fn(style.borderBottomWidth || this.get_borderBottomWidth());
 
-            box.paddingLeft = fn(style.paddingLeft || this.get_paddingLeft());
-            box.paddingTop = fn(style.paddingTop || this.get_paddingTop());
-            box.paddingRight = fn(style.paddingRight || this.get_paddingRight());
-            box.paddingBottom = fn(style.paddingBottom || this.get_paddingBottom());
+            box.paddingLeft = fn(this.get_paddingLeft());
+            box.paddingTop = fn(this.get_paddingTop());
+            box.paddingRight = fn(this.get_paddingRight());
+            box.paddingBottom = fn(this.get_paddingBottom());
 
             box.spacingWidth = (this.clientLeft = box.borderLeft + box.paddingLeft) + box.borderRight + box.paddingRight;
             box.spacingHeight = (this.clientTop = box.borderTop + box.paddingTop) + box.borderBottom + box.paddingBottom;
@@ -707,7 +751,7 @@ flyingon.defineClass("Control", function () {
             this.offsetHeight = height;
 
 
-            //设置dom大小
+            //设置dom
             if (this.__border_sizing)
             {
                 style.width = width + "px";
@@ -719,10 +763,13 @@ flyingon.defineClass("Control", function () {
                 style.height = this.clientHeight + "px";
             }
 
-            //排列完毕使用
-            if (this.after_measure)
+            //测量后述处理
+            if (!this.after_measure || this.after_measure(style, box) !== false)
             {
-                this.after_measure();
+                style.paddingLeft = box.paddingLeft + "px";
+                style.paddingTop = box.paddingTop + "px";
+                style.paddingRight = box.paddingRight + "px";
+                style.paddingBottom = box.paddingBottom + "px";
             }
 
 
@@ -958,6 +1005,7 @@ flyingon.defineClass("Control", function () {
         };
 
 
+
         //调整大小
         this.__fn_resize = function (side, event, pressdown) {
 
@@ -966,25 +1014,71 @@ flyingon.defineClass("Control", function () {
 
             if (side.left)
             {
-                this.set_left(pressdown.offsetLeft + x + "px");
-                this.set_width(pressdown.offsetWidth - x + "px");
+                resize_value(this, pressdown, "left", x);
+                resize_value(this, pressdown, "width", -x);
             }
             else if (side.right)
             {
-                this.set_width(pressdown.offsetWidth + x + "px");
+                resize_value(this, pressdown, "width", x);
             }
 
             if (side.top)
             {
-                this.set_top(pressdown.offsetTop + y + "px");
-                this.set_height(pressdown.offsetHeight - y + "px");
+                resize_value(this, pressdown, "top", y);
+                resize_value(this, pressdown, "height", -y);
             }
             else if (side.bottom)
             {
-                this.set_height(pressdown.offsetHeight + y + "px");
+                resize_value(this, pressdown, "height", y)
             }
 
             event.stopPropagation(false);
+        };
+
+
+
+        //保持原单位的大小调整
+        var regex_resize = /[a-zA-Z%]+/,  //
+
+            resize_names = { //默认位置大小名称对应关系
+
+                left: "offsetLeft",
+                top: "offsetTop",
+                width: "offsetWidth",
+                height: "offsetHeight"
+            };
+
+
+
+
+        //调整大小
+        function resize_value(target, start, name, change) {
+
+            start = start[name] || (start[name] = target.__fn_unit_scale(target["get_" + name](), target[resize_names[name]], target.get_direction() === "rtl"));
+            target["set_" + name](start.value + (start.scale === 1 ? change : +(change * start.scale).toFixed(2)) + start.unit);
+        };
+
+
+
+
+        //获取单位换算比例(原始值,单位及换算比例)
+        //default,fill,auto按px单位处理
+        this.__fn_unit_scale = function (value, px, reverse) {
+
+            var unit = value.match(regex_resize);
+
+            if (!unit || (unit = unit[0]).length > 2 || unit === "px")
+            {
+                return { value: px, unit: "px", scale: 1, reverse: reverse };
+            }
+
+            return {
+
+                unit: unit,
+                value: (value = parseFloat(value) || 100),
+                scale: value / px || 1,
+                reverse: reverse
+            };
         };
 
 

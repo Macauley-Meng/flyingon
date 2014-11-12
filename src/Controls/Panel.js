@@ -173,8 +173,12 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
         var target = new flyingon.Control(), //拖动控件
             source, //原始控件
+            properties = ["marginLeft", "marginTop", "marginRight", "marginBottom", "newline", "layoutSplit", "dock", "columnIndex", "spacingCells"], //要复制的属性
             insert_index = -1,
             last_index = -1;
+
+
+        target.set_border("1px dotted red");
 
 
 
@@ -187,11 +191,11 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
             if (index >= 0 && insert_index !== index)
             {
+                target.set_width(event.dragTarget.offsetWidth + "px");
+                target.set_height(event.dragTarget.offsetHeight + "px");
+
                 if (source = items[insert_index = index])
                 {
-                    target.set_width(source.get_width());
-                    target.set_height(source.get_height());
-
                     copy_property(source, target);
                 }
 
@@ -266,15 +270,14 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
             }
         };
 
-
         //复制对象属性
         function copy_property(source, target) {
 
-            target.set_newline(source.get_newline());
-            target.set_layoutSplit(source.get_layoutSplit());
-            target.set_dock(source.get_dock());
-            target.set_columnIndex(source.get_columnIndex());
-            target.set_spacingCells(source.get_spacingCells());
+            for (var i = 0, _ = properties.length; i < _; i++)
+            {
+                var name = properties[i];
+                target["set_" + name](source["get_" + name]());
+            }
         };
 
 

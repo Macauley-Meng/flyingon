@@ -35,7 +35,13 @@
             releaseCapture,                         //释放鼠标
             capture_dom,                            //捕获的dom
 
-            pressdown;                              //按下时dom事件
+            cursor_list,                            //cursor暂存集合
+
+            pressdown,                              //按下时dom事件
+            host_mousemove = true,                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
+
+            selection1 = window.getSelection,       //获取选区方法1
+            selection2 = document.selection;        //获取选区方法2
 
 
 
@@ -48,97 +54,6 @@
                 dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
             }
         };
-
-
-
-
-        //捕获或释放鼠标
-        if (host.setCapture)
-        {
-
-            setCapture = function (dom) {
-
-                dom.setCapture();
-            };
-
-            releaseCapture = function (dom) {
-
-                dom.releaseCapture();
-            };
-
-        }
-        else //window.captureEvents方式效果不好,不要使用
-        {
-
-            //是否允许host处理mousemove事件
-            var host_mousemove = true,
-                cursor_list,
-
-
-            //设置捕获鼠标以避免拖动时鼠标闪烁
-            setCapture = function (dom) {
-
-                var parent = dom,
-                    cursor = dom.style.cursor,
-                    style;
-
-                cursor_list = [];
-
-                while ((parent = parent.parentNode) && (style = parent.style))
-                {
-                    cursor_list.push(style);
-                    cursor_list.push(style.cursor);
-
-                    style.cursor = cursor;
-                }
-            };
-
-
-            //恢复鼠标状态
-            releaseCapture = function (dom) {
-
-                if (cursor_list)
-                {
-                    for (var i = 0, _ = cursor_list.length; i < _; i++)
-                    {
-                        cursor_list[i++].cursor = cursor_list[i];
-                    }
-                }
-            };
-
-
-
-            //捕获全局mousemove事件
-            flyingon.addEventListener(host, "mousemove", function (event) {
-
-                if (!host_mousemove)
-                {
-                    host_mousemove = true;
-                }
-                else if (pressdown)
-                {
-                    events.mousemove.call(this, event || fix_event(window.event));
-                }
-                else if (hover_control)
-                {
-                    hover_control.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
-                    hover_control.__fn_to_hover(false);
-                }
-            });
-
-
-            //捕获全局mouseup事件
-            flyingon.addEventListener(host, "mouseup", function (event) {
-
-                if (pressdown)
-                {
-                    events.mouseup.call(this, event || fix_event(window.event));
-                }
-            });
-
-
-        };
-
 
 
 
@@ -163,8 +78,114 @@
 
 
 
+
+        //捕获或释放鼠标
+        if (host.setCapture)
+        {
+
+            setCapture = function (dom, event) {
+
+                dom.setCapture(true);
+                //dom.onlosecapture = pressdown_cancel; //IE特有 注册此方法会造成IE7无法拖动滚动条
+            };
+
+            releaseCapture = function (dom) {
+
+                dom.releaseCapture();
+                //dom.onlosecapture = null;
+            };
+
+        }
+        else //window.captureEvents方式效果不好,不要使用
+        {
+
+            //设置捕获
+            setCapture = function (dom, event) {
+
+                event.preventDefault(); //阻止默认拖动操作
+            };
+
+
+            //释放捕获
+            releaseCapture = function (dom) { };
+
+
+
+            //捕获全局mousemove事件
+            flyingon.addEventListener(host, "mousemove", function (event) {
+
+                if (!host_mousemove)
+                {
+                    host_mousemove = true;
+                }
+                else if (pressdown)
+                {
+                    events.mousemove.call(this, event || fix_event(window.event));
+                }
+                else if (hover_control)
+                {
+                    hover_control.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
+                    hover_control.__fn_to_hover(false);
+                }
+            });
+
+
+        };
+
+
+
+
+        //捕获全局mouseover事件修改cursor防止拖动时鼠标闪烁
+        flyingon.addEventListener(host, "mouseover", function (event) {
+
+            if (pressdown)
+            {
+                var target = event.target;
+
+                if (target && !target.__save_cursor && target !== capture_dom)
+                {
+                    (cursor_list || (cursor_list = [])).push(target, target.style.cursor);
+
+                    target.__save_cursor = true;
+                    target.style.cursor = pressdown.cursor;
+                }
+            }
+
+        });
+
+
+
+        //捕获全局mouseup事件
+        //注: 当鼠标在浏览器窗口外弹起时此事件仍不能执行,暂时找不到好的办法捕获浏览器外mouseup事件
+        //IE的onlosecapture会造成IE7等浏览器滚动条不能拖动
+        //window的onblur事件在IE7等浏览器中性能太差
+        flyingon.addEventListener(host, "mouseup", function (event) {
+
+            if (pressdown)
+            {
+                events.mouseup.call(this, event || fix_event(window.event), true);
+            }
+        });
+
+
+
+        //解决某些情况下鼠标按下拖动后无法执行mouseup的问题 IE此用此方法在拖动滚动条时性能很差
+        //flyingon.addEventListener(window, "blur", pressdown_cancel);
+
+
+
+
+
+
         //注:IE6/7/8的鼠标事件的event中鼠标数据是全局的,不能直接记录,需要把相关的数据存储至pressdown对象中
         events.mousedown = function (event) {
+
+            //如果因为移出窗口等原因丢失mouseup事件则触发mouseup
+            if (pressdown)
+            {
+                events.mouseup(event);
+                return;
+            }
 
             var ownerWindow = this.flyingon,
                 target = dom_target(event || (event = fix_event(window.event))),
@@ -188,19 +209,16 @@
             if (target)
             {
                 //捕获dom
-                setCapture(capture_dom = target.dom);
+                setCapture(capture_dom = target.dom, event);
 
                 //记录鼠标按下位置
                 pressdown = {
 
                     capture: target,
-                    clientX: event.clientX,
-                    clientY: event.clientY,
                     which: event.which,
-                    offsetLeft: target.offsetLeft,
-                    offsetTop: target.offsetTop,
-                    offsetWidth: target.offsetWidth,
-                    offsetHeight: target.offsetHeight
+                    cursor: capture_dom.style.cursor,
+                    clientX: event.clientX,
+                    clientY: event.clientY
                 };
 
                 if (target.dispatchEvent(new MouseEvent("mousedown", event)) !== false)
@@ -236,6 +254,8 @@
 
             if (pressdown && (target = pressdown.capture))
             {
+                selection1 ? selection1().removeAllRanges() : selection2.empty(); //清除选中内容防止浏览器默认拖动操作
+
                 if (resizable) //调整大小
                 {
                     target.__fn_resize(resizable, event, pressdown);
@@ -276,9 +296,20 @@
         };
 
 
-        events.mouseup = function (event) {
+        events.mouseup = function (event, cancel) {
 
             var target;
+
+            if (cursor_list) //恢复鼠标状态
+            {
+                for (var i = 0, _ = cursor_list.length; i < _; i++)
+                {
+                    cursor_list[i].__save_cursor = undefined;
+                    cursor_list[i++].style.cursor = cursor_list[i];
+                }
+
+                cursor_list = null;
+            }
 
             if (capture_dom)
             {
@@ -299,7 +330,7 @@
             {
                 draggable = null;
 
-                if (dragdrop.stop(event, pressdown, this === host)) //如果拖动过则取消相关鼠标事件
+                if (dragdrop.stop(event, pressdown, cancel)) //如果拖动过则取消相关鼠标事件
                 {
                     flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
                     pressdown = null;
@@ -358,12 +389,6 @@
             return target.dispatchEvent(event);
         };
 
-
-        //拖动操作结果需释放鼠标触发mouseup事件(浏览器会有默认拖放动作且不会触发mouseup事件)
-        events.dragend = function (event) {
-
-            events.mouseup.call(this, event);
-        };
 
 
         //events.touchstart = function(event) {
@@ -450,6 +475,15 @@
 
 
             return target.dispatchEvent("blur");
+        };
+
+
+        function pressdown_cancel(event) {
+
+            if (pressdown)
+            {
+                events.mouseup(event, true);
+            }
         };
 
 

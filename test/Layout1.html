@@ -50,7 +50,7 @@
                 <span style="width: 10px"></span>
                 <input type="button" value="Paint" onclick="paint()" />
                 <span style="width: 10px"></span>
-                <span style="color:red;">可点击Button选择控件及调整参数 可拖动Panel或Button调整位置或大小</span>
+                <span style="color:red;">可点击Html控件选择控件及调整参数 可拖动面板或Html控件调整位置或大小</span>
             </div>
 
             <table style="border:1px solid black;">
@@ -58,60 +58,63 @@
                     <td style="width:60px;">面板参数:</td>
                     <td>
                         <div id="panel_property" style="padding:2px;">
-                            <span>spacingWidth<input type="text" style="width:40px;" value="2px" onchange="sync_panel()" /></span>
-                            <span>spacingHeight<input type="text" style="width:40px;" value="2px" onchange="sync_panel()" /></span>
+                            <span>spacingWidth<input type="text" style="width:50px;" value="10px" onchange="to_panel()" /></span>
+                            <span>spacingHeight<input type="text" style="width: 50px;" value="10px" onchange="to_panel()" /></span>
 
-                            <span tag="flow">layoutWidth<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
-                            <span tag="flow">layoutHeight<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
+                            <span tag="flow">layoutWidth<input type="text" style="width: 50px;" value="0" onchange="to_panel()" /></span>
+                            <span tag="flow">layoutHeight<input type="text" style="width: 50px;" value="0" onchange="to_panel()" /></span>
 
-                            <span style="display: none;" tag="page">layoutPage<input type="text" style="width:40px;" value="0" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="page">layoutPage<input type="text" style="width:50px;" value="0" onchange="to_panel()" /></span>
 
-                            <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
-                            <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="8" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="6" onchange="to_panel()" /></span>
+                            <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="6" onchange="to_panel()" /></span>
 
-                            <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 500px; " value="*[50% 4px *  4px*] 4px[*] *[* 4px 50%{(spacingWidth=50%,spacingHeight=50%) *[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1} 4px *] 4px[*] *[* 4px * 4px * 4px *]" onchange="sync_panel()" /></span>
-                            <span style="display: none;" tag="table">layoutTables<input type="text" style="width: 500px; " value="[ [300, 300, '*[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1' ], [ 400, 400, '*[* 4px * 4px * 4px *] 4px[*] *[* 4px * 4px * 4px *] ...2&1'] ]" onchange="sync_panel()" /></span>
+                            <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 500px; " value="*[50% * *] *[* 50%{(spacingWidth=50%,spacingHeight=50%) *[* * *] ...2} *] *[* * * *]" onchange="to_panel()" /></span>
+                            <span style="display: none;" tag="table">layoutTables<input type="text" style="width: 500px; " value="[ [300, 300, '*[* * *] ...2' ], [ 400, 400, '*[* * * *] ...3'] ]" onchange="to_panel()" /></span>
                         </div>
                     </td>
                 </tr>
                 <tr>
                     <td style="width:60px;">控件参数:</td>
                     <td>
-                        <div id="button_property" style="padding:2px;">
+                        <div id="control_property" style="padding:2px;">
 
-                            <span>width<input type="text" style="width:40px;" value="default" onchange="sync_button()" /></span>
-                            <span>height<input type="text" style="width:40px;" value="default" onchange="sync_button()" /></span>
+                            <span>width<input type="text" style="width:50px;" value="default" onchange="to_control()" /></span>
+                            <span>height<input type="text" style="width:50px;" value="default" onchange="to_control()" /></span>
 
-                            <span>minWidth<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                            <span>maxWidth<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>minWidth<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>maxWidth<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
 
-                            <span>minHeight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                            <span>maxHeight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>minHeight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>maxHeight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
 
-                            <span>offsetX<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                            <span>offsetY<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>offsetX<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>offsetY<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
 
-                            <span>alignX<input type="text" style="width:40px;" value="center" onchange="sync_button()" /></span>
-                            <span>alignY<input type="text" style="width:40px;" value="middle" onchange="sync_button()" /></span>
+                            <span>alignX<input type="text" style="width:50px;" value="center" onchange="to_control()" /></span>
+                            <span>alignY<input type="text" style="width:50px;" value="middle" onchange="to_control()" /></span>
 
-                            <span>marginLeft<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                            <span>marginTop<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                            <span>marginRight<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                            <span>marginBottom<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
+                            <span>resizable<input type="text" style="width:50px;" value="both" onchange="to_control()" /></span>
+                            <span>draggable<input type="text" style="width:50px;" value="both" onchange="to_control()" /></span>
 
-                            <span tag="flow">newline<input type="text" style="width:40px;" value="false" onchange="sync_button()" /></span>
+                            <span>marginLeft<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginTop<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginRight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginBottom<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
 
-                            <span style="display: none;" tag="split">layoutSplit<input type="text" style="width: 50px; " value="before" onchange="sync_button()" /></span>
+                            <span tag="flow">newline<input type="text" style="width:50px;" value="false" onchange="to_control()" /></span>
 
-                            <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="split">layoutSplit<input type="text" style="width: 50px; " value="before" onchange="to_control()" /></span>
 
-                            <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
-                            <span style="display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="sync_button()" /></span>
-                            <span style="display: none;" tag="grid">columnIndex<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                            <span style="display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="to_control()" /></span>
 
-                            <span style="display: none;" tag="absolute">left<input type="text" style="width:40px;" value="0" onchange="sync_button()" /></span>
-                            <span style="display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="sync_button()" /></span>
+                            <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">columnIndex<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="absolute">left<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="to_control()" /></span>
 
                         </div>
                     </td>
@@ -126,30 +129,19 @@
     </div>
 
 
+    <script type="text/javascript">
+
+
+        var date = new Date();
+
+    </script>
+
+
     <script src="../scripts/flyingon.js"></script>
     <script src="../themes/default/flyingon.js"></script>
 
     <script type="text/javascript">
 
-
-
-        var inputs = tool.getElementsByTagName("input");
-
-        for (var i = 0; i < inputs.length; i++)
-        {
-            inputs[i].onkeydown = function (event) {
-
-                event = event || window.event;
-
-                if (event.keyCode === 13)
-                {
-                    this.blur();
-                }
-            };
-        }
-
-
-        var date = new Date();
 
 
         var w = new flyingon.Window(host).sets({
@@ -162,7 +154,7 @@
         });
 
 
-        for (var i = 0; i < 100; i++)
+        for (var i = 0; i < 10; i++)
         {
             var panel = new flyingon.Panel().sets({
 
@@ -171,28 +163,25 @@
                 padding: "10px",
                 droppable: true,
                 resizable: "both",
-                layoutType: "flow",
-                spacingWidth: "2px",
-                spacingHeight: "2px",
-
-                layoutColumns: "8", //4
-                layoutRows: "8",   //4
-
-                layoutTable: "*[50% 4px *  4px*] 4px[*] *[* 4px 50%{(spacingWidth=50%,spacingHeight=50%) *[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1} 4px *] 4px[*] *[* 4px * 4px * 4px *]",
-                layoutTables: "[ [300, 300, '*[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1' ], [ 400, 400, '*[* 4px * 4px * 4px *] 4px[*] *[* 4px * 4px * 4px *] ...2&1'] ]"
+                layoutType: "flow"
             });
 
 
-            for (var j = 0; j < 50; j++)
+            for (var j = 0; j < 100; j++)
             {
 
-                var ctrl = new flyingon.Button().sets({
+                var ctrl = new flyingon.HtmlControl().sets({
 
                     left: j % 5 * 120 + "px",
                     top: j / 5 * 30 + "px",
+                    border: "1px solid black",
+                    paddingTop: "2px",
+                    backgroundColor: "white",
+                    cursor: "pointer",
                     draggable: "both",
                     resizable: "both",
-                    text: "button" + j
+                    textAlign: "center",
+                    text: "html " + j
                 });
 
                 switch (j % 5)
@@ -224,14 +213,6 @@
                 }
 
                 panel.appendChild(ctrl);
-
-                if (j < 50 - 1)
-                {
-                    panel.appendChild(new flyingon.Splitter()
-                        .set_draggable("both")
-                        .set_dock(ctrl.get_dock())
-                        .set_layoutSplit(ctrl.get_layoutSplit())); //添加分隔条
-                }
             }
 
 
@@ -244,7 +225,25 @@
 
 
 
-        function sync_panel() {
+        var inputs = tool.getElementsByTagName("input");
+
+        for (var i = 0; i < inputs.length; i++)
+        {
+            inputs[i].onkeydown = function (event) {
+
+                event = event || window.event;
+
+                if (event.keyCode === 13)
+                {
+                    this.blur();
+                }
+            };
+        }
+
+
+
+
+        function to_panel() {
 
             var nodes = panel_property.getElementsByTagName("span"),
                 children = w.get_children();
@@ -260,6 +259,9 @@
                 }
             }
         };
+
+
+        to_panel();
 
 
 
@@ -341,14 +343,14 @@
 
 
 
-        var button = w.get_children()[0].get_children()[0];
+        var control = w.get_children()[0].get_children()[0];
 
 
-        function sync_button() {
+        function to_control() {
 
-            if (button)
+            if (control)
             {
-                var nodes = button_property.getElementsByTagName("span");
+                var nodes = control_property.getElementsByTagName("span");
 
                 for (var i = 0; i < nodes.length; i++)
                 {
@@ -359,7 +361,7 @@
                     switch (name)
                     {
                         case "newline":
-                            button.set(name, value && value !== "false");
+                            control.set(name, value && value !== "false");
                             break;
 
                         case "alignX":
@@ -369,7 +371,7 @@
                             }
                             else
                             {
-                                button.set(name, value);
+                                control.set(name, value);
                             }
                             break;
 
@@ -380,12 +382,24 @@
                             }
                             else
                             {
-                                button.set(name, value);
+                                control.set(name, value);
+                            }
+                            break;
+
+                        case "draggable":
+                        case "resizable":
+                            if (value !== "none" && value !== "both" && value !== "horizontal" && value !== "vertical")
+                            {
+                                alert("可选值: none, both, horizontal, vertical");
+                            }
+                            else
+                            {
+                                control.set(name, value);
                             }
                             break;
 
                         default:
-                            button.set(name, value);
+                            control.set(name, value);
                             break;
                     }
 
@@ -393,25 +407,32 @@
             }
         };
 
-        sync_button();
+
+
+        function from_control() {
+
+            var nodes = control_property.getElementsByTagName("span");
+
+            for (var i = 0; i < nodes.length; i++)
+            {
+                var node = nodes[i];
+                var name = node.innerText || node.textContent;
+
+                node.children[0].value = control.get(name);
+            }
+        };
+
+
+        from_control();
 
 
 
         w.on("mousedown", function (event) {
 
-            if (event.target.is(flyingon.Button))
+            if (event.target.is(flyingon.HtmlControl))
             {
-                var nodes = button_property.getElementsByTagName("span");
-
-                button = event.target;
-
-                for (var i = 0; i < nodes.length; i++)
-                {
-                    var node = nodes[i];
-                    var name = node.innerText || node.textContent;
-
-                    node.children[0].value = button.get(name);
-                }
+                control = event.target;
+                from_control();
             }
 
         });

@@ -9,6 +9,7 @@
 
 
 
+
     //布局基类
     var layout_base = flyingon.defineClass(function () {
 
@@ -95,12 +96,11 @@
 
 
         //初始化分隔条
-        this.__fn_splitter = function (splitter, defautValue) {
+        this.__fn_splitter = function (splitter, defautValue, vertical) {
 
-            var styles = splitter.__styles || (splitter.__styles = {}),
-                vertical = this.vertical;
+            var styles = splitter.__styles || (splitter.__styles = {});
 
-            splitter.dom.style.cursor = vertical ? "n-resize" : "w-resize";
+            splitter.dom.style.cursor = (splitter.__vertical = vertical) ? "n-resize" : "w-resize";
 
             styles.width = vertical ? defautValue : (styles.width = undefined, splitter.get_width());
             styles.height = vertical ? (styles.height = undefined, splitter.get_height()) : defautValue;
@@ -108,43 +108,34 @@
 
 
         //调整控件大小
-        this.__fn_resize = function (target, index, start, distanceX, distanceY) {
+        this.__fn_resize = function (target, name, value) {
 
-            if (target = target.__children[index])
-            {
-                if (this.vertical)
-                {
-                    if (this.__fn_resize_reverse(target))
-                    {
-                        distanceY = -distanceY;
-                    }
-
-                    target.set_height((start.height >= 0 ? start.height : (start.height = target.offsetHeight)) + distanceY + "px");
-                }
-                else
-                {
-                    if (this.__fn_resize_reverse(target))
-                    {
-                        distanceX = -distanceX;
-                    }
-
-                    target.set_width((start.width >= 0 ? start.width : (start.width = target.offsetWidth)) + distanceX + "px");
-                }
-            }
+            target["set_" + name](value);
         };
 
 
-        //是否反向调整大小
+        //获取开始调整大小参数
+        this.__fn_resize_start = function (target, name, vertical, value, px) {
+
+            if (!((px = +px) >= 0))
+            {
+                px = target[vertical ? "offsetHeight" : "offsetWidth"];
+            }
+
+            var result = target.__fn_unit_scale(value || target["get_" + name](), px);
+
+            result.name = name;
+            result.vertical = vertical;
+            result.reverse = this.__fn_resize_reverse(target);
+
+            return result;
+        };
+
+
+        //获取调整大小时是否需要反向处理
         this.__fn_resize_reverse = function (target) {
 
             return this.rtl;
-        };
-
-
-        //获取子控件收拢方向
-        this.__fn_collapse = function (target, item) {
-
-            return this.vertical ? "top" : "left";
         };
 
 
@@ -173,9 +164,15 @@
         };
 
 
+        //获取子控件收拢方向
+        this.__fn_collapse = function (target, item) {
+
+            return this.vertical ? "top" : "left";
+        };
 
 
     });
+
 
 
 
@@ -668,6 +665,7 @@
                 else
                 {
                     target.__fn_hide_after(items, i);
+                    break;
                 }
             }
 
@@ -1352,6 +1350,7 @@
 
         this.__fn_resize = function (target, index, start, distanceX, distanceY) {
 
+
         };
 
 
@@ -1828,7 +1827,7 @@
         });
 
 
-        
+
 
         function compute(target, table, width, height, spacingWidth, spacingHeight, vertical) {
 

@@ -1,4 +1,6 @@
 ﻿
+
+
 ///Ajax实现
 (function (flyingon) {
 
@@ -307,6 +309,65 @@
         }
 
         return flyingon.ajax(options);
+    };
+
+
+
+})(flyingon);
+
+
+
+
+
+//脚本及资源
+(function (flyingon) {
+
+
+
+    //导入javascript脚本
+    flyingon.load = function (url, callback) {
+
+        var dom = document.createElement('script'),
+            head = document.getElementsByTagName("head")[0];
+
+        dom.type = 'text/javascript';
+        dom.src = url;
+        dom.onload = dom.onreadystatechange = function () {
+
+            if (!dom.readyState || dom.readyState == 'loaded' || dom.readyState == 'complete')
+            {
+                dom.onload = dom.onreadystatechange = null;
+
+                if (callback)
+                {
+                    callback(dom);
+                }
+
+                flyingon.dispose_dom(dom);
+            }
+        };
+
+        head.appendChild(dom);
+    };
+
+
+
+    //多语言缓存
+    var cache = {};
+
+
+    //翻译多语言
+    flyingon.translate = function (file, message) {
+
+        var values = cache[file] || load(file);
+        return message in values ? values[message] : message;
+    };
+
+
+    //加载多语言资源(当前语言)
+    function load(file) {
+
+        return cache[file] = flyingon.ajax_get("/resources/" + flyingon.current_language + "/" + file, "json");
     };
 
 

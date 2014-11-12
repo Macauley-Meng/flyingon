@@ -55,7 +55,7 @@ flyingon.IChildren = function (base) {
 
 
     //测量完毕后执行方法
-    this.after_measure = function () {
+    this.after_measure = function (style, box) {
 
         //客户区变化时才会请求重新排列
         if (this.clientWidth !== this.__arrange_width || this.clientHeight !== this.__arrange_height)

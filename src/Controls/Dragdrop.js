@@ -123,6 +123,20 @@
         event.offsetLeft = __offsetLeft;
         event.offsetTop = __offsetTop;
 
+        if (pressdown)
+        {
+            if (__draggable === "horizontal")
+            {
+                event.clientY = pressdown.clientY;
+                event.distanceY = 0;
+            }
+            else if (__draggable === "vertical")
+            {
+                event.clientX = pressdown.clientX;
+                event.distanceX = 0;
+            }
+        }
+
         return target.dispatchEvent(event);
     };
 
@@ -175,17 +189,18 @@
         }
 
         var offset = __ownerWindow.offset(event.clientX, event.clientY),
-            target = __ownerWindow.findAt(offset.x, offset.y);
+            target = __ownerWindow.findAt(offset.x, offset.y),
+            dom = __ownerWindow.dom;
 
         //移到代理dom
         if (__draggable !== "vertical")
         {
-            __dom_proxy.style.left = event.clientX - pressdown.clientX + "px";
+            __dom_proxy.style.left = dom.scrollLeft + event.clientX - pressdown.clientX + "px";
         }
 
         if (__draggable !== "horizontal")
         {
-            __dom_proxy.style.top = event.clientY - pressdown.clientY + "px";
+            __dom_proxy.style.top = dom.scrollTop + event.clientY - pressdown.clientY + "px";
         }
 
         //往上找出可放置拖放的对象(复制模式时不能放置在目标控件上)

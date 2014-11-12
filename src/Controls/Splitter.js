@@ -26,7 +26,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         if (target && (target = target.__layout))
         {
-            target.__fn_splitter(this, "default");
+            target.__fn_splitter(this, "default", this.get_vertical());
         }
 
         return base.measure.apply(this, arguments);
@@ -45,15 +45,27 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
     this.__event_bubble_mousemove = function (event) {
 
-        var target, layout, index;
+        var target, layout, start, index, vertical, name, value;
 
         if (!event.ctrlKey &&
-            event.pressdown &&
+            (start = event.pressdown) &&
             (event.distanceX || event.distanceY) &&
+            (index = this.__arrange_index - 1) >= 0 &&
             (target = this.__parent) && (layout = target.__layout) &&
-            (index = this.childIndex()) > 0)
+            (target = target.__children[index]))
         {
-            layout.__fn_resize(target, index - 1, event.pressdown, event.distanceX, event.distanceY);
+            vertical = this.__vertical;
+            name = vertical ? "height" : "width";
+
+            start = start.start || (start.start = {});
+            start = start[name] || (start[name] = layout.__fn_resize_start(target, name, vertical));
+
+            value = vertical ? event.distanceY : event.distanceX;
+            value = start.scale === 1 ? value : +(value * start.scale).toFixed(2);
+            value = start.value + (start.reverse ? -value : value) + start.unit;
+
+            layout.__fn_resize(target, name, value);
+
             event.stopPropagation(false);
         }
     };

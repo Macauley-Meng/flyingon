@@ -213,3 +213,23 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 });
 
+
+
+
+
+//处理全局异常
+flyingon.addEventListener(window, "error", function (message, url, line) {
+
+    var error = flyingon.last_error;
+
+    if (error && (message = flyingon.translate("error.js", error.message)) && error.parameters)
+    {
+        error = error.parameters;
+        message = message.replace(/\{(\d+)\}/g, function (_, key) { return error[key] || ""; });
+    }
+
+    alert(message);
+    return true;
+});
+
+

@@ -46,17 +46,18 @@ flyingon.defineClass("ControlCollection", function (base) {
     this.append = function (item) {
 
         var length = arguments.length,
-            change = !flyingon.__initializing;
+            change;
 
         if (length > 0)
         {
+            change = !flyingon.__initializing;
+
             for (var i = 0; i < length; i++)
             {
-                if ((item = arguments[i]) && validate(this, arguments[i], change))
-                {
-                    push.call(this, item);
-                }
+                validate(this, arguments[i], change);
             }
+
+            push.apply(this, arguments);
 
             this.target.__dom_dirty = true; //标记需要重排dom
         }
@@ -67,10 +68,12 @@ flyingon.defineClass("ControlCollection", function (base) {
     this.insert = function (index, item) {
 
         var length = arguments.length,
-            change = !flyingon.__initializing;
+            change;
 
         if (length > 1)
         {
+            change = !flyingon.__initializing;
+
             if (index < 0)
             {
                 index = 0;
@@ -82,10 +85,8 @@ flyingon.defineClass("ControlCollection", function (base) {
 
             for (var i = 1; i < length; i++)
             {
-                if ((item = arguments[i]) && validate(this, arguments[i], change))
-                {
-                    splice.call(this, index++, 0, item);
-                }
+                validate(this, item = arguments[i], change);
+                splice.call(this, index++, 0, item);
             }
 
             this.target.__dom_dirty = true; //标记需要重排dom
@@ -216,9 +217,8 @@ flyingon.defineClass("ControlCollection", function (base) {
     //清除控件缓存
     function clear_cache(item) {
 
-        item.__ownerWindow = null;
-        item.__events_cache = null;  //清空缓存的事件
-        item.__css_types = null;     //重置样式
+        //清空缓存及重置样式
+        item.__ownerWindow = item.__events_cache = item.__arrange_index = item.__css_types = null;
         item.__update_dirty = 1;
 
         if ((item = item.__children) && item.length > 0)
@@ -230,7 +230,7 @@ flyingon.defineClass("ControlCollection", function (base) {
         }
     };
 
-    
+
 
 });
 
