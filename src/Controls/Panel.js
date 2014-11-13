@@ -173,7 +173,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
         var target = new flyingon.Control(), //拖动控件
             source, //原始控件
-            properties = ["marginLeft", "marginTop", "marginRight", "marginBottom", "newline", "layoutSplit", "dock", "columnIndex", "spacingCells"], //要复制的属性
+            properties = ["newline", "layoutSplit", "dock", "columnIndex", "spacingCells"], //要复制的属性
             insert_index = -1,
             last_index = -1;
 
@@ -187,12 +187,17 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
             var items = this.__children,
                 offset = this.offset(event.clientX, event.clientY),
-                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft, offset.y - event.offsetTop) : 0;
+                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft, offset.y - event.offsetTop) : 0,
+                cache = event.dragTarget;
 
-            if (index >= 0 && insert_index !== index)
+            if (index >= 0 && insert_index !== index && cache)
             {
-                target.set_width(event.dragTarget.offsetWidth + "px");
-                target.set_height(event.dragTarget.offsetHeight + "px");
+                target.set_marginLeft(cache.get_marginLeft());
+                target.set_marginTop(cache.get_marginTop());
+                target.set_marginRight(cache.get_marginRight());
+                target.set_marginBottom(cache.get_marginBottom());
+                target.set_width(cache.offsetWidth + "px");
+                target.set_height(cache.offsetHeight + "px");
 
                 if (source = items[insert_index = index])
                 {

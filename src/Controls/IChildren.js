@@ -171,7 +171,7 @@ flyingon.IChildren = function (base) {
 
         for (var i = 0, _ = items.length; i < _; i++)
         {
-            (item = items[i]).dom.style.top = height - item.offsetTop - item.offsetHeight;
+            (item = items[i]).dom.style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
         }
     };
 
@@ -182,7 +182,7 @@ flyingon.IChildren = function (base) {
 
         for (var i = 0, _ = items.length; i < _; i++)
         {
-            (item = items[i]).dom.style.left = width - item.offsetLeft - item.offsetWidth + "px";
+            (item = items[i]).dom.style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
         }
     };
 
@@ -194,8 +194,8 @@ flyingon.IChildren = function (base) {
         for (var i = 0, _ = items.length; i < _; i++)
         {
             style = (item = items[i]).dom.style;
-            style.left = width - item.offsetLeft - item.offsetWidth;
-            style.top = height - item.offsetTop - item.offsetHeight;
+            style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
+            style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
         }
     };
 

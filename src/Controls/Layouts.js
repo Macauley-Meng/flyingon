@@ -53,22 +53,25 @@
                 clientHeight = target.contentHeight = target.clientHeight,
                 children = target.__children,
                 items = [],
-                cache;
+                style1 = target.dom.style,
+                style2 = target.dom_children.style;
 
             this.vertical = target.get_vertical();
 
             //先筛选出可视控件
             for (var i = 0, _ = children.length; i < _; i++)
             {
-                (cache = children[i]).__arrange_index = i;
+                var item = children[i];
 
-                if (cache.__visible = (cache.get_visibility() !== "collapse"))
+                item.__arrange_index = i;
+
+                if (item.__visible = (item.get_visibility() !== "collapse"))
                 {
-                    items.push(cache);
+                    items.push(item);
                 }
                 else
                 {
-                    target.__fn_hide(cache);
+                    target.__fn_hide(item);
                 }
             }
 
@@ -76,9 +79,27 @@
             this.arrange(target, items, clientWidth, clientHeight);
 
             //设置样式
-            cache = target.dom_children.style;
-            cache.width = target.contentWidth <= clientWidth ? "100%" : target.contentWidth + "px";
-            cache.height = target.contentHeight <= clientHeight ? "100%" : target.contentHeight + "px";
+            if (target.contentWidth <= clientWidth)
+            {
+                style1.overflowX = "hidden"; //不加这句在有些浏览器会出现滚动条
+                style2.width = "100%";
+            }
+            else
+            {
+                style1.overflowX = target.get_overflowX();
+                style2.width = target.contentWidth + "px";
+            }
+
+            if (target.contentHeight <= clientHeight)
+            {
+                style1.overflowY = "hidden"; //不加这句在有些浏览器会出现滚动条
+                style2.height = "100%";
+            }
+            else
+            {
+                style1.overflowY = target.get_overflowY();
+                style2.height = target.contentHeight + "px";
+            }
 
             //如果是右向顺序则重算位置
             if (this.rtl = target.get_direction() === "rtl")
@@ -96,46 +117,36 @@
 
 
         //初始化分隔条
-        this.__fn_splitter = function (splitter, defautValue, vertical) {
+        this.__fn_splitter = function (splitter, width, height, vertical) {
 
             var styles = splitter.__styles || (splitter.__styles = {});
 
-            splitter.dom.style.cursor = (splitter.__vertical = vertical) ? "n-resize" : "w-resize";
+            splitter.dom.style.cursor = vertical ? "n-resize" : "w-resize";
 
-            styles.width = vertical ? defautValue : (styles.width = undefined, splitter.get_width());
-            styles.height = vertical ? (styles.height = undefined, splitter.get_height()) : defautValue;
+            styles.width = vertical ? width : (styles.width = undefined, splitter.get_width());
+            styles.height = vertical ? (styles.height = undefined, splitter.get_height()) : height;
         };
 
 
         //调整控件大小
-        this.__fn_resize = function (target, name, value) {
+        this.__fn_resize = function (target, start, change) {
 
-            target["set_" + name](value);
+            change = start.scale === 1 ? change : ((change * start.scale * 100 | 0) / 100);
+            target[start.vertical ? "set_height" : "set_width"](start.value + change + start.unit);
         };
 
 
         //获取开始调整大小参数
-        this.__fn_resize_start = function (target, name, vertical, value, px) {
+        this.__fn_resize_start = function (splitter, target, vertical) {
 
-            if (!((px = +px) >= 0))
-            {
-                px = target[vertical ? "offsetHeight" : "offsetWidth"];
-            }
+            var style = target[vertical ? "get_height" : "get_width"](),
+                value = target[vertical ? "offsetHeight" : "offsetWidth"],
+                start = target.__fn_unit_scale(style, value);
 
-            var result = target.__fn_unit_scale(value || target["get_" + name](), px);
+            start.reverse = !vertical && this.rtl;
+            start.vertical = vertical;
 
-            result.name = name;
-            result.vertical = vertical;
-            result.reverse = this.__fn_resize_reverse(target);
-
-            return result;
-        };
-
-
-        //获取调整大小时是否需要反向处理
-        this.__fn_resize_reverse = function (target) {
-
-            return this.rtl;
+            return start;
         };
 
 
@@ -181,7 +192,7 @@
 
         var layout = new layout_base();
 
-        layout_fn.call(layout);
+        layout_fn.call(layout, layout_base.prototype);
 
         if (name)
         {
@@ -195,14 +206,7 @@
 
 
     //流式布局(支持竖排)
-    flyingon.defineLayout("flow", function () {
-
-
-
-        this.arrange = function (target, items, clientWidth, clientHeight) {
-
-            (this.vertical ? arrange2 : arrange1).apply(this, arguments);
-        };
+    flyingon.defineLayout("flow", function (base) {
 
 
         function arrange1(target, items, clientWidth, clientHeight, fixed) {
@@ -327,12 +331,41 @@
         };
 
 
+        this.arrange = function (target, items, clientWidth, clientHeight) {
+
+            (this.vertical ? arrange2 : arrange1).apply(this, arguments);
+        };
+
+
+        this.__fn_splitter = function (splitter, width, height, vertical) {
+
+            var target = splitter.__parent,
+                box;
+
+            if (target && (target = target.__children[splitter.__arrange_index - 1]))
+            {
+                box = target.__boxModel;
+
+                if (vertical)
+                {
+                    arguments[1] = target.offsetWidth + box.marginLeft + box.marginRight + "px";
+                }
+                else
+                {
+                    arguments[2] = target.offsetHeight + box.marginTop + box.marginBottom + "px";
+                }
+
+                base.__fn_splitter.apply(this, arguments);
+            }
+        };
+
+
     });
 
 
 
     //线性布局(支持竖排)
-    flyingon.defineLayout("line", function () {
+    flyingon.defineLayout("line", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -420,7 +453,7 @@
 
 
     //拆分布局(支持竖排)
-    flyingon.defineLayout("split", function () {
+    flyingon.defineLayout("split", function (base) {
 
 
         function arrange1(target, items, clientWidth, clientHeight) {
@@ -484,7 +517,7 @@
 
                 if (width > 0)
                 {
-                    item.measure(width, height, true, true);
+                    item.measure(width, clientHeight, true, true);
                     item.locate(x, 0);
                 }
                 else
@@ -559,7 +592,7 @@
 
                 if (height > 0)
                 {
-                    item.measure(width, height, true, true);
+                    item.measure(clientWidth, height, true, true);
                     item.locate(0, y);
                 }
                 else
@@ -578,11 +611,14 @@
         };
 
 
-        //是否反向调整大小
-        this.__fn_resize_reverse = function (target) {
+        this.__fn_resize_start = function (splitter, target, vertical) {
 
-            var split = target.get_layoutSplit();
-            return this.rtl ? split === "before" : split === "after";
+            var start = base.__fn_resize_start.apply(this, arguments),
+                split = target.get_layoutSplit();
+
+            start.reverse = !vertical && this.rtl ? split === "before" : split === "after";
+
+            return start;
         };
 
 
@@ -591,7 +627,7 @@
 
 
     //停靠布局(不支持竖排)
-    flyingon.defineLayout("dock", function () {
+    flyingon.defineLayout("dock", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -688,11 +724,37 @@
         };
 
 
-        //是否反向调整大小
-        this.__fn_resize_reverse = function (target) {
+        this.__fn_splitter = function (splitter, width, height, vertical) {
 
-            var dock = target.get_dock();
-            return this.rtl ? (dock === "left" || dock === "top") : (dock === "right" || dock === "bottom");
+            var target = splitter.__parent;
+
+            if (target && (target = target.__children[splitter.__arrange_index - 1]))
+            {
+                switch (target.get_dock())
+                {
+                    case "top":
+                    case "bottom":
+                        arguments[3] = true;
+                        break;
+
+                    default:
+                        arguments[3] = false;
+                        break;
+                }
+
+                base.__fn_splitter.apply(this, arguments);
+            }
+        };
+
+
+        this.__fn_resize_start = function (splitter, target, vertical) {
+
+            var dock = target.get_dock(),
+                start = base.__fn_resize_start.call(this, splitter, target, vertical = dock === "top" || dock === "bottom");
+
+            start.reverse = vertical ? dock === "bottom" : (this.rtl ? dock === "left" : dock === "right");
+
+            return start;
         };
 
 
@@ -701,7 +763,7 @@
 
 
     //层叠布局(不支持竖排)
-    flyingon.defineLayout("cascade", function () {
+    flyingon.defineLayout("cascade", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -734,7 +796,7 @@
 
 
     //单页显示(不支持竖排)
-    flyingon.defineLayout("page", function () {
+    flyingon.defineLayout("page", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -785,7 +847,7 @@
 
 
     //绝对定位(不支持竖排)
-    flyingon.defineLayout("absolute", function () {
+    flyingon.defineLayout("absolute", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -949,6 +1011,9 @@
                 }
             }
 
+            //记录总权重
+            this.weight = weight;
+
             if (x > 0 && length > 0)
             {
                 x -= (length - 1) * spacing;
@@ -976,6 +1041,20 @@
 
             //总大小
             return this.total = x - spacing;
+        };
+
+
+        this.serialize = function () {
+
+            var values = [],
+                item;
+
+            for (var i = 0, _ = this.length; i < _; i++)
+            {
+                values.push((item = this[i]).value === 100 && item.unit === "*" ? "*" : item.value + item.unit);
+            }
+
+            return values.join(" ");
         };
 
 
@@ -1018,11 +1097,14 @@
 
 
 
+
+
     //网格布局(支持竖排)
-    flyingon.defineLayout("grid", function () {
+    flyingon.defineLayout("grid", function (base) {
 
 
         var layouts = {},   //缓存布局
+            layout_cache = true,    //是否缓存布局
             regex = /(\d+\.\d*|\d+)?(\w+|\*|%)?(!)?\s*(\.{3}(\d+)?(&(\d+))?)?/g;
 
 
@@ -1084,7 +1166,14 @@
                 layouts[value] = result; //缓存
             }
 
-            result.__cache_value = value;
+            if (layout_cache)
+            {
+                result.__cache_key = value;
+            }
+            else
+            {
+                layout_cache = true;
+            }
 
             return result;
         };
@@ -1094,24 +1183,26 @@
 
             var value1 = target.get_layoutColumns() || 3,
                 value2 = target.get_layoutRows() || 3,
-                columns = this.__cache_value1,
-                rows = this.__cache_value2,
+                columns = this.columns,
+                rows = this.rows,
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
                 keys = [clientWidth, clientHeight, spacingWidth, spacingHeight].join(" "),
                 fixed;
 
-            if (!columns || columns.__cache_value !== value1)
+            if (!columns || columns.__cache_key !== value1)
             {
-                columns = this.__cache_value1 = parse(value1);
+                columns = this.columns = parse(value1);
+                this.__cache_key = null;
             }
 
-            if (!rows || rows.__cache_value !== value2)
+            if (!rows || rows.__cache_key !== value2)
             {
-                rows = this.__cache_value2 = parse(value2);
+                rows = this.rows = parse(value2);
+                this.__cache_key = null;
             }
 
-            if (this.__cache_value !== keys)
+            if (this.__cache_key !== keys)
             {
                 columns.compute(target, clientWidth, spacingWidth);
                 rows.compute(target, clientHeight, spacingHeight);
@@ -1133,9 +1224,11 @@
                     columns.compute(target, clientWidth, spacingWidth);
                     rows.compute(target, clientHeight, spacingHeight);
                 }
+
+                this.__cache_key = keys;
             }
 
-            return [columns, rows];
+            return columns;
         };
 
 
@@ -1189,12 +1282,12 @@
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
 
-            var item = compute.call(this, target, clientWidth, clientHeight),
-                list1 = item[0],
-                list2 = item[1],
+            var list1 = compute.call(this, target, clientWidth, clientHeight),
+                list2 = this.rows,
                 vertical = this.vertical,
                 index1 = 0,
                 index2 = 0,
+                item,
                 locked,
                 x,
                 y,
@@ -1288,8 +1381,9 @@
                     height = cache2.size;
                 }
 
-                //处理跨列
-                cache1 = index1; //记录当前列
+                //记录行列(仅对可视控件有效)
+                item.__arrange_row = index2;
+                item.__arrange_column = index1;
 
                 if (column_span)
                 {
@@ -1318,7 +1412,7 @@
 
                     for (var j = index2; j <= cache2; j++)
                     {
-                        for (var j2 = cache1; j2 <= index1; j2++)
+                        for (var j2 = item.__arrange_column; j2 <= index1; j2++)
                         {
                             ((locked || (locked = {}))[j] || (locked[j] = {}))[j2] = true;
                         }
@@ -1348,9 +1442,51 @@
         };
 
 
-        this.__fn_resize = function (target, index, start, distanceX, distanceY) {
+        this.__fn_splitter = function (splitter, width, height, vertical) {
+
+            if (splitter.__vertical = splitter.__arrange_column === 0 ||
+                splitter.__parent.__children[splitter.__arrange_index - 1] instanceof flyingon.Splitter ||
+                splitter.get_vertical())
+            {
+                arguments[3] = true;
+            }
+
+            base.__fn_splitter.apply(this, arguments);
+        };
 
 
+        this.__fn_resize = function (target, start, change) {
+
+            var vertical = start.vertical,
+                list = vertical ? this.rows : this.columns,
+                item = list[start.index];
+
+            if (item)
+            {
+                if ((item.value = start.value + (start.scale === 1 ? change : (change * start.scale * 100 | 0) / 100)) < 0)
+                {
+                    item.value = 0;
+                }
+
+                layout_cache = false;
+                target.__parent[vertical ? "set_layoutRows" : "set_layoutColumns"](list.serialize());
+            }
+        };
+
+
+        this.__fn_resize_start = function (splitter, target, vertical) {
+
+            var index = (vertical = splitter.__vertical) ? target.__arrange_row : target.__arrange_column,
+                item = (vertical ? this.rows : this.columns)[index],
+                start = target.__fn_unit_scale(item.value + item.unit, item.size);
+
+            start.vertical = vertical;
+            start.reverse = !vertical && this.rtl;
+            start.index = index;
+
+            item.unit = start.unit;
+
+            return start;
         };
 
 
@@ -1359,7 +1495,7 @@
 
 
     //表格布局(支持竖排)
-    flyingon.defineLayout("table", function () {
+    flyingon.defineLayout("table", function (base) {
 
 
 
@@ -1401,7 +1537,7 @@
 
 
             //排列控件
-            this.arrange = function (items, index, x, y, vertical) {
+            this.arrange = function (table, row, items, index, x, y, vertical) {
 
                 var length = items.length,
                     cell,
@@ -1418,6 +1554,11 @@
                         else
                         {
                             item = items[index++];
+
+                            //记录表格位置
+                            item.__arrange_table = table;
+                            item.__arrange_row = row;
+                            item.__arrange_column = i;
 
                             if (vertical)
                             {
@@ -1454,12 +1595,34 @@
                 return result;
             };
 
+
+            this.serialize = function (values) {
+
+                values.push((this.value === 100 && this.unit === "*" ? "*" : this.value + this.unit) + "[");
+
+                for (var i = 0, _ = this.length; i < _; i++)
+                {
+                    var column = this[i];
+
+                    values.push(column.value === 100 && column.unit === "*" ? "*" : column.value + column.unit);
+
+                    if (column.table)
+                    {
+                        column.table.serialize(values);
+                    }
+                }
+
+                values.push("]")
+            };
+
         });
 
 
 
         //表
         var layout_table = flyingon.defineClass(layout_row, function (base) {
+
+
 
 
 
@@ -1516,7 +1679,7 @@
                     name,
                     cache;
 
-                this.__cache_value2 = null;
+                this.__cache_key2 = null;
 
                 while (index < length)
                 {
@@ -1671,7 +1834,7 @@
                             {
                                 index++;
 
-                                if ((token = tokens[index]) === " ")
+                                if ((token = tokens[index++]) === " ")
                                 {
                                     token = tokens[index++];
                                 }
@@ -1787,13 +1950,24 @@
 
                 for (var i = 0, _ = this.length; i < _; i++)
                 {
-                    if ((row = this[i]).enable && (index = row.arrange(items, index, x, y, vertical)) >= length)
+                    if ((row = this[i]).enable && (index = row.arrange(this, i, items, index, x, y, vertical)) >= length)
                     {
                         return index;
                     }
                 }
 
                 return index;
+            };
+
+
+            this.serialize = function (values) {
+
+                for (var i = 0, _ = this.length; i < _; i++)
+                {
+                    this[i].serialize(values || (values = []));
+                }
+
+                return values ? values.join(" ") : null;
             };
 
 
@@ -1824,9 +1998,30 @@
             };
 
 
+            this.serialize = function (values) {
+
+                values.push("{ ");
+
+                if (this.spacingWidth !== "100%" || this.spacingHeight !== "100%")
+                {
+                    values.push("(spacingWidth=" + this.spacingWidth + ",spacingHeight=" + this.spacingHeight + ") ")
+                }
+
+                for (var i = 0, _ = this.length; i < _; i++)
+                {
+                    this[i].serialize(values = values || []);
+                }
+
+                values.push(" }");
+            };
+
+
         });
 
 
+
+        //是否缓存布局
+        var layout_cache = true;
 
 
         function compute(target, table, width, height, spacingWidth, spacingHeight, vertical) {
@@ -1835,7 +2030,7 @@
                 fn,
                 fixed;
 
-            if (table.__cache_value2 !== keys)
+            if (table.__cache_key2 !== keys)
             {
                 fn = vertical ? table.compute2 : table.compute1;
                 fn.call(table, target, width, height, spacingWidth, spacingHeight);
@@ -1857,7 +2052,14 @@
                     fn.call(table, target, width, height, spacingWidth, spacingHeight);
                 }
 
-                table.__cache_value2 = keys;
+                if (layout_cache)
+                {
+                    table.__cache_key2 = keys;
+                }
+                else
+                {
+                    layout_cache = true;
+                }
             }
         };
 
@@ -1887,7 +2089,7 @@
                 value = target.get_layoutTable() || "*[* * *] ...2";
             }
 
-            if (!table || table.__cache_value1 !== value)
+            if (!table || table.__cache_key1 !== value)
             {
                 if (table = layouts[value]) //优先从缓存复制
                 {
@@ -1895,11 +2097,11 @@
                 }
                 else
                 {
-                    table = layouts[value] = new layout_table()
+                    table = layouts[value] = this.table = new layout_table()
                     table.parse(value.replace(/\s+/g, " ").match(regex_parse), 0);
                 }
 
-                (target.__x_layoutTable = table).__cache_value1 = value;
+                (target.__x_layoutTable = table).__cache_key1 = value;
             }
 
             compute.call(this, target, table, clientWidth, clientHeight, spacingWidth, spacingHeight, this.vertical);
@@ -1914,8 +2116,39 @@
         };
 
 
-        this.__fn_resize = function (target, index, start, distanceX, distanceY) {
+        this.__fn_splitter = function (splitter, width, height, vertical) {
 
+            if (splitter.__vertical = splitter.__arrange_column === 0 ||
+                splitter.__parent.__children[splitter.__arrange_index - 1] instanceof flyingon.Splitter ||
+                splitter.get_vertical())
+            {
+                arguments[3] = true;
+            }
+
+            base.__fn_splitter.apply(this, arguments);
+        };
+
+
+        this.__fn_resize = function (target, start, change) {
+
+            start.item.value = (change += start.value) > 0 ? change : 1;
+
+            layout_cache = false;
+            target.__parent.set_layoutTable(document.title = this.table.serialize());
+        };
+
+
+        this.__fn_resize_start = function (splitter, target, vertical) {
+
+            var table = splitter.__arrange_table,
+                row = table[target.__arrange_row],
+                item = vertical ? row : row[splitter.__arrange_column],
+                start = target.__fn_unit_scale(item.value + item.unit, item.size);
+
+            start.reverse = !vertical && this.rtl;
+            start.item = item;
+
+            return start;
         };
 
 

@@ -21,8 +21,7 @@ flyingon.css({
     ".flyingon-Splitter-content": {
 
         width: "100%",
-        height: "100%",
-        backgroundColor: "silver"
+        height: "100%"
     },
 
 
@@ -152,10 +151,9 @@ flyingon.style({
     //分隔条控件样式
     "@flyingon-Splitter": {
 
-        //overflow: "hidden", //防止IE怪异模式下无法设置小于字体大小的高度
-        padding: "1px",
-        width: "4px",
-        height: "4px"
+        width: "2px",
+        height: "2px",
+        backgroundColor: "silver"
     },
     
 

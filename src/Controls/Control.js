@@ -1038,7 +1038,7 @@ flyingon.defineClass("Control", function () {
 
 
         //保持原单位的大小调整
-        var regex_resize = /[a-zA-Z%]+/,  //
+        var regex_resize = /[a-zA-Z%*]+/,  //
 
             resize_names = { //默认位置大小名称对应关系
 
@@ -1054,30 +1054,34 @@ flyingon.defineClass("Control", function () {
         //调整大小
         function resize_value(target, start, name, change) {
 
-            start = start[name] || (start[name] = target.__fn_unit_scale(target["get_" + name](), target[resize_names[name]], target.get_direction() === "rtl"));
-            target["set_" + name](start.value + (start.scale === 1 ? change : +(change * start.scale).toFixed(2)) + start.unit);
+            if (!(start = start[name]))
+            {
+                start = start[name] = target.__fn_unit_scale(target["get_" + name](), target[resize_names[name]]);
+                start.reverse = target.get_direction() === "rtl";
+            }
+
+            target["set_" + name](start.value + (start.scale === 1 ? change : (change * start.scale * 100 | 0) / 100) + start.unit);
         };
 
 
 
 
-        //获取单位换算比例(原始值,单位及换算比例)
-        //default,fill,auto按px单位处理
-        this.__fn_unit_scale = function (value, px, reverse) {
+        //获取1像素转换为目标单位的换算比例
+        //default,fill,auto,*按px单位处理
+        this.__fn_unit_scale = function (value, px) {
 
             var unit = value.match(regex_resize);
 
-            if (!unit || (unit = unit[0]).length > 2 || unit === "px")
+            if (!unit || unit === "px" || (unit = unit[0]).length !== 2)
             {
-                return { value: px, unit: "px", scale: 1, reverse: reverse };
+                return { value: px, unit: "px", scale: 1 };
             }
 
             return {
 
                 unit: unit,
-                value: (value = parseFloat(value) || 100),
-                scale: value / px || 1,
-                reverse: reverse
+                value: (value = parseFloat(value) || 0),
+                scale: (value / px) || 1
             };
         };
 

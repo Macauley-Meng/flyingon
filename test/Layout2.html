@@ -143,12 +143,9 @@
 
                 width: "500px",
                 border: "4px solid red",
-                padding: "10px",
                 droppable: true,
                 resizable: "both",
                 layoutType: "flow",
-                spacingWidth: "10px",
-                spacingHeight: "10px",
 
                 layoutColumns: "* 4px * ...2&1", //4
                 layoutRows: "* 4px * ...2&1",   //4
@@ -167,20 +164,20 @@
 
                 case 2:
                     panel.set_layoutType("split");
-                    create_html(50);
+                    create_html(3);
                     break;
 
                 case 3:
                     panel.set_layoutType("dock");
-                    create_html(50);
+                    create_html(5, 2);
                     break;
 
                 case 4:
                     panel.set_layoutType("grid");
                     create_html(50);
-                    panel.get_children()[7].set_columnSpan(6);
-                    panel.get_children()[15].set_columnSpan(6);
-                    panel.get_children()[23].set_columnSpan(6);
+                    panel.get_children()[7].set_columnSpan(-1);
+                    panel.get_children()[15].set_columnSpan(-1);
+                    panel.get_children()[23].set_columnSpan(-1);
                     break;
 
                 case 5:
@@ -200,42 +197,44 @@
 
         function create_html(length) {
 
-            for (var j = 0; j < length; j++)
+            for (var i = 0; i < length; i++)
             {
 
                 var ctrl = new flyingon.HtmlControl().sets({
 
-                    left: j % 5 * 120 + "px",
-                    top: j / 5 * 30 + "px",
+                    left: i % 5 * 120 + "px",
+                    top: i / 5 * 30 + "px",
+                    overflow: "hidden",
+                    margin: "8px",
                     border: "1px solid black",
                     paddingTop: "2px",
                     backgroundColor: "white",
                     cursor: "pointer",
                     draggable: "both",
                     textAlign: "center",
-                    text: "html " + j
+                    text: "html " + i
                 });
 
-                switch (j % 5)
+                switch (i % 5)
                 {
                     case 0:
-                        ctrl.set_dock("left");
+                        ctrl.set_dock("top");
                         ctrl.set_layoutSplit("before");
                         break;
 
                     case 1:
-                        ctrl.set_dock("top");
+                        ctrl.set_dock("bottom");
                         ctrl.set_layoutSplit("after");
                         break;
 
                     case 2:
-                        ctrl.set_dock("right");
-                        ctrl.set_layoutSplit("before");
+                        ctrl.set_dock("left");
+                        ctrl.set_layoutSplit("center");
                         break;
 
                     case 3:
-                        ctrl.set_dock("bottom");
-                        ctrl.set_layoutSplit("after");
+                        ctrl.set_dock("right");
+                        ctrl.set_layoutSplit("center");
                         break;
 
                     case 4:
@@ -250,6 +249,7 @@
                 {
                     panel.appendChild(new flyingon.Splitter().sets({
 
+                        draggable: "both",
                         dock: ctrl.get_dock(),
                         layoutSplit: ctrl.get_layoutSplit()
                     }));

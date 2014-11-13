@@ -192,7 +192,7 @@
             target = __ownerWindow.findAt(offset.x, offset.y),
             dom = __ownerWindow.dom;
 
-        //移到代理dom
+        //移动代理dom
         if (__draggable !== "vertical")
         {
             __dom_proxy.style.left = dom.scrollLeft + event.clientX - pressdown.clientX + "px";

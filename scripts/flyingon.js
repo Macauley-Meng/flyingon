@@ -3801,7 +3801,7 @@ flyingon.defineClass("Component", function () {
             target = __ownerWindow.findAt(offset.x, offset.y),
             dom = __ownerWindow.dom;
 
-        //移到代理dom
+        //移动代理dom
         if (__draggable !== "vertical")
         {
             __dom_proxy.style.left = dom.scrollLeft + event.clientX - pressdown.clientX + "px";
@@ -4464,6 +4464,40 @@ flyingon.defineClass("Component", function () {
 
 
 
+
+
+        //控件溢出处理(包含横向溢出处理及纵向溢出处理)
+        //hidden    内容会被修剪 其余内容是不可见的
+        //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
+        //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
+        //同时设置横向溢出处理及纵向溢出处理以空格分开, 如:"auto scroll"
+        complex("overflow", ["x", "y"], (function () {
+
+            var regex = /visible|hidden|scroll|auto/g;
+
+            return function (value) {
+
+                var values = value ? ("" + value).match(regex) : [];
+
+                return {
+
+                    overflowX: values[0],
+                    overflowY: values[1] || values[0]
+                };
+            };
+
+        })());
+
+        //控件横向溢出处理及纵向溢出处理
+        //hidden    内容会被修剪 其余内容是不可见的
+        //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
+        //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
+        styles("overflow-?", ["x", "y"], "visible", "arrange");
+
+
+
+
+
         //控件外边距简写方式(按照上右下左的顺序编写 与css规则相同)
         complex("margin", items, split_sides("margin-?"));
 
@@ -4609,36 +4643,6 @@ flyingon.defineClass("Component", function () {
         //bottom    底部对齐
         style("vertical-align", "middle");
 
-
-
-
-        //控件溢出处理(包含横向溢出处理及纵向溢出处理)
-        //hidden    内容会被修剪 其余内容是不可见的
-        //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
-        //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
-        //同时设置横向溢出处理及纵向溢出处理以空格分开, 如:"auto scroll"
-        complex("overflow", ["x", "y"], (function () {
-
-            var regex = /visible|hidden|scroll|auto/g;
-
-            return function (value) {
-
-                var values = value ? ("" + value).match(regex) : [];
-
-                return {
-
-                    overflowX: values[0],
-                    overflowY: values[1] || values[0]
-                };
-            };
-
-        })());
-
-        //控件横向溢出处理及纵向溢出处理
-        //hidden    内容会被修剪 其余内容是不可见的
-        //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
-        //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
-        styles("overflow-?", ["x", "y"], "visible");
 
 
 
@@ -7631,7 +7635,7 @@ flyingon.defineClass("Control", function () {
 
 
         //保持原单位的大小调整
-        var regex_resize = /[a-zA-Z%]+/,  //
+        var regex_resize = /[a-zA-Z%*]+/,  //
 
             resize_names = { //默认位置大小名称对应关系
 
@@ -7647,30 +7651,34 @@ flyingon.defineClass("Control", function () {
         //调整大小
         function resize_value(target, start, name, change) {
 
-            start = start[name] || (start[name] = target.__fn_unit_scale(target["get_" + name](), target[resize_names[name]], target.get_direction() === "rtl"));
-            target["set_" + name](start.value + (start.scale === 1 ? change : +(change * start.scale).toFixed(2)) + start.unit);
+            if (!(start = start[name]))
+            {
+                start = start[name] = target.__fn_unit_scale(target["get_" + name](), target[resize_names[name]]);
+                start.reverse = target.get_direction() === "rtl";
+            }
+
+            target["set_" + name](start.value + (start.scale === 1 ? change : (change * start.scale * 100 | 0) / 100) + start.unit);
         };
 
 
 
 
-        //获取单位换算比例(原始值,单位及换算比例)
-        //default,fill,auto按px单位处理
-        this.__fn_unit_scale = function (value, px, reverse) {
+        //获取1像素转换为目标单位的换算比例
+        //default,fill,auto,*按px单位处理
+        this.__fn_unit_scale = function (value, px) {
 
             var unit = value.match(regex_resize);
 
-            if (!unit || (unit = unit[0]).length > 2 || unit === "px")
+            if (!unit || unit === "px" || (unit = unit[0]).length !== 2)
             {
-                return { value: px, unit: "px", scale: 1, reverse: reverse };
+                return { value: px, unit: "px", scale: 1 };
             }
 
             return {
 
                 unit: unit,
-                value: (value = parseFloat(value) || 100),
-                scale: value / px || 1,
-                reverse: reverse
+                value: (value = parseFloat(value) || 0),
+                scale: (value / px) || 1
             };
         };
 
@@ -8336,22 +8344,25 @@ flyingon.defineClass("ControlCollection", function (base) {
                 clientHeight = target.contentHeight = target.clientHeight,
                 children = target.__children,
                 items = [],
-                cache;
+                style1 = target.dom.style,
+                style2 = target.dom_children.style;
 
             this.vertical = target.get_vertical();
 
             //先筛选出可视控件
             for (var i = 0, _ = children.length; i < _; i++)
             {
-                (cache = children[i]).__arrange_index = i;
+                var item = children[i];
 
-                if (cache.__visible = (cache.get_visibility() !== "collapse"))
+                item.__arrange_index = i;
+
+                if (item.__visible = (item.get_visibility() !== "collapse"))
                 {
-                    items.push(cache);
+                    items.push(item);
                 }
                 else
                 {
-                    target.__fn_hide(cache);
+                    target.__fn_hide(item);
                 }
             }
 
@@ -8359,9 +8370,27 @@ flyingon.defineClass("ControlCollection", function (base) {
             this.arrange(target, items, clientWidth, clientHeight);
 
             //设置样式
-            cache = target.dom_children.style;
-            cache.width = target.contentWidth <= clientWidth ? "100%" : target.contentWidth + "px";
-            cache.height = target.contentHeight <= clientHeight ? "100%" : target.contentHeight + "px";
+            if (target.contentWidth <= clientWidth)
+            {
+                style1.overflowX = "hidden"; //不加这句在有些浏览器会出现滚动条
+                style2.width = "100%";
+            }
+            else
+            {
+                style1.overflowX = target.get_overflowX();
+                style2.width = target.contentWidth + "px";
+            }
+
+            if (target.contentHeight <= clientHeight)
+            {
+                style1.overflowY = "hidden"; //不加这句在有些浏览器会出现滚动条
+                style2.height = "100%";
+            }
+            else
+            {
+                style1.overflowY = target.get_overflowY();
+                style2.height = target.contentHeight + "px";
+            }
 
             //如果是右向顺序则重算位置
             if (this.rtl = target.get_direction() === "rtl")
@@ -8379,46 +8408,36 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
         //初始化分隔条
-        this.__fn_splitter = function (splitter, defautValue, vertical) {
+        this.__fn_splitter = function (splitter, width, height, vertical) {
 
             var styles = splitter.__styles || (splitter.__styles = {});
 
-            splitter.dom.style.cursor = (splitter.__vertical = vertical) ? "n-resize" : "w-resize";
+            splitter.dom.style.cursor = vertical ? "n-resize" : "w-resize";
 
-            styles.width = vertical ? defautValue : (styles.width = undefined, splitter.get_width());
-            styles.height = vertical ? (styles.height = undefined, splitter.get_height()) : defautValue;
+            styles.width = vertical ? width : (styles.width = undefined, splitter.get_width());
+            styles.height = vertical ? (styles.height = undefined, splitter.get_height()) : height;
         };
 
 
         //调整控件大小
-        this.__fn_resize = function (target, name, value) {
+        this.__fn_resize = function (target, start, change) {
 
-            target["set_" + name](value);
+            change = start.scale === 1 ? change : ((change * start.scale * 100 | 0) / 100);
+            target[start.vertical ? "set_height" : "set_width"](start.value + change + start.unit);
         };
 
 
         //获取开始调整大小参数
-        this.__fn_resize_start = function (target, name, vertical, value, px) {
+        this.__fn_resize_start = function (splitter, target, vertical) {
 
-            if (!((px = +px) >= 0))
-            {
-                px = target[vertical ? "offsetHeight" : "offsetWidth"];
-            }
+            var style = target[vertical ? "get_height" : "get_width"](),
+                value = target[vertical ? "offsetHeight" : "offsetWidth"],
+                start = target.__fn_unit_scale(style, value);
 
-            var result = target.__fn_unit_scale(value || target["get_" + name](), px);
+            start.reverse = !vertical && this.rtl;
+            start.vertical = vertical;
 
-            result.name = name;
-            result.vertical = vertical;
-            result.reverse = this.__fn_resize_reverse(target);
-
-            return result;
-        };
-
-
-        //获取调整大小时是否需要反向处理
-        this.__fn_resize_reverse = function (target) {
-
-            return this.rtl;
+            return start;
         };
 
 
@@ -8464,7 +8483,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
         var layout = new layout_base();
 
-        layout_fn.call(layout);
+        layout_fn.call(layout, layout_base.prototype);
 
         if (name)
         {
@@ -8478,14 +8497,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
     //流式布局(支持竖排)
-    flyingon.defineLayout("flow", function () {
-
-
-
-        this.arrange = function (target, items, clientWidth, clientHeight) {
-
-            (this.vertical ? arrange2 : arrange1).apply(this, arguments);
-        };
+    flyingon.defineLayout("flow", function (base) {
 
 
         function arrange1(target, items, clientWidth, clientHeight, fixed) {
@@ -8610,12 +8622,41 @@ flyingon.defineClass("ControlCollection", function (base) {
         };
 
 
+        this.arrange = function (target, items, clientWidth, clientHeight) {
+
+            (this.vertical ? arrange2 : arrange1).apply(this, arguments);
+        };
+
+
+        this.__fn_splitter = function (splitter, width, height, vertical) {
+
+            var target = splitter.__parent,
+                box;
+
+            if (target && (target = target.__children[splitter.__arrange_index - 1]))
+            {
+                box = target.__boxModel;
+
+                if (vertical)
+                {
+                    arguments[1] = target.offsetWidth + box.marginLeft + box.marginRight + "px";
+                }
+                else
+                {
+                    arguments[2] = target.offsetHeight + box.marginTop + box.marginBottom + "px";
+                }
+
+                base.__fn_splitter.apply(this, arguments);
+            }
+        };
+
+
     });
 
 
 
     //线性布局(支持竖排)
-    flyingon.defineLayout("line", function () {
+    flyingon.defineLayout("line", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -8703,7 +8744,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
     //拆分布局(支持竖排)
-    flyingon.defineLayout("split", function () {
+    flyingon.defineLayout("split", function (base) {
 
 
         function arrange1(target, items, clientWidth, clientHeight) {
@@ -8767,7 +8808,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
                 if (width > 0)
                 {
-                    item.measure(width, height, true, true);
+                    item.measure(width, clientHeight, true, true);
                     item.locate(x, 0);
                 }
                 else
@@ -8842,7 +8883,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
                 if (height > 0)
                 {
-                    item.measure(width, height, true, true);
+                    item.measure(clientWidth, height, true, true);
                     item.locate(0, y);
                 }
                 else
@@ -8861,11 +8902,14 @@ flyingon.defineClass("ControlCollection", function (base) {
         };
 
 
-        //是否反向调整大小
-        this.__fn_resize_reverse = function (target) {
+        this.__fn_resize_start = function (splitter, target, vertical) {
 
-            var split = target.get_layoutSplit();
-            return this.rtl ? split === "before" : split === "after";
+            var start = base.__fn_resize_start.apply(this, arguments),
+                split = target.get_layoutSplit();
+
+            start.reverse = !vertical && this.rtl ? split === "before" : split === "after";
+
+            return start;
         };
 
 
@@ -8874,7 +8918,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
     //停靠布局(不支持竖排)
-    flyingon.defineLayout("dock", function () {
+    flyingon.defineLayout("dock", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -8971,11 +9015,37 @@ flyingon.defineClass("ControlCollection", function (base) {
         };
 
 
-        //是否反向调整大小
-        this.__fn_resize_reverse = function (target) {
+        this.__fn_splitter = function (splitter, width, height, vertical) {
 
-            var dock = target.get_dock();
-            return this.rtl ? (dock === "left" || dock === "top") : (dock === "right" || dock === "bottom");
+            var target = splitter.__parent;
+
+            if (target && (target = target.__children[splitter.__arrange_index - 1]))
+            {
+                switch (target.get_dock())
+                {
+                    case "top":
+                    case "bottom":
+                        arguments[3] = true;
+                        break;
+
+                    default:
+                        arguments[3] = false;
+                        break;
+                }
+
+                base.__fn_splitter.apply(this, arguments);
+            }
+        };
+
+
+        this.__fn_resize_start = function (splitter, target, vertical) {
+
+            var dock = target.get_dock(),
+                start = base.__fn_resize_start.call(this, splitter, target, vertical = dock === "top" || dock === "bottom");
+
+            start.reverse = vertical ? dock === "bottom" : (this.rtl ? dock === "left" : dock === "right");
+
+            return start;
         };
 
 
@@ -8984,7 +9054,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
     //层叠布局(不支持竖排)
-    flyingon.defineLayout("cascade", function () {
+    flyingon.defineLayout("cascade", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -9017,7 +9087,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
     //单页显示(不支持竖排)
-    flyingon.defineLayout("page", function () {
+    flyingon.defineLayout("page", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -9068,7 +9138,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
     //绝对定位(不支持竖排)
-    flyingon.defineLayout("absolute", function () {
+    flyingon.defineLayout("absolute", function (base) {
 
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
@@ -9232,6 +9302,9 @@ flyingon.defineClass("ControlCollection", function (base) {
                 }
             }
 
+            //记录总权重
+            this.weight = weight;
+
             if (x > 0 && length > 0)
             {
                 x -= (length - 1) * spacing;
@@ -9259,6 +9332,20 @@ flyingon.defineClass("ControlCollection", function (base) {
 
             //总大小
             return this.total = x - spacing;
+        };
+
+
+        this.serialize = function () {
+
+            var values = [],
+                item;
+
+            for (var i = 0, _ = this.length; i < _; i++)
+            {
+                values.push((item = this[i]).value === 100 && item.unit === "*" ? "*" : item.value + item.unit);
+            }
+
+            return values.join(" ");
         };
 
 
@@ -9301,11 +9388,14 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
 
+
+
     //网格布局(支持竖排)
-    flyingon.defineLayout("grid", function () {
+    flyingon.defineLayout("grid", function (base) {
 
 
         var layouts = {},   //缓存布局
+            layout_cache = true,    //是否缓存布局
             regex = /(\d+\.\d*|\d+)?(\w+|\*|%)?(!)?\s*(\.{3}(\d+)?(&(\d+))?)?/g;
 
 
@@ -9367,7 +9457,14 @@ flyingon.defineClass("ControlCollection", function (base) {
                 layouts[value] = result; //缓存
             }
 
-            result.__cache_value = value;
+            if (layout_cache)
+            {
+                result.__cache_key = value;
+            }
+            else
+            {
+                layout_cache = true;
+            }
 
             return result;
         };
@@ -9377,24 +9474,26 @@ flyingon.defineClass("ControlCollection", function (base) {
 
             var value1 = target.get_layoutColumns() || 3,
                 value2 = target.get_layoutRows() || 3,
-                columns = this.__cache_value1,
-                rows = this.__cache_value2,
+                columns = this.columns,
+                rows = this.rows,
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
                 keys = [clientWidth, clientHeight, spacingWidth, spacingHeight].join(" "),
                 fixed;
 
-            if (!columns || columns.__cache_value !== value1)
+            if (!columns || columns.__cache_key !== value1)
             {
-                columns = this.__cache_value1 = parse(value1);
+                columns = this.columns = parse(value1);
+                this.__cache_key = null;
             }
 
-            if (!rows || rows.__cache_value !== value2)
+            if (!rows || rows.__cache_key !== value2)
             {
-                rows = this.__cache_value2 = parse(value2);
+                rows = this.rows = parse(value2);
+                this.__cache_key = null;
             }
 
-            if (this.__cache_value !== keys)
+            if (this.__cache_key !== keys)
             {
                 columns.compute(target, clientWidth, spacingWidth);
                 rows.compute(target, clientHeight, spacingHeight);
@@ -9416,9 +9515,11 @@ flyingon.defineClass("ControlCollection", function (base) {
                     columns.compute(target, clientWidth, spacingWidth);
                     rows.compute(target, clientHeight, spacingHeight);
                 }
+
+                this.__cache_key = keys;
             }
 
-            return [columns, rows];
+            return columns;
         };
 
 
@@ -9472,12 +9573,12 @@ flyingon.defineClass("ControlCollection", function (base) {
 
         this.arrange = function (target, items, clientWidth, clientHeight) {
 
-            var item = compute.call(this, target, clientWidth, clientHeight),
-                list1 = item[0],
-                list2 = item[1],
+            var list1 = compute.call(this, target, clientWidth, clientHeight),
+                list2 = this.rows,
                 vertical = this.vertical,
                 index1 = 0,
                 index2 = 0,
+                item,
                 locked,
                 x,
                 y,
@@ -9571,8 +9672,9 @@ flyingon.defineClass("ControlCollection", function (base) {
                     height = cache2.size;
                 }
 
-                //处理跨列
-                cache1 = index1; //记录当前列
+                //记录行列(仅对可视控件有效)
+                item.__arrange_row = index2;
+                item.__arrange_column = index1;
 
                 if (column_span)
                 {
@@ -9601,7 +9703,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
                     for (var j = index2; j <= cache2; j++)
                     {
-                        for (var j2 = cache1; j2 <= index1; j2++)
+                        for (var j2 = item.__arrange_column; j2 <= index1; j2++)
                         {
                             ((locked || (locked = {}))[j] || (locked[j] = {}))[j2] = true;
                         }
@@ -9631,9 +9733,52 @@ flyingon.defineClass("ControlCollection", function (base) {
         };
 
 
-        this.__fn_resize = function (target, index, start, distanceX, distanceY) {
+        this.__fn_splitter = function (splitter, width, height, vertical) {
+
+            if (splitter.__vertical = splitter.__arrange_column === 0 ||
+                splitter.__parent.__children[splitter.__arrange_index - 1] instanceof flyingon.Splitter ||
+                splitter.get_vertical())
+            {
+                arguments[3] = true;
+            }
+
+            base.__fn_splitter.apply(this, arguments);
+        };
 
 
+        this.__fn_resize = function (target, start, change) {
+
+            var vertical = start.vertical,
+                list = vertical ? this.rows : this.columns,
+                item = list[start.index];
+
+            if (item)
+            {
+                if ((item.value = start.value + (start.scale === 1 ? change : (change * start.scale * 100 | 0) / 100)) < 0)
+                {
+                    item.value = 0;
+                }
+
+                document.title = item.value+ " " +item.size;
+                layout_cache = false;
+                target.__parent[vertical ? "set_layoutRows" : "set_layoutColumns"](list.serialize());
+            }
+        };
+
+
+        this.__fn_resize_start = function (splitter, target, vertical) {
+
+            var index = (vertical = splitter.__vertical) ? target.__arrange_row : target.__arrange_column,
+                item = (vertical ? this.rows : this.columns)[index],
+                start = target.__fn_unit_scale(item.value + item.unit, item.size);
+
+            start.vertical = vertical;
+            start.reverse = !vertical && this.rtl;
+            start.index = index;
+
+            item.unit = start.unit;
+
+            return start;
         };
 
 
@@ -9642,7 +9787,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
     //表格布局(支持竖排)
-    flyingon.defineLayout("table", function () {
+    flyingon.defineLayout("table", function (base) {
 
 
 
@@ -9684,7 +9829,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
             //排列控件
-            this.arrange = function (items, index, x, y, vertical) {
+            this.arrange = function (table, row, items, index, x, y, vertical) {
 
                 var length = items.length,
                     cell,
@@ -9701,6 +9846,11 @@ flyingon.defineClass("ControlCollection", function (base) {
                         else
                         {
                             item = items[index++];
+
+                            //记录表格位置
+                            item.__arrange_table = table;
+                            item.__arrange_row = row;
+                            item.__arrange_column = i;
 
                             if (vertical)
                             {
@@ -9737,12 +9887,34 @@ flyingon.defineClass("ControlCollection", function (base) {
                 return result;
             };
 
+
+            this.serialize = function (values) {
+
+                values.push((this.value === 100 && this.unit === "*" ? "*" : this.value + this.unit) + "[");
+
+                for (var i = 0, _ = this.length; i < _; i++)
+                {
+                    var column = this[i];
+
+                    values.push(column.value === 100 && column.unit === "*" ? "*" : column.value + column.unit);
+
+                    if (column.table)
+                    {
+                        column.table.serialize(values);
+                    }
+                }
+
+                values.push("]")
+            };
+
         });
 
 
 
         //表
         var layout_table = flyingon.defineClass(layout_row, function (base) {
+
+
 
 
 
@@ -9799,7 +9971,7 @@ flyingon.defineClass("ControlCollection", function (base) {
                     name,
                     cache;
 
-                this.__cache_value2 = null;
+                this.__cache_key2 = null;
 
                 while (index < length)
                 {
@@ -9954,7 +10126,7 @@ flyingon.defineClass("ControlCollection", function (base) {
                             {
                                 index++;
 
-                                if ((token = tokens[index]) === " ")
+                                if ((token = tokens[index++]) === " ")
                                 {
                                     token = tokens[index++];
                                 }
@@ -10070,13 +10242,24 @@ flyingon.defineClass("ControlCollection", function (base) {
 
                 for (var i = 0, _ = this.length; i < _; i++)
                 {
-                    if ((row = this[i]).enable && (index = row.arrange(items, index, x, y, vertical)) >= length)
+                    if ((row = this[i]).enable && (index = row.arrange(this, i, items, index, x, y, vertical)) >= length)
                     {
                         return index;
                     }
                 }
 
                 return index;
+            };
+
+
+            this.serialize = function (values) {
+
+                for (var i = 0, _ = this.length; i < _; i++)
+                {
+                    this[i].serialize(values || (values = []));
+                }
+
+                return values ? values.join(" ") : null;
             };
 
 
@@ -10107,9 +10290,30 @@ flyingon.defineClass("ControlCollection", function (base) {
             };
 
 
+            this.serialize = function (values) {
+
+                values.push("{ ");
+
+                if (this.spacingWidth !== "100%" || this.spacingHeight !== "100%")
+                {
+                    values.push("(spacingWidth=" + this.spacingWidth + ",spacingHeight=" + this.spacingHeight + ") ")
+                }
+
+                for (var i = 0, _ = this.length; i < _; i++)
+                {
+                    this[i].serialize(values = values || []);
+                }
+
+                values.push(" }");
+            };
+
+
         });
 
 
+
+        //是否缓存布局
+        var layout_cache = true;
 
 
         function compute(target, table, width, height, spacingWidth, spacingHeight, vertical) {
@@ -10118,7 +10322,7 @@ flyingon.defineClass("ControlCollection", function (base) {
                 fn,
                 fixed;
 
-            if (table.__cache_value2 !== keys)
+            if (table.__cache_key2 !== keys)
             {
                 fn = vertical ? table.compute2 : table.compute1;
                 fn.call(table, target, width, height, spacingWidth, spacingHeight);
@@ -10140,7 +10344,14 @@ flyingon.defineClass("ControlCollection", function (base) {
                     fn.call(table, target, width, height, spacingWidth, spacingHeight);
                 }
 
-                table.__cache_value2 = keys;
+                if (layout_cache)
+                {
+                    table.__cache_key2 = keys;
+                }
+                else
+                {
+                    layout_cache = true;
+                }
             }
         };
 
@@ -10170,7 +10381,7 @@ flyingon.defineClass("ControlCollection", function (base) {
                 value = target.get_layoutTable() || "*[* * *] ...2";
             }
 
-            if (!table || table.__cache_value1 !== value)
+            if (!table || table.__cache_key1 !== value)
             {
                 if (table = layouts[value]) //优先从缓存复制
                 {
@@ -10178,11 +10389,11 @@ flyingon.defineClass("ControlCollection", function (base) {
                 }
                 else
                 {
-                    table = layouts[value] = new layout_table()
+                    table = layouts[value] = this.table = new layout_table()
                     table.parse(value.replace(/\s+/g, " ").match(regex_parse), 0);
                 }
 
-                (target.__x_layoutTable = table).__cache_value1 = value;
+                (target.__x_layoutTable = table).__cache_key1 = value;
             }
 
             compute.call(this, target, table, clientWidth, clientHeight, spacingWidth, spacingHeight, this.vertical);
@@ -10197,8 +10408,39 @@ flyingon.defineClass("ControlCollection", function (base) {
         };
 
 
-        this.__fn_resize = function (target, index, start, distanceX, distanceY) {
+        this.__fn_splitter = function (splitter, width, height, vertical) {
 
+            if (splitter.__vertical = splitter.__arrange_column === 0 ||
+                splitter.__parent.__children[splitter.__arrange_index - 1] instanceof flyingon.Splitter ||
+                splitter.get_vertical())
+            {
+                arguments[3] = true;
+            }
+
+            base.__fn_splitter.apply(this, arguments);
+        };
+
+
+        this.__fn_resize = function (target, start, change) {
+
+            start.item.value = (change += start.value) > 0 ? change : 1;
+
+            layout_cache = false;
+            target.__parent.set_layoutTable(document.title = this.table.serialize());
+        };
+
+
+        this.__fn_resize_start = function (splitter, target, vertical) {
+
+            var table = splitter.__arrange_table,
+                row = table[target.__arrange_row],
+                item = vertical ? row : row[splitter.__arrange_column],
+                start = target.__fn_unit_scale(item.value + item.unit, item.size);
+
+            start.reverse = !vertical && this.rtl;
+            start.item = item;
+
+            return start;
         };
 
 
@@ -10390,7 +10632,7 @@ flyingon.IChildren = function (base) {
 
         for (var i = 0, _ = items.length; i < _; i++)
         {
-            (item = items[i]).dom.style.top = height - item.offsetTop - item.offsetHeight;
+            (item = items[i]).dom.style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
         }
     };
 
@@ -10401,7 +10643,7 @@ flyingon.IChildren = function (base) {
 
         for (var i = 0, _ = items.length; i < _; i++)
         {
-            (item = items[i]).dom.style.left = width - item.offsetLeft - item.offsetWidth + "px";
+            (item = items[i]).dom.style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
         }
     };
 
@@ -10413,8 +10655,8 @@ flyingon.IChildren = function (base) {
         for (var i = 0, _ = items.length; i < _; i++)
         {
             style = (item = items[i]).dom.style;
-            style.left = width - item.offsetLeft - item.offsetWidth;
-            style.top = height - item.offsetTop - item.offsetHeight;
+            style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
+            style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
         }
     };
 
@@ -10727,7 +10969,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
         var target = new flyingon.Control(), //拖动控件
             source, //原始控件
-            properties = ["marginLeft", "marginTop", "marginRight", "marginBottom", "newline", "layoutSplit", "dock", "columnIndex", "spacingCells"], //要复制的属性
+            properties = ["newline", "layoutSplit", "dock", "columnIndex", "spacingCells"], //要复制的属性
             insert_index = -1,
             last_index = -1;
 
@@ -10741,12 +10983,17 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
             var items = this.__children,
                 offset = this.offset(event.clientX, event.clientY),
-                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft, offset.y - event.offsetTop) : 0;
+                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft, offset.y - event.offsetTop) : 0,
+                cache = event.dragTarget;
 
-            if (index >= 0 && insert_index !== index)
+            if (index >= 0 && insert_index !== index && cache)
             {
-                target.set_width(event.dragTarget.offsetWidth + "px");
-                target.set_height(event.dragTarget.offsetHeight + "px");
+                target.set_marginLeft(cache.get_marginLeft());
+                target.set_marginTop(cache.get_marginTop());
+                target.set_marginRight(cache.get_marginRight());
+                target.set_marginBottom(cache.get_marginBottom());
+                target.set_width(cache.offsetWidth + "px");
+                target.set_height(cache.offsetHeight + "px");
 
                 if (source = items[insert_index = index])
                 {
@@ -10883,7 +11130,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         if (target && (target = target.__layout))
         {
-            target.__fn_splitter(this, "default", this.get_vertical());
+            target.__fn_splitter(this, "fill", "fill", target.vertical);
         }
 
         return base.measure.apply(this, arguments);
@@ -10902,26 +11149,18 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
     this.__event_bubble_mousemove = function (event) {
 
-        var target, layout, start, index, vertical, name, value;
+        var target, layout, start, index, value;
 
         if (!event.ctrlKey &&
             (start = event.pressdown) &&
-            (event.distanceX || event.distanceY) &&
             (index = this.__arrange_index - 1) >= 0 &&
             (target = this.__parent) && (layout = target.__layout) &&
             (target = target.__children[index]))
         {
-            vertical = this.__vertical;
-            name = vertical ? "height" : "width";
+            start = start.start || (start.start = layout.__fn_resize_start(this, target, layout.vertical));
+            value = start.vertical ? event.distanceY : event.distanceX;
 
-            start = start.start || (start.start = {});
-            start = start[name] || (start[name] = layout.__fn_resize_start(target, name, vertical));
-
-            value = vertical ? event.distanceY : event.distanceX;
-            value = start.scale === 1 ? value : +(value * start.scale).toFixed(2);
-            value = start.value + (start.reverse ? -value : value) + start.unit;
-
-            layout.__fn_resize(target, name, value);
+            layout.__fn_resize(target, start, start.reverse ? -value : value);
 
             event.stopPropagation(false);
         }

@@ -567,6 +567,40 @@
 
 
 
+
+
+        //控件溢出处理(包含横向溢出处理及纵向溢出处理)
+        //hidden    内容会被修剪 其余内容是不可见的
+        //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
+        //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
+        //同时设置横向溢出处理及纵向溢出处理以空格分开, 如:"auto scroll"
+        complex("overflow", ["x", "y"], (function () {
+
+            var regex = /visible|hidden|scroll|auto/g;
+
+            return function (value) {
+
+                var values = value ? ("" + value).match(regex) : [];
+
+                return {
+
+                    overflowX: values[0],
+                    overflowY: values[1] || values[0]
+                };
+            };
+
+        })());
+
+        //控件横向溢出处理及纵向溢出处理
+        //hidden    内容会被修剪 其余内容是不可见的
+        //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
+        //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
+        styles("overflow-?", ["x", "y"], "visible", "arrange");
+
+
+
+
+
         //控件外边距简写方式(按照上右下左的顺序编写 与css规则相同)
         complex("margin", items, split_sides("margin-?"));
 
@@ -712,36 +746,6 @@
         //bottom    底部对齐
         style("vertical-align", "middle");
 
-
-
-
-        //控件溢出处理(包含横向溢出处理及纵向溢出处理)
-        //hidden    内容会被修剪 其余内容是不可见的
-        //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
-        //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
-        //同时设置横向溢出处理及纵向溢出处理以空格分开, 如:"auto scroll"
-        complex("overflow", ["x", "y"], (function () {
-
-            var regex = /visible|hidden|scroll|auto/g;
-
-            return function (value) {
-
-                var values = value ? ("" + value).match(regex) : [];
-
-                return {
-
-                    overflowX: values[0],
-                    overflowY: values[1] || values[0]
-                };
-            };
-
-        })());
-
-        //控件横向溢出处理及纵向溢出处理
-        //hidden    内容会被修剪 其余内容是不可见的
-        //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
-        //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
-        styles("overflow-?", ["x", "y"], "visible");
 
 
 
