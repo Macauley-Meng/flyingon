@@ -208,15 +208,16 @@
             //先分发mousedown事件,如果取消默认行为则不执行后续处理
             if (target)
             {
-                //捕获dom
-                setCapture(capture_dom = target.dom, event);
+                //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
+                setCapture(capture_dom = event.target, event);
 
                 //记录鼠标按下位置
                 pressdown = {
 
+                    dom: event.target, //按下时触发事件的dom
                     capture: target,
                     which: event.which,
-                    cursor: capture_dom.style.cursor,
+                    cursor: target.dom.style.cursor,
                     clientX: event.clientX,
                     clientY: event.clientY
                 };

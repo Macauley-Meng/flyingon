@@ -1,11 +1,18 @@
 ﻿
 //子控件接口
+//注: 需包含名为dom_children的dom对象作为子控件父dom
 flyingon.IChildren = function (base) {
 
 
 
     //是否需要重新排列子控件
     this.__arrange_dirty = true;
+
+    //排列宽度
+    this.__arrange_width = 0;
+
+    //排列高度
+    this.__arrange_height = 0;
 
     //是否需要重新处理子dom
     this.__dom_dirty = true;
@@ -15,7 +22,7 @@ flyingon.IChildren = function (base) {
     //子控件集合
     this.defineProperty("children", function () {
 
-        return this.__children;
+        return this.__children || (this.__children = new flyingon.ControlCollection());
     });
 
 
@@ -24,7 +31,7 @@ flyingon.IChildren = function (base) {
     //添加子控件
     this.appendChild = function (item) {
 
-        var children = this.__children;
+        var children = this.__children || this.get_children();
         children.append.apply(children, arguments);
     };
 
@@ -32,7 +39,7 @@ flyingon.IChildren = function (base) {
     //在指定位置插入子控件
     this.insertChild = function (index, item) {
 
-        var children = this.__children;
+        var children = this.__children || this.get_children();
         children.insert.apply(children, arguments);
     };
 
@@ -41,30 +48,50 @@ flyingon.IChildren = function (base) {
     this.removeChild = function (item) {
 
         var children = this.__children;
-        children.remove.apply(children, arguments);
+
+        if (children)
+        {
+            children.remove.apply(children, arguments);
+        }
     };
 
 
     //移除指定位置的子控件
     this.removeAt = function (index, length) {
 
-        this.__children.removeAt.apply(index, length);
+        var children = this.__children;
+
+        if (children)
+        {
+            children.removeAt.apply(children, index, length);
+        }
     };
 
 
 
 
     //测量完毕后执行方法
-    this.after_measure = function (style, box) {
+    this.after_measure = function (box) {
+
+        var dom = this.dom_children.parentNode,
+            width,
+            height;
+
+        //计算客户区大小(包含滚动条)
+        width = dom.offsetWidth - box.spacingWidth;
+        height = dom.offsetHeight - box.spacingHeight;
 
         //客户区变化时才会请求重新排列
-        if (this.clientWidth !== this.__arrange_width || this.clientHeight !== this.__arrange_height)
+        if (width !== this.__arrange_width || height !== this.__arrange_height)
         {
             this.__arrange_dirty = true;
-            this.__arrange_width = this.clientWidth;
-            this.__arrange_height = this.clientHeight;
+            this.__arrange_width = width;
+            this.__arrange_height = height;
         }
+
+        return false;
     };
+
 
 
     //渲染控件
@@ -87,8 +114,16 @@ flyingon.IChildren = function (base) {
     //渲染子控件
     function render_children() {
 
-        var items = this.__children,
+        var dom = this.dom_children.parentNode,
+            box = this.__boxModel,
+            items = this.__children,
             cache;
+
+        //计算客户区大小
+        this.clientLeft = dom.clientLeft + box.paddingLeft;
+        this.clientTop = dom.clientTop + box.paddingTop;
+        this.clientWidth = dom.clientWidth - box.paddingLeft - box.paddingRight;
+        this.clientHeight = dom.clientHeight - box.paddingTop - box.paddingBottom;
 
         if (items && items.length > 0)
         {
@@ -114,7 +149,7 @@ flyingon.IChildren = function (base) {
                     this.__compute_style.fontSize = cache;
                 }
 
-                this.arrange();
+                this.arrange(this.__arrange_width, this.__arrange_height);
 
                 this.__arrange_dirty = false;
             }
@@ -150,52 +185,13 @@ flyingon.IChildren = function (base) {
 
 
     //排列子控件
-    this.arrange = function () {
+    this.arrange = function (width, height) {
 
         var items = this.__children;
 
         if (items && items.length > 0)
         {
-            this.__layout.__fn_arrange(this);
-        }
-    };
-
-
-
-
-
-    //沿x中心轴进行排列变换
-    this.__fn_transform_axis_x = function (items, width, height) {
-
-        var item;
-
-        for (var i = 0, _ = items.length; i < _; i++)
-        {
-            (item = items[i]).dom.style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
-        }
-    };
-
-    //沿y中心轴进行排列变换
-    this.__fn_transform_axis_y = function (items, width, height) {
-
-        var item;
-
-        for (var i = 0, _ = items.length; i < _; i++)
-        {
-            (item = items[i]).dom.style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
-        }
-    };
-
-    //沿坐标原点进行排列变换
-    this.__fn_transform_axis_origin = function (items, width, height) {
-
-        var item, style;
-
-        for (var i = 0, _ = items.length; i < _; i++)
-        {
-            style = (item = items[i]).dom.style;
-            style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
-            style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
+            this.__layout.__fn_arrange(this, width, height);
         }
     };
 

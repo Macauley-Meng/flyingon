@@ -45,20 +45,22 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         this.__states = { active: true };
 
         //修改class
-        this.dom.className += " flyingon-Window-active";
+        this.dom.className += " flyingon-Window--active";
 
         //注册窗口
         flyingon.__all_windows.push(this);
 
-        //注册窗口更新
-        this.__fn_registry_update(this, function () {
+        //自动显示窗口
+        setTimeout(function () {
 
             if (host)
             {
                 host.appendChild(dom);
             }
-        });
 
+            self.render();
+
+        }, 0);
     };
 
 
@@ -100,7 +102,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
 
 
-    //更新窗口
+    //渲染
     this.render = (function (render) {
 
         return function () {
@@ -125,6 +127,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         };
 
     })(this.render);
+
 
 
 

@@ -34,7 +34,6 @@
                 <input type="button" value="split" onclick="layout('split')" />
                 <input type="button" value="dock" onclick="layout('dock')" />
                 <input type="button" value="cascade" onclick="layout('cascade')" />
-                <input type="button" value="page" onclick="layout('page')" />
                 <input type="button" value="grid" onclick="layout('grid')" />
                 <input type="button" value="table" onclick="layout('table')" />
                 <input type="button" value="absolute" onclick="layout('absolute')" />
@@ -44,8 +43,10 @@
                 <input type="button" value="vertical" onclick="vertical(true)" />
 
                 <span style="width: 10px"></span>
-                <input type="button" value="ltr" onclick="direction('ltr')" />
-                <input type="button" value="rtl" onclick="direction('rtl')" />
+                <input type="button" value="mirror-none" onclick="mirror('none')" />
+                <input type="button" value="mirror-y" onclick="mirror('y')" />
+                <input type="button" value="mirror-x" onclick="mirror('x')" />
+                <input type="button" value="mirror-center" onclick="mirror('center')" />
 
                 <span style="width: 10px"></span>
                 <input type="button" value="Paint" onclick="paint()" />
@@ -63,8 +64,6 @@
 
                             <span tag="flow">layoutWidth<input type="text" style="width: 50px;" value="0" onchange="to_panel()" /></span>
                             <span tag="flow">layoutHeight<input type="text" style="width: 50px;" value="0" onchange="to_panel()" /></span>
-
-                            <span style="display: none;" tag="page">layoutPage<input type="text" style="width:50px;" value="0" onchange="to_panel()" /></span>
 
                             <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " value="6" onchange="to_panel()" /></span>
                             <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " value="6" onchange="to_panel()" /></span>
@@ -144,6 +143,30 @@
 
 
 
+        //定义样式
+        flyingon.style({
+
+            ".test-panel": {
+
+                width: "500px",
+                border: "4px solid red",
+                padding: "10px",
+                layoutType: "flow"
+            },
+
+            ".test-control": {
+
+                overflow: "hidden",
+                border: "1px solid black",
+                paddingTop: "2px",
+                backgroundColor: "white",
+                cursor: "pointer",
+                textAlign: "center"
+            }
+
+        });
+
+
         var w = new flyingon.Window(host).sets({
 
             layoutType: "flow",
@@ -158,14 +181,10 @@
         {
             var panel = new flyingon.Panel().sets({
 
-                width: "500px",
-                border: "4px solid red",
-                padding: "10px",
+                className: "test-panel",
                 droppable: true,
-                resizable: "both",
-                layoutType: "flow"
+                resizable: "both"
             });
-
 
             for (var j = 0; j < 100; j++)
             {
@@ -174,14 +193,9 @@
 
                     left: j % 5 * 120 + "px",
                     top: j / 5 * 30 + "px",
-                    overflow: "hidden",
-                    border: "1px solid black",
-                    paddingTop: "2px",
-                    backgroundColor: "white",
-                    cursor: "pointer",
+                    className: "test-control",
                     draggable: "both",
                     resizable: "both",
-                    textAlign: "center",
                     text: "html " + j
                 });
 
@@ -324,7 +338,7 @@
         };
 
 
-        function direction(value) {
+        function mirror(value) {
 
             var date = new Date();
 
@@ -333,7 +347,7 @@
             for (var i = 0; i < children.length; i++)
             {
                 var panel = children[i];
-                panel.set_direction(value);
+                panel.set_mirror(value);
             }
 
             w.render();
@@ -436,6 +450,12 @@
                 from_control();
             }
 
+        });
+
+        w.on("mouseover", function (event) {
+
+            var target = event.target;
+            document.title = [target.clientLeft, target.clientTop, target.clientWidth, target.clientHeight].join(",");
         });
 
 

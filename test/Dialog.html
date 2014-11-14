@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="no-cache" />
+    <title></title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            height: 100%;
+        }
+    </style>
+</head>
+<body style="background-color: yellow;">
+
+
+    <span id="message"></span>
+    <div id="host" style="width: 100%; height: 100%;">
+    </div>
+
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../scripts/flyingon.controls.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+    <script type="text/javascript">
+
+
+
+        //定义样式
+        flyingon.style({
+
+            ".test-control": {
+
+                overflow: "hidden",
+                border: "1px solid black",
+                paddingTop: "2px",
+                backgroundColor: "white",
+                cursor: "pointer",
+                textAlign: "center"
+            }
+
+        });
+
+
+        var w = new flyingon.Window(host);
+
+
+        var button1 = new flyingon.Button();
+        var button2 = new flyingon.Button();
+
+        button1.set("text", "非模态窗口").on("click", function () {
+
+            openWindow(false);
+        });
+
+        button2.set("text", "模态窗口").on("click", function () {
+
+            openWindow(true);
+        });
+
+
+        function openWindow(showDialog) {
+
+
+            var win = new flyingon.Dialog().init({
+
+                width: "600px",
+                height: "400px",
+                border: "2px solid blue",
+                padding: "10px",
+                spacingWidth: "10px",
+                spacingHeight: "10px"
+            });
+
+
+            for (var i = 0; i < 100; i++)
+            {
+                win.appendChild(new flyingon.HtmlControl().sets({
+
+                    className: "test-control",
+                    left: i % 5 * 120 + "px",
+                    top: i / 5 * 30 + "px",
+                    draggable: "both",
+                    text: "html " + i
+                }));
+            }
+
+
+            win[showDialog ? "showDialog" : "show"](w);
+        };
+
+
+        w.appendChild(button1, button2);
+
+
+    </script>
+
+</body>
+</html>

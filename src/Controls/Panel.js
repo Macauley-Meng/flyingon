@@ -22,7 +22,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
     //dom元素模板
-    this.create_dom_template("div", null, "<div style=\"position:relative;overflow:hidden;direction:ltr;\"></div>");
+    this.create_dom_template("div", null, "<div style=\"position:relative;overflow:hidden;\"></div>");
 
 
 
@@ -49,8 +49,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
     //渲染子控件
     this.render_children = function () {
 
-        var scroll = this.contentWidth > this.clientWidth || this.contentHeight > this.clientHeight,
-            items = scroll ? this.__render_items || render_items(this) : this.__children,
+        var items = this.__render_items || render_items(this),
             length;
 
         if (items && (length = items.length) > 0)
@@ -125,13 +124,13 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
     //排列子控件
-    this.arrange = function () {
+    this.arrange = function (width, height) {
 
         var items = this.__children;
 
         if (items && items.length > 0)
         {
-            (this.__layout = this.layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this);
+            (this.__layout = this.layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this, width, height);
         }
 
         this.__render_items = null;

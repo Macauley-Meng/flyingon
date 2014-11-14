@@ -32,7 +32,7 @@ flyingon.defineClass("Label", flyingon.Control, function (base) {
 
 
 
-    this.arrange = function () {
+    this.arrange = function (width, height) {
 
         var dom = this.dom_span;
 

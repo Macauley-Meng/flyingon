@@ -91,7 +91,7 @@
 
 
 
-        this.arrange = function () {
+        this.arrange = function (width, height) {
 
             base.arrange.call(this);
             this.dom_label.style.top = ((this.clientHeight - this.dom_label.offsetHeight) >> 1) + "px";

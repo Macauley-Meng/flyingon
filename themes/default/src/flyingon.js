@@ -36,7 +36,6 @@ flyingon.css({
     //弹出窗口内容样式
     ".flyingon-Dialog-body": {
 
-        padding: "2px",
         top: "25px",
         backgroundColor: "white"
     }
@@ -143,7 +142,6 @@ flyingon.style({
     //面板控件样式
     "@flyingon-Panel": {
 
-        overflow: "auto",
         backgroundColor: "white"
     },
 
@@ -160,7 +158,6 @@ flyingon.style({
     //主窗口样式
     "@flyingon-Window": {
 
-        overflow: "auto",
         padding: "2px"
     },
 

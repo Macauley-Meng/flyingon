@@ -96,7 +96,7 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
     Class.create = function (type, dom_event, pressdown) {
 
         //触事件的dom对象
-        this.dom = dom_event.target;
+        this.dom = pressdown ? pressdown.dom : dom_event.target;
 
         //关联的原始dom事件
         this.dom_event = dom_event;

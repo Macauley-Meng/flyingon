@@ -934,7 +934,7 @@ flyingon.defineClass("Fieldset", flyingon.Panel, function (base) {
 
 
     //创建dom元素模板
-    this.create_dom_template("fieldset", null, "<legend style=\"\"></legend><div style=\"position:relative;overflow:hidden;direction:ltr;\"></div>");
+    this.create_dom_template("fieldset", null, "<legend style=\"\"></legend><div style=\"position:relative;overflow:hidden;\"></div>");
 
 
 
@@ -990,7 +990,7 @@ flyingon.defineClass("Label", flyingon.Control, function (base) {
 
 
 
-    this.arrange = function () {
+    this.arrange = function (width, height) {
 
         var dom = this.dom_span;
 
@@ -1354,7 +1354,7 @@ flyingon.defineClass("TextButton", flyingon.Control, function (base) {
 
 
 
-        this.arrange = function () {
+        this.arrange = function (width, height) {
 
             base.arrange.call(this);
             this.dom_label.style.top = ((this.clientHeight - this.dom_label.offsetHeight) >> 1) + "px";
@@ -1575,7 +1575,7 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
 
 
     //排列子控件
-    this.arrange = function () {
+    this.arrange = function (width, height) {
 
         this.contentWidth = this.dom_div.offsetWidth;
         this.contentHeight = this.dom_div.offsetHeight;

@@ -19,8 +19,8 @@
         this.vertical = false;
 
 
-        //是否右向顺序
-        this.rtl = false;
+        //镜像变换类型
+        this.mirror = "none";
 
 
         //计算滚动条大小
@@ -47,14 +47,13 @@
 
 
 
-        this.__fn_arrange = function (target) {
+        this.__fn_arrange = function (target, width, height) {
 
-            var clientWidth = target.contentWidth = target.clientWidth,
-                clientHeight = target.contentHeight = target.clientHeight,
-                children = target.__children,
-                items = [],
-                style1 = target.dom.style,
-                style2 = target.dom_children.style;
+            var children = target.__children,
+                dom = target.dom_children,
+                style1 = dom.parentNode.style,
+                style2 = dom.style,
+                items = [];
 
             this.vertical = target.get_vertical();
 
@@ -65,7 +64,7 @@
 
                 item.__arrange_index = i;
 
-                if (item.__visible = (item.get_visibility() !== "collapse"))
+                if (item.__visible = (item.__visibility = item.get_visibility()) !== "collapse")
                 {
                     items.push(item);
                 }
@@ -75,43 +74,89 @@
                 }
             }
 
+            //初始化内容区
+            target.contentWidth = width;
+            target.contentHeight = height;
+
             //排列
-            this.arrange(target, items, clientWidth, clientHeight);
+            this.arrange(target, items, width, height);
+
+            //镜像变换
+            if ((this.mirror = target.__arrange_mirror = target.get_mirror()) !== "none")
+            {
+                mirror(items, this.mirror, target.contentWidth, target.contentHeight);
+            }
+
+            if (dom = dom.parentNode)
+            {
+                if (!dom.flyingon_arrange)
+                {
+                    dom.flyingon_arrange = document.createElement("div");
+                    dom.flyingon_arrange.style.cssText = "position:absolute;border:0;padding:0;font-size:0;width:0;height:0;visibility:hidden;";
+                    dom.appendChild(dom.flyingon_arrange);
+                }
+
+                dom = dom.flyingon_arrange;
+                dom.style.left = target.contentWidth + "px";
+                dom.style.top = target.contentHeight + "px";
+            }
 
             //设置样式
-            if (target.contentWidth <= clientWidth)
-            {
-                style1.overflowX = "hidden"; //不加这句在有些浏览器会出现滚动条
-                style2.width = "100%";
-            }
-            else
-            {
-                style1.overflowX = target.get_overflowX();
-                style2.width = target.contentWidth + "px";
-            }
+            //if (target.contentWidth <= width)
+            //{
+            //    style1.overflowX = "hidden"; //不加这句在有些浏览器会出现滚动条
+            //    style2.width = "100%";
+            //}
+            //else
+            //{
+            //    style1.overflowX = target.get_overflowX();
+            //    style2.width = target.contentWidth + "px";
+            //}
 
-            if (target.contentHeight <= clientHeight)
-            {
-                style1.overflowY = "hidden"; //不加这句在有些浏览器会出现滚动条
-                style2.height = "100%";
-            }
-            else
-            {
-                style1.overflowY = target.get_overflowY();
-                style2.height = target.contentHeight + "px";
-            }
-
-            //如果是右向顺序则重算位置
-            if (this.rtl = target.get_direction() === "rtl")
-            {
-                target.__fn_transform_axis_y(items, target.dom_children.offsetWidth, target.dom_children.offsetHeight);
-            }
+            //if (target.contentHeight <= height)
+            //{
+            //    style1.overflowY = "hidden"; //不加这句在有些浏览器会出现滚动条
+            //    style2.height = "100%";
+            //}
+            //else
+            //{
+            //    style1.overflowY = target.get_overflowY();
+            //    style2.height = target.contentHeight + "px";
+            //}
         };
 
 
         //排列
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
+        };
+
+
+        //镜像变换
+        function mirror(items, mirror, width, height) {
+
+            var item, style;
+
+            for (var i = 0, _ = items.length; i < _; i++)
+            {
+                style = (item = items[i]).dom.style;
+
+                switch (mirror)
+                {
+                    case "x":
+                        style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
+                        break;
+
+                    case "y":
+                        style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
+                        break;
+
+                    case "center":
+                        style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
+                        style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
+                        break;
+                }
+            }
         };
 
 
@@ -143,7 +188,7 @@
                 value = target[vertical ? "offsetHeight" : "offsetWidth"],
                 start = target.__fn_unit_scale(style, value);
 
-            start.reverse = !vertical && this.rtl;
+            start.reverse = !vertical && this.mirror !== "none";
             start.vertical = vertical;
 
             return start;
@@ -209,7 +254,7 @@
     flyingon.defineLayout("flow", function (base) {
 
 
-        function arrange1(target, items, clientWidth, clientHeight, fixed) {
+        function arrange1(target, items, width, height, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
@@ -219,7 +264,7 @@
                 x = 0,
                 y = 0,
                 item,
-                width,
+                size,
                 offset;
 
             for (var i = 0, _ = items.length; i < _; i++)
@@ -239,9 +284,9 @@
                     }
                 }
 
-                width = item.measure(clientWidth > x ? clientWidth - x : clientWidth, align_height, false, false, true, false).width;
+                size = item.measure(width > x ? width - x : width, align_height, false, false, true, false).width;
 
-                if (x > 0 && x + width > clientWidth) //是否超行
+                if (x > 0 && x + size > width) //是否超行
                 {
                     x = 0;
                     y = contentHeight + spacingHeight;
@@ -249,9 +294,9 @@
 
                 offset = item.locate(x, y, null, align_height);
 
-                if (offset.y > clientHeight && !fixed) //超行需调整客户区后重排
+                if (offset.y > height && !fixed) //超行需调整客户区后重排
                 {
-                    return arrange1.call(this, target, items, clientWidth - this.scroll_width, clientHeight, true);
+                    return arrange1.call(this, target, items, width - this.scroll_width, height, true);
                 }
 
                 if ((x = offset.x) > contentWidth)
@@ -270,7 +315,7 @@
         };
 
 
-        function arrange2(target, items, clientWidth, clientHeight, fixed) {
+        function arrange2(target, items, width, height, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
@@ -280,7 +325,7 @@
                 contentWidth = 0,
                 contentHeight = 0,
                 item,
-                height,
+                size,
                 offset;
 
             for (var i = 0, _ = items.length; i < _; i++)
@@ -300,9 +345,9 @@
                     }
                 }
 
-                height = item.measure(align_width, clientHeight > y ? clientHeight - y : clientHeight, false, false, true, false).height;
+                size = item.measure(align_width, height > y ? height - y : height, false, false, true, false).height;
 
-                if (y > 0 && y + height > clientHeight) //超行
+                if (y > 0 && y + size > height) //超行
                 {
                     y = 0;
                     x = contentWidth + spacingWidth;
@@ -310,9 +355,9 @@
 
                 offset = item.locate(x, y, align_width);
 
-                if (offset.x > clientWidth && !fixed) //超行需调整客户区后重排
+                if (offset.x > width && !fixed) //超行需调整客户区后重排
                 {
-                    return arrange2.call(this, target, items, clientWidth, clientHeight - this.scroll_height, true);
+                    return arrange2.call(this, target, items, width, height - this.scroll_height, true);
                 }
 
                 if (offset.x > contentWidth)
@@ -331,7 +376,7 @@
         };
 
 
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
             (this.vertical ? arrange2 : arrange1).apply(this, arguments);
         };
@@ -368,17 +413,17 @@
     flyingon.defineLayout("line", function (base) {
 
 
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
             (this.vertical ? arrange2 : arrange1).apply(this, arguments);
         };
 
 
-        function arrange1(target, items, clientWidth, clientHeight, fixed) {
+        function arrange1(target, items, width, height, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
                 x = 0,
-                y = clientHeight,
+                y = height,
                 item,
                 offset;
 
@@ -391,13 +436,13 @@
                     x += spacingWidth;
                 }
 
-                item.measure(clientWidth - x, clientHeight, false, true, true, false);
+                item.measure(width - x, height, false, true, true, false);
 
-                offset = item.locate(x, 0, null, clientHeight);
+                offset = item.locate(x, 0, null, height);
 
-                if ((x = offset.x) > clientWidth && !fixed) //超行需调整客户区后重排
+                if ((x = offset.x) > width && !fixed) //超行需调整客户区后重排
                 {
-                    return arrange1.call(this, target, items, clientWidth, clientHeight - this.scroll_height, true);
+                    return arrange1.call(this, target, items, width, height - this.scroll_height, true);
                 }
 
                 if (offset.y > y)
@@ -411,10 +456,10 @@
         };
 
 
-        function arrange2(target, items, clientWidth, clientHeight, fixed) {
+        function arrange2(target, items, width, height, fixed) {
 
             var spacingHeight = target.compute_size(target.get_spacingHeight()),
-                x = clientWidth,
+                x = width,
                 y = 0,
                 item,
                 offset;
@@ -428,13 +473,13 @@
                     y += spacingHeight;
                 }
 
-                item.measure(clientWidth, clientHeight - y, true, false, false, true);
+                item.measure(width, height - y, true, false, false, true);
 
-                offset = item.locate(0, y, clientWidth);
+                offset = item.locate(0, y, width);
 
-                if ((y = offset.y) > clientHeight && !fixed) //超行需调整客户区后重排
+                if ((y = offset.y) > height && !fixed) //超行需调整客户区后重排
                 {
-                    return arrange2.call(this, target, items, clientWidth - this.scroll_width, clientHeight, true);
+                    return arrange2.call(this, target, items, width - this.scroll_width, height, true);
                 }
 
                 if (offset.x > x)
@@ -456,13 +501,13 @@
     flyingon.defineLayout("split", function (base) {
 
 
-        function arrange1(target, items, clientWidth, clientHeight) {
+        function arrange1(target, items, width, height) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
                 length = items.length,
                 x = 0,
-                y = clientHeight,
-                width = clientWidth,
+                y = height,
+                size = width,
                 right = width,
                 list = [],
                 item,
@@ -474,18 +519,18 @@
             {
                 item = items[i];
 
-                if (item.__visible = width > 0)
+                if (item.__visible = size > 0)
                 {
                     switch (item instanceof flyingon.Splitter ? split : (split = item.get_layoutSplit()))
                     {
                         case "before":
-                            cache = item.measure(width, clientHeight, false, true).width;
+                            cache = item.measure(size, height, false, true).width;
                             offset = item.locate(x, 0);
                             x += cache + spacingWidth;
                             break;
 
                         case "after":
-                            cache = item.measure(width, clientHeight, false, true).width;
+                            cache = item.measure(size, height, false, true).width;
                             offset = item.locate(right -= cache, 0);
                             right -= spacingWidth;
                             break;
@@ -500,9 +545,9 @@
                         y = offset.y;
                     }
 
-                    if ((width = right - x) < 0)
+                    if ((size = right - x) < 0)
                     {
-                        width = 0;
+                        size = 0;
                     }
                 }
                 else
@@ -515,9 +560,9 @@
             {
                 item = list[i];
 
-                if (width > 0)
+                if (size > 0)
                 {
-                    item.measure(width, clientHeight, true, true);
+                    item.measure(size, height, true, true);
                     item.locate(x, 0);
                 }
                 else
@@ -530,13 +575,13 @@
         };
 
 
-        function arrange2(target, items, clientWidth, clientHeight) {
+        function arrange2(target, items, width, height) {
 
             var spacingHeight = target.compute_size(target.get_spacingHeight()),
                 length = items.length,
-                x = clientWidth,
+                x = width,
                 y = 0,
-                height = clientHeight,
+                size = height,
                 bottom = height,
                 list = [],
                 item,
@@ -548,18 +593,18 @@
             {
                 item = items[i];
 
-                if (height > 0)
+                if (size > 0)
                 {
                     switch (item instanceof flyingon.Splitter ? split : (split = item.get_layoutSplit()))
                     {
                         case "before":
-                            cache = item.measure(clientWidth, height, true, false).height;
+                            cache = item.measure(width, size, true, false).height;
                             offset = item.locate(0, y);
                             y += cache + spacingHeight;
                             break;
 
                         case "after":
-                            cache = item.measure(clientWidth, height, true, false).height;
+                            cache = item.measure(width, size, true, false).height;
                             offset = item.locate(0, bottom -= cache);
                             bottom -= spacingHeight;
                             break;
@@ -569,9 +614,9 @@
                             continue;
                     }
 
-                    if ((height = bottom - y) < 0)
+                    if ((size = bottom - y) < 0)
                     {
-                        height = 0;
+                        size = 0;
                     }
 
                     if (offset.x > x)
@@ -590,9 +635,9 @@
             {
                 item = list[i];
 
-                if (height > 0)
+                if (size > 0)
                 {
-                    item.measure(clientWidth, height, true, true);
+                    item.measure(width, size, true, true);
                     item.locate(0, y);
                 }
                 else
@@ -605,7 +650,7 @@
         };
 
 
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
             (this.vertical ? arrange2 : arrange1).apply(this, arguments);
         };
@@ -616,7 +661,7 @@
             var start = base.__fn_resize_start.apply(this, arguments),
                 split = target.get_layoutSplit();
 
-            start.reverse = !vertical && this.rtl ? split === "before" : split === "after";
+            start.reverse = this.mirror !== "none" ? split === "before" : split === "after";
 
             return start;
         };
@@ -630,15 +675,15 @@
     flyingon.defineLayout("dock", function (base) {
 
 
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
                 length = items.length,
                 x = 0,
                 y = 0,
-                width = clientWidth,
-                height = clientHeight,
+                size1 = width,
+                size2 = height,
                 right = width,
                 bottom = height,
                 list = [],
@@ -649,47 +694,47 @@
             {
                 item = items[i];
 
-                if (width > 0 && height > 0)
+                if (size1 > 0 && size2 > 0)
                 {
                     switch (item.get_dock())
                     {
                         case "left":
-                            cache = item.measure(width, height, false, true).width;
+                            cache = item.measure(size1, size2, false, true).width;
                             item.locate(x, y);
 
-                            if ((width = right - (x += cache + spacingWidth)) < 0)
+                            if ((size1 = right - (x += cache + spacingWidth)) < 0)
                             {
-                                width = 0;
+                                size1 = 0;
                             }
                             break;
 
                         case "top":
-                            cache = item.measure(width, height, true, false).height;
+                            cache = item.measure(size1, size2, true, false).height;
                             item.locate(x, y);
 
-                            if ((height = bottom - (y += cache + spacingHeight)) < 0)
+                            if ((size2 = bottom - (y += cache + spacingHeight)) < 0)
                             {
-                                height = 0;
+                                size2 = 0;
                             }
                             break;
 
                         case "right":
-                            cache = item.measure(width, height, false, true).width;
+                            cache = item.measure(size1, size2, false, true).width;
                             item.locate(right -= cache, y);
 
-                            if ((width = (right -= spacingWidth) - x) < 0)
+                            if ((size1 = (right -= spacingWidth) - x) < 0)
                             {
-                                width = 0;
+                                size1 = 0;
                             }
                             break;
 
                         case "bottom":
-                            cache = item.measure(width, height, true, false).height;
+                            cache = item.measure(size1, size2, true, false).height;
                             item.locate(x, bottom -= cache);
 
-                            if ((height = (bottom -= spacingHeight) - y) < 0)
+                            if ((size2 = (bottom -= spacingHeight) - y) < 0)
                             {
-                                height = 0;
+                                size2 = 0;
                             }
                             break;
 
@@ -705,7 +750,7 @@
                 }
             }
 
-            cache = width > 0 && height > 0;
+            cache = size1 > 0 && size2 > 0;
 
             for (var i = 0, length = list.length; i < length; i++)
             {
@@ -713,7 +758,7 @@
 
                 if (cache)
                 {
-                    item.measure(width, height, true, true);
+                    item.measure(size1, size2, true, true);
                     item.locate(x, y);
                 }
                 else
@@ -749,10 +794,18 @@
 
         this.__fn_resize_start = function (splitter, target, vertical) {
 
-            var dock = target.get_dock(),
+            var mirror = this.mirror,
+                dock = target.get_dock(),
                 start = base.__fn_resize_start.call(this, splitter, target, vertical = dock === "top" || dock === "bottom");
 
-            start.reverse = vertical ? dock === "bottom" : (this.rtl ? dock === "left" : dock === "right");
+            if (vertical)
+            {
+                start.reverse = mirror === "x" || mirror === "center" ? dock === "top" : dock === "bottom"
+            }
+            else
+            {
+                start.reverse = mirror === "y" || mirror === "center" ? dock === "left" : dock === "right";
+            }
 
             return start;
         };
@@ -766,73 +819,15 @@
     flyingon.defineLayout("cascade", function (base) {
 
 
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
                 var item = items[i];
 
-                item.measure(clientWidth, clientHeight, true, true);
-                item.locate(0, 0, clientWidth, clientHeight);
+                item.measure(width, height);
+                item.locate(0, 0, width, height);
             }
-        };
-
-
-        //永远最后
-        this.__fn_index = function (target) {
-
-            return target.__children.length;
-        };
-
-
-        //屏蔽不支持调整大小
-        this.__fn_resize = function () {
-
-        };
-
-
-    });
-
-
-
-    //单页显示(不支持竖排)
-    flyingon.defineLayout("page", function (base) {
-
-
-        this.arrange = function (target, items, clientWidth, clientHeight) {
-
-            var index = target.get_layoutPage(),
-                length = items.length,
-                item;
-
-            if (index < 0)
-            {
-                index = 0;
-            }
-            else if (index >= length)
-            {
-                index = length - 1;
-            }
-
-            for (var i = 0; i < length; i++)
-            {
-                if ((item = items[i]).__visible = (i === index))
-                {
-                    item.measure(clientWidth, clientHeight, true, true);
-                    item.locate(0, 0, clientWidth, clientHeight);
-                }
-                else
-                {
-                    target.__fn_hide(item);
-                }
-            }
-        };
-
-
-        //永远最后
-        this.__fn_index = function (target) {
-
-            return target.__children.length;
         };
 
 
@@ -850,7 +845,7 @@
     flyingon.defineLayout("absolute", function (base) {
 
 
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
             var contentWidth = 0,
                 contentHeight = 0,
@@ -876,13 +871,6 @@
 
             target.contentWidth = contentWidth;
             target.contentHeight = contentHeight;
-        };
-
-
-        //永远最后
-        this.__fn_index = function (target) {
-
-            return target.__children.length;
         };
 
 
@@ -1179,7 +1167,7 @@
         };
 
 
-        function compute(target, clientWidth, clientHeight) {
+        function compute(target, width, height) {
 
             var value1 = target.get_layoutColumns() || 3,
                 value2 = target.get_layoutRows() || 3,
@@ -1187,7 +1175,7 @@
                 rows = this.rows,
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
-                keys = [clientWidth, clientHeight, spacingWidth, spacingHeight].join(" "),
+                keys = [width, height, spacingWidth, spacingHeight].join(" "),
                 fixed;
 
             if (!columns || columns.__cache_key !== value1)
@@ -1204,25 +1192,25 @@
 
             if (this.__cache_key !== keys)
             {
-                columns.compute(target, clientWidth, spacingWidth);
-                rows.compute(target, clientHeight, spacingHeight);
+                columns.compute(target, width, spacingWidth);
+                rows.compute(target, height, spacingHeight);
 
-                if (columns.total > clientWidth)
+                if (columns.total > width)
                 {
-                    clientHeight -= this.scroll_height;
+                    height -= this.scroll_height;
                     fixed = true;
                 }
 
-                if (rows.total > clientHeight)
+                if (rows.total > height)
                 {
-                    clientWidth -= this.scroll_width;
+                    width -= this.scroll_width;
                     fixed = true;
                 }
 
                 if (fixed)
                 {
-                    columns.compute(target, clientWidth, spacingWidth);
-                    rows.compute(target, clientHeight, spacingHeight);
+                    columns.compute(target, width, spacingWidth);
+                    rows.compute(target, height, spacingHeight);
                 }
 
                 this.__cache_key = keys;
@@ -1280,9 +1268,9 @@
         };
 
 
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
-            var list1 = compute.call(this, target, clientWidth, clientHeight),
+            var list1 = compute.call(this, target, width, height),
                 list2 = this.rows,
                 vertical = this.vertical,
                 index1 = 0,
@@ -1291,8 +1279,8 @@
                 locked,
                 x,
                 y,
-                width,
-                height,
+                size1,
+                size2,
                 row_span,
                 column_span,
                 column_index,
@@ -1370,15 +1358,15 @@
                 {
                     x = cache2.start;
                     y = cache1.start;
-                    width = cache2.size;
-                    height = cache1.size;
+                    size1 = cache2.size;
+                    size2 = cache1.size;
                 }
                 else
                 {
                     x = cache1.start;
                     y = cache2.start;
-                    width = cache1.size;
-                    height = cache2.size;
+                    size1 = cache1.size;
+                    size2 = cache2.size;
                 }
 
                 //记录行列(仅对可视控件有效)
@@ -1394,11 +1382,11 @@
 
                     if (vertical)
                     {
-                        height = cache2 - y;
+                        size2 = cache2 - y;
                     }
                     else
                     {
-                        width = cache2 - x;
+                        size1 = cache2 - x;
                     }
                 }
 
@@ -1423,17 +1411,17 @@
 
                     if (vertical)
                     {
-                        width = cache2 - x;
+                        size1 = cache2 - x;
                     }
                     else
                     {
-                        height = cache2 - y;
+                        size2 = cache2 - y;
                     }
                 }
 
                 //测量及定位
-                item.measure(width, height, true, true);
-                item.locate(x, y, width, height);
+                item.measure(size1, size2, true, true);
+                item.locate(x, y, size1, size2);
 
                 //继续往下排列
                 index1++;
@@ -1481,10 +1469,14 @@
                 start = target.__fn_unit_scale(item.value + item.unit, item.size);
 
             start.vertical = vertical;
-            start.reverse = !vertical && this.rtl;
+            start.reverse = !vertical && this.mirror !== "none";
             start.index = index;
 
-            item.unit = start.unit;
+            if (item.unit !== start.unit)
+            {
+                start.value = item.size;
+                item.unit = start.unit;
+            }
 
             return start;
         };
@@ -2064,7 +2056,7 @@
         };
 
 
-        this.arrange = function (target, items, clientWidth, clientHeight) {
+        this.arrange = function (target, items, width, height) {
 
             var table = target.__x_layoutTable,
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
@@ -2076,7 +2068,7 @@
             {
                 for (var i = 0, _ = cache.length; i < _; i++)
                 {
-                    if (cache[i][0] >= clientWidth && cache[i][1] >= clientHeight)
+                    if (cache[i][0] >= width && cache[i][1] >= height)
                     {
                         value = cache[i][2] || "*[* * *] ...2";
                         break;
@@ -2104,7 +2096,7 @@
                 (target.__x_layoutTable = table).__cache_key1 = value;
             }
 
-            compute.call(this, target, table, clientWidth, clientHeight, spacingWidth, spacingHeight, this.vertical);
+            compute.call(this, target, table, width, height, spacingWidth, spacingHeight, this.vertical);
 
             target.contentWidth = table.width;
             target.contentHeight = table.height;
@@ -2145,7 +2137,7 @@
                 item = vertical ? row : row[splitter.__arrange_column],
                 start = target.__fn_unit_scale(item.value + item.unit, item.size);
 
-            start.reverse = !vertical && this.rtl;
+            start.reverse = !vertical && this.mirror !== "none";
             start.item = item;
 
             return start;

@@ -166,7 +166,7 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
 
 
     //排列子控件
-    this.arrange = function () {
+    this.arrange = function (width, height) {
 
         this.contentWidth = this.dom_div.offsetWidth;
         this.contentHeight = this.dom_div.offsetHeight;

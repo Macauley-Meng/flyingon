@@ -24,7 +24,7 @@ flyingon.defineClass("Fieldset", flyingon.Panel, function (base) {
 
 
     //创建dom元素模板
-    this.create_dom_template("fieldset", null, "<legend style=\"\"></legend><div style=\"position:relative;overflow:hidden;direction:ltr;\"></div>");
+    this.create_dom_template("fieldset", null, "<legend style=\"\"></legend><div style=\"position:relative;overflow:hidden;\"></div>");
 
 
 

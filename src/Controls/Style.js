@@ -88,19 +88,6 @@
 
 
 
-    function default_rule() {
-
-        var value = "-moz-user-select:text;-khtml-user-select:text;user-select:text;outline:none;";
-
-        add_rule("div", "-moz-user-select:none;-khtml-user-select:none;user-select:none;outline:none;");
-        add_rule("span", value); //IE7不支持span,input写法
-        add_rule("input", value);
-    };
-
-
-    default_rule();
-
-
 
     //样式表
     flyingon.styleSheets = (function () {
@@ -132,7 +119,6 @@
             registry_names = Object.create(null);
 
             remove_rule();
-            default_rule();
 
             for (var i = 0, _ = this.length; i < length; i++)
             {
@@ -368,7 +354,6 @@
         //split:        拆分布局(支持竖排)
         //dock:         停靠布局(不支持竖排)
         //cascade:      层叠布局(不支持竖排)
-        //page:         单页显示(不支持竖排)
         //grid:         网格布局(支持竖排)
         //table:        表格布局(支持竖排)
         //absolute:     绝对定位(不支持竖排)
@@ -383,6 +368,13 @@
         //true      竖排
         //false     横排
         style("vertical", false, "last-value");
+
+        //镜像布局变换
+        //none:     不进行镜像变换
+        //x:        沿x轴镜像变换
+        //y:        沿y轴镜像变换
+        //center:   沿中心镜像变换
+        style("mirror", "none", "last-value");
 
         //布局间隔宽度
         //length	规定以具体单位计的值 比如像素 厘米等
@@ -409,10 +401,6 @@
         //after     后面位置
         //center    中间位置
         style("layout-split", "before", "last-value");
-
-        //单页显示布局当前布局页(此值仅对单页显示布局(page)有效)
-        //number	整数值 
-        style("layout-page", 0, "last-value");
 
         //均匀网格布局行数(此值仅对网格布局(grid)有效)
         //number	整数值 
@@ -592,10 +580,11 @@
         })());
 
         //控件横向溢出处理及纵向溢出处理
+        //visible   内容不会被修剪
         //hidden    内容会被修剪 其余内容是不可见的
         //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
         //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
-        styles("overflow-?", ["x", "y"], "visible", "arrange");
+        styles("overflow-?", ["x", "y"], "auto", "arrange|no");
 
 
 
@@ -727,10 +716,10 @@
 
 
 
-        //控件阅读方向
+        //阅读方向
         //ltr	    从左到右 
         //rtl	    从右到左 
-        style("direction", "ltr", "arrange|inherit");
+        style("direction", "ltr");
 
 
 
@@ -753,19 +742,33 @@
         //visible	默认值 元素是可见的 
         //hidden	元素是不可见的 
         //collapse	当在表格元素中使用时, 此值可删除一行或一列, 但是它不会影响表格的布局 被行或列占据的空间会留给其他内容使用 如果此值被用在其他的元素上, 会呈现为 "hidden" 
-        style("visibility", "visible", {
-
-            attributes: "layout|inherit",
-            end_code: "this.dom.style.display = (this.dom.style[name] = value !== undefined ? value : \"\") !== \"collapse\" ? \"\" : \"none\";"
-        });
+        style("visibility", "visible", "layout|no");
 
         //控件透明度
         //number	0(完全透明)到1(完全不透明)之间数值
         style("opacity", 1, {
 
-            end_code: "var style = this.dom.style;\t\n"
-                + "style.filter = \"alpha(opacity=\" + (value * 100) + \")\";\t\n"
-                + "style.opacity = value;\t\n"
+            end_code: "this.dom.style." + (function () {
+
+                if ("opacity" in document.body.style)
+                {
+
+                    return "opacity = value;"
+                }
+
+                if (flyingon.browser_MSIE)
+                {
+                    return "filter = \"alpha(opacity=\" + (value * 100) + \")\";";
+                }
+
+                if (flyingon.browser_Firefox)
+                {
+                    return "MozOpacity = value;";
+                }
+
+                return "KthmlOpacity = value;"
+
+            })()
         });
 
         //控件鼠标样式
@@ -1247,10 +1250,10 @@
             name,
             cache;
 
-        //全部类型
-        if (cache = types["*"])
+        //所有控件
+        if (cache = types["@flyingon-Control"])
         {
-            result.push("*");
+            result.push("@flyingon-Control");
             result.rule = cache[0];
         }
         else
@@ -1679,13 +1682,6 @@
             {
                 switch (name) //修改css值
                 {
-                    case "visibility":
-                        if (value === "collapse")
-                        {
-                            cssText.push("display:none;");
-                        }
-                        break;
-
                     case "opacity":
                         cssText.push("filter:alpha(opacity=" + (value * 100) + ");");
                         cssText.push("-moz-opacity:" + value + ";");
