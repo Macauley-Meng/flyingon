@@ -386,15 +386,15 @@
         //number%   控件客户区高度的百分比
         style("spacing-height", "0", "last-value");
 
-        //布局宽度(此值仅对纵向流式布局(flow)有效)
+        //流式布局列宽(此值仅对纵向流式布局(flow)有效)
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   控件客户区宽度的百分比
-        style("layout-width", "0", "last-value");
+        style("flow-width", "0", "last-value");
 
-        //布局高度(此值仅对横向流式布局(flow)有效)
+        //流式布局行高(此值仅对横向流式布局(flow)有效)
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   控件客户区高度的百分比
-        style("layout-height", "0", "last-value");
+        style("flow-height", "0", "last-value");
 
         //拆分布局位置(此值仅对拆分布局(split)有效)
         //before    前面位置

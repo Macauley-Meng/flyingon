@@ -1,0 +1,135 @@
+﻿
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!--以IE的当前版本渲染,如果安装了ChromeFrame则优先使用-->
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />-->
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=7" />-->
+    <title></title>
+    <style type="text/css">
+        * {
+            font-size: 12px;
+            font-family: Arial;
+        }
+
+        #tool span {
+            padding-left: 2px;
+        }
+
+        #tool input {
+            margin-left: 2px;
+        }
+    </style>
+</head>
+<body style="margin: 0;">
+
+    <div id="host" layoutType="dock"  style="width: 100%; height: 600px;">
+        <div dock="left"></div>
+    </div>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+    <script type="text/javascript">
+
+
+        flyingon.tranalate_layout(host);
+
+        //定义样式
+        flyingon.style({
+
+            ".test-panel": {
+
+                layoutType: "flow",
+                layoutColumns: "* 4px * ...2&1", //4
+                layoutRows: "* 4px * ...2&1",   //4
+                layoutTable: "*[* 4px * 4px * 4px * 4px *] 4px[*] *[* 4px * 4px * 4px * 4px *] ...3&1",
+                layoutTables: "[ [300, 300, '*[* 4px * 4px *] 4px[*] *[* 4px * 4px *] ...1&1' ], [ 400, 400, '*[* 4px * 4px * 4px *] 4px[*] *[* 4px * 4px * 4px *] ...2&1'] ]"
+            }
+
+        });
+
+
+
+        var w = new flyingon.Window(host).sets({
+
+            layoutType: "dock",
+            border: "4px solid blue",
+            padding: "0"
+
+        }).appendChild(
+
+            new flyingon.Panel().sets({
+
+                className: "test-panel",
+                borderBottom: "1px solid blue",
+                dock: "top",
+                height: "40px",
+                droppable: true
+            }),
+
+            new flyingon.Panel().sets({
+
+                className: "test-panel",
+                borderTop: "1px solid blue",
+                dock: "bottom",
+                height: "40px",
+                droppable: true
+            }),
+
+            new flyingon.TitlePanel().sets({
+
+                className: "test-panel",
+                margin: "2px",
+                marginLeft: "0",
+                border: "1px solid blue",
+                borderLeftWidth: "0",
+                dock: "left",
+                width: "200px",
+                droppable: true,
+                collapse: true,
+                title: "<span style='color:blue'>导航</span>树"
+            }),
+
+            new flyingon.Splitter().sets({
+
+                marginTop: "2px",
+                marginBottom: "2px",
+                dock: "left"
+            }),
+
+            new flyingon.TitlePanel().sets({
+
+                className: "test-panel",
+                margin: "2px",
+                marginRight: "0",
+                border: "1px solid blue",
+                borderRightWidth: "0",
+                dock: "right",
+                width: "200px",
+                droppable: true,
+                title: "功能视图"
+            }),
+
+            new flyingon.Splitter().sets({
+
+                marginTop: "2px",
+                marginBottom: "2px",
+                dock: "right"
+            }),
+
+            new flyingon.Panel().sets({
+
+                className: "test-panel",
+                margin: "2px",
+                border: "1px solid blue",
+                dock: "fill",
+                droppable: true
+            }));
+
+
+
+    </script>
+
+</body>
+</html>

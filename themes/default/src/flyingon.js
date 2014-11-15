@@ -25,15 +25,59 @@ flyingon.css({
     },
 
 
-    //弹出窗口标题栏样式
-    ".flyingon-Dialog-header": {
+    //标题面板标题区样式
+    ".flyingon-TitlePanel-header": {
 
+        paddingLeft: "4px",
+        paddingRight: "4px",
+        height: "25px",
+        lineHeight: "25px",
+        verticalAlign: "middle",
+        backgroundColor: "silver"
+    },
+
+    //标题面板标题样式
+    ".flyingon-TitlePanel-title": {
+
+    },
+
+    //标题面板内容区样式
+    ".flyingon-TitlePanel-body": {
+
+        top: "25px",
+        backgroundColor: "white"
+    },
+
+    //标题面板收拢样式
+    ".flyingon-TitlePanel-collapse": {
+
+        width: "20px",
+        wordBreak: "break-all",
+        letterSpacing: "15px",
+        lineHeight: "15px",
         backgroundColor: "silver",
-        height: "25px"
+        textAlign: "center",
+        padding: "4px"
     },
 
 
-    //弹出窗口内容样式
+    //弹出窗口标题区样式
+    ".flyingon-Dialog-header": {
+
+        paddingLeft: "2px",
+        paddingRight: "2px",
+        height: "25px",
+        lineHeight: "25px",
+        verticalAlign: "middle",
+        backgroundColor: "silver"
+    },
+
+    //弹出窗口标题样式
+    ".flyingon-Dialog-title": {
+
+    },
+
+    //弹出窗口内容区样式
     ".flyingon-Dialog-body": {
 
         top: "25px",
@@ -153,7 +197,7 @@ flyingon.style({
         height: "2px",
         backgroundColor: "silver"
     },
-    
+
 
     //主窗口样式
     "@flyingon-Window": {
@@ -166,7 +210,7 @@ flyingon.style({
     "@flyingon-Dialog": {
 
     }
- 
+
 
 
 });

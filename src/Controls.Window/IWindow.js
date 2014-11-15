@@ -208,9 +208,6 @@
             //先分发mousedown事件,如果取消默认行为则不执行后续处理
             if (target)
             {
-                //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
-                setCapture(capture_dom = event.target, event);
-
                 //记录鼠标按下位置
                 pressdown = {
 
@@ -227,11 +224,19 @@
                     //可调整大小 触控版目前不支持调整大小
                     if (resizable)
                     {
-                        flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
+                        //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
+                        setCapture(capture_dom = event.target, event);
+
+                        //禁止点击事件
+                        flyingon.__disable_click = flyingon.__disable_dbclick = true;
                     }
                     else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
                     {
-                        draggable = cache; //记录状态
+                        //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
+                        setCapture(capture_dom = event.target, event);
+
+                        //记录状态
+                        draggable = cache; 
                     }
                     else
                     {
@@ -255,7 +260,7 @@
 
             if (pressdown && (target = pressdown.capture))
             {
-                selection1 ? selection1().removeAllRanges() : selection2.empty(); //清除选中内容防止浏览器默认拖动操作
+                //selection1 ? selection1().removeAllRanges() : selection2.empty(); //清除选中内容防止浏览器默认拖动操作
 
                 if (resizable) //调整大小
                 {
@@ -580,21 +585,21 @@
 
 
         //主窗口
-        this.defineProperty("mainWindow", function () {
+        flyingon.defineProperty(this, "mainWindow", function () {
 
             return this.__mainWindow || null;
         });
 
 
         //活动窗口
-        this.defineProperty("activeWindow", function () {
+        flyingon.defineProperty(this, "activeWindow", function () {
 
             return this.__mainWindow && this.__mainWindow.__activeWindow || null;
         });
 
 
         //父窗口
-        this.defineProperty("parentWindow", function () {
+        flyingon.defineProperty(this, "parentWindow", function () {
 
             return this.__parentWindow || null;
         });

@@ -82,7 +82,7 @@ flyingon.defineClass("Control", function () {
 
 
     //所属窗口
-    this.defineProperty("ownerWindow", function () {
+    flyingon.defineProperty(this, "ownerWindow", function () {
 
         return this.__ownerWindow || (this.__parent ? (this.__ownerWindow = this.__parent.get_ownerWindow()) : null);
     });
@@ -569,23 +569,17 @@ flyingon.defineClass("Control", function () {
 
 
             //计算盒模型
-            box.marginLeft = fn(this.get_marginLeft());
-            box.marginTop = fn(this.get_marginTop());
-            box.marginRight = fn(this.get_marginRight());
-            box.marginBottom = fn(this.get_marginBottom());
+            box.margin_width = (box.marginLeft = fn(this.get_marginLeft())) + (box.marginRight = fn(this.get_marginRight()));
+            box.margin_height = (box.marginTop = fn(this.get_marginTop())) + (box.marginBottom = fn(this.get_marginBottom()));
 
-            box.borderLeft = dom.clientLeft;
-            box.borderTop = dom.clientTop;
-            box.borderRight = fn(style.borderRightWidth || this.get_borderRightWidth());
-            box.borderBottom = fn(style.borderBottomWidth || this.get_borderBottomWidth());
+            box.border_width = (box.borderLeft = dom.clientLeft) + (box.borderRight = fn(this.get_borderRightWidth()));
+            box.border_height = (box.borderTop = dom.clientTop) + (box.borderBottom = fn(this.get_borderBottomWidth()));
 
-            box.paddingLeft = fn(this.get_paddingLeft());
-            box.paddingTop = fn(this.get_paddingTop());
-            box.paddingRight = fn(this.get_paddingRight());
-            box.paddingBottom = fn(this.get_paddingBottom());
+            box.padding_width = (box.paddingLeft = fn(this.get_paddingLeft())) + (box.paddingRight = fn(this.get_paddingRight()));
+            box.padding_height = (box.paddingTop = fn(this.get_paddingTop())) + (box.paddingBottom = fn(this.get_paddingBottom()));
 
-            box.spacingWidth = box.borderLeft + box.paddingLeft + box.borderRight + box.paddingRight;
-            box.spacingHeight = box.borderTop + box.paddingTop + box.borderBottom + box.paddingBottom;
+            box.spacingWidth = box.border_width + box.padding_width;
+            box.spacingHeight = box.border_height + box.padding_height;
 
             box.minWidth = fn(this.get_minWidth());
             box.maxWidth = fn(this.get_maxWidth());
@@ -628,7 +622,7 @@ flyingon.defineClass("Control", function () {
             //充满可用宽度
             if (value === true)
             {
-                if ((usable_width -= box.marginLeft + box.marginTop) > 0) //有可用空间
+                if ((usable_width -= box.margin_width) > 0) //有可用空间
                 {
                     width = usable_width;
                 }
@@ -683,7 +677,7 @@ flyingon.defineClass("Control", function () {
             //充满可用高度
             if (value === true)
             {
-                if ((usable_height -= box.marginTop + box.marginBottom) > 0) //有可用空间
+                if ((usable_height -= box.margin_height) > 0) //有可用空间
                 {
                     height = usable_height;
                 }
@@ -762,44 +756,35 @@ flyingon.defineClass("Control", function () {
             this.offsetHeight = height;
 
 
-            //获取子控件dom容器的父dom,如果等于当前控件dom则返回null
-            if ((dom = this.dom_children) && (dom = dom.parentNode) && dom === this.dom)
+            //宽度或高度等于0隐藏dom 否则可能因最小宽度或高度或边框等无法隐藏控件
+            style.visibility = width > 0 && height > 0 && this.__visibility !== "hidden" ? "visible" : "hidden";
+
+            //设置padding样式
+            if (!this.dom_children) //如果有子dom容器不设置padding, 通过布局调整内容区的大小来模拟padding,否则有些浏览器滚动条的宽高不包含paddingRight或paddingBottom
             {
-                dom = null;
+                style.paddingLeft = box.paddingLeft + "px";
+                style.paddingTop = box.paddingTop + "px";
+                style.paddingRight = box.paddingRight + "px";
+                style.paddingBottom = box.paddingBottom + "px";
             }
 
             //设置边框
-            if (this.__border_sizing) //大小包含边框
+            if (this.box_border_sizing) //盒模型宽高包含边框
             {
                 style.width = width + "px";
                 style.height = height + "px";
             }
             else //大小不包含边框
             {
-                if (dom) //如果有子控件容器的父dom且不等于当前控件dom则添加padding
+                if (this.dom_children) //有子dom容器时内容区需加上padding
                 {
-                    clientWidth += box.paddingLeft + box.paddingRight;
-                    clientHeight += box.paddingTop + box.paddingBottom;
+                    clientWidth += box.padding_width;
+                    clientHeight += box.padding_height;
                 }
 
                 style.width = clientWidth + "px";
                 style.height = clientHeight + "px";
             }
-
-            //宽度或高度等于0隐藏dom 否则可能因最小宽度或高度或边框等无法隐藏控件
-            style.visibility = width > 0 && height > 0 && this.__visibility !== "hidden" ? "visible" : "hidden";
-
-            //padding样式只能添加到子控件容器的父dom或当前控件的dom上
-            if (dom)
-            {
-                style = dom.style;
-            }
-
-            //设置padding样式
-            style.paddingLeft = box.paddingLeft + "px";
-            style.paddingTop = box.paddingTop + "px";
-            style.paddingRight = box.paddingRight + "px";
-            style.paddingBottom = box.paddingBottom + "px";
 
             //测量后述处理
             if (this.after_measure)
@@ -811,8 +796,8 @@ flyingon.defineClass("Control", function () {
             //返回占用空间
             return {
 
-                width: width + box.marginLeft + box.marginRight,
-                height: height + box.marginTop + box.marginBottom
+                width: this.offsetWidth + box.margin_width,
+                height: this.offsetHeight + box.margin_height
             };
         };
 
@@ -831,7 +816,7 @@ flyingon.defineClass("Control", function () {
                 style = this.dom.style,
                 value;
 
-            if (align_width > 0 && (value = align_width - box.marginLeft - box.marginRight - this.offsetWidth))
+            if (align_width > 0 && (value = align_width - box.margin_width - this.offsetWidth))
             {
                 switch (this.get_alignX())
                 {
@@ -845,7 +830,7 @@ flyingon.defineClass("Control", function () {
                 }
             }
 
-            if (align_height > 0 && (value = align_height - box.marginTop - box.marginBottom - this.offsetHeight))
+            if (align_height > 0 && (value = align_height - box.margin_height - this.offsetHeight))
             {
                 switch (this.get_alignY())
                 {
@@ -1359,7 +1344,7 @@ flyingon.defineClass("Control", function () {
         //创建dom模板(必须在创建类时使用此方法创建dom模板)
         this.create_dom_template = function (tagName, cssText, attributes) {
 
-            //计算dom盒模型是否包含边框
+            //计算盒模型在不同浏览器中的偏差
             var dom = document.createElement(tagName = tagName || "div");
 
             if (attributes && attributes.type)
@@ -1370,7 +1355,10 @@ flyingon.defineClass("Control", function () {
             dom.style.cssText = "position:absolute;width:100px;height:0;padding:1px;visibility:hidden;";
 
             document.body.appendChild(dom);
-            this.__border_sizing = dom.offsetWidth === 100; //存储计算结果
+
+            //盒模型的宽度是否包含边框
+            this.box_border_sizing = dom.offsetWidth === 100;
+
             flyingon.dispose_dom(dom); //销毁dom
 
             //创建dom模板(使用上次的dom创建节点时在某些浏览器性能较差,故重新创建dom节点作为模板)

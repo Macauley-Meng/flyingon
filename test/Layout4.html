@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+
+    <div id="host" layout-type="dock" style="width:100%;height:600px;">
+
+        <div layout-dock="left">text1</div>
+        <div layout-dock="top">text2</div>
+        <div layout-dock="bottom">text3</div>
+        <div layout-dock="right">text4</div>
+
+    </div>
+
+
+    <script type="text/javascript">
+
+        flyingon.layout(host, "flow");
+
+    </script>
+
+
+</body>
+</html>

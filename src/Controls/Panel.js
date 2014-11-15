@@ -22,7 +22,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
     //dom元素模板
-    this.create_dom_template("div", null, "<div style=\"position:relative;overflow:hidden;\"></div>");
+    this.create_dom_template("div", null, "<div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div>");
 
 
 

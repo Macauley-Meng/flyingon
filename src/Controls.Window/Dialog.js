@@ -25,7 +25,8 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //创建模板
-    this.create_dom_template("div", "overflow:hidden;", "<div class='flyingon-Dialog-header' style='position:absolute;left:0;top:0;right:0;overflow:hidden;'></div><div class='flyingon-Dialog-body' style='position:absolute;left:0;right:0;bottom:0;'><div style=\"position:relative;overflow:hidden;\"></div></div>");
+    this.create_dom_template("div", "overflow:hidden;", "<div class='flyingon-TitlePanel-title' style='position:absolute;top:0;width:100%;overflow:hidden;'><div class='flyingon-Dialog-title'></div></div><div class='flyingon-TitlePanel-body' style='position:absolute;width:100%;bottom:0;'><div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div></div>");
+
 
 
 

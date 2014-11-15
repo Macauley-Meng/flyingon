@@ -49,10 +49,11 @@
 
         this.__fn_arrange = function (target, width, height) {
 
-            var children = target.__children,
+            var box = target.__boxModel,
+                children = target.__children,
                 dom = target.dom_children,
-                style1 = dom.parentNode.style,
                 style2 = dom.style,
+                style1 = (dom = dom.parentNode).style,
                 items = [];
 
             this.vertical = target.get_vertical();
@@ -87,42 +88,38 @@
                 mirror(items, this.mirror, target.contentWidth, target.contentHeight);
             }
 
-            if (dom = dom.parentNode)
+            //设置样式
+            if (target.contentWidth <= width)
             {
-                if (!dom.flyingon_arrange)
-                {
-                    dom.flyingon_arrange = document.createElement("div");
-                    dom.flyingon_arrange.style.cssText = "position:absolute;border:0;padding:0;font-size:0;width:0;height:0;visibility:hidden;";
-                    dom.appendChild(dom.flyingon_arrange);
-                }
+                style1.overflowX = "hidden"; //不加这句IE有时会出现滚动条
+                style2.width = "100%";
+            }
+            else
+            {
+                style1.overflowX = target.get_overflowX();
+                style2.width = target.contentWidth + box.paddingRight + "px";
 
-                dom = dom.flyingon_arrange;
-                dom.style.left = target.contentWidth + "px";
-                dom.style.top = target.contentHeight + "px";
+                if (dom.scrollWidth - box.padding_width < target.contentWidth) //解决设置了paddingRight时在IE怪异模式下无法滚到底的问题
+                {
+                    style2.width = target.contentWidth + box.padding_width + "px";
+                }
             }
 
-            //设置样式
-            //if (target.contentWidth <= width)
-            //{
-            //    style1.overflowX = "hidden"; //不加这句在有些浏览器会出现滚动条
-            //    style2.width = "100%";
-            //}
-            //else
-            //{
-            //    style1.overflowX = target.get_overflowX();
-            //    style2.width = target.contentWidth + "px";
-            //}
+            if (target.contentHeight <= height)
+            {
+                style1.overflowY = "hidden"; //不加这句IE有时会出现滚动条
+                style2.height = "100%";
+            }
+            else
+            {
+                style1.overflowY = target.get_overflowY();
+                style2.height = target.contentHeight + box.paddingBottom + "px";
 
-            //if (target.contentHeight <= height)
-            //{
-            //    style1.overflowY = "hidden"; //不加这句在有些浏览器会出现滚动条
-            //    style2.height = "100%";
-            //}
-            //else
-            //{
-            //    style1.overflowY = target.get_overflowY();
-            //    style2.height = target.contentHeight + "px";
-            //}
+                if (dom.scrollHeight - box.padding_height < target.contentHeight) //解决设置了paddingBottom时在IE怪异模式下无法滚到底的问题
+                {
+                    style2.height = target.contentHeight + box.padding_height + "px";
+                }
+            }
         };
 
 
@@ -260,7 +257,7 @@
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
                 contentWidth = 0,
                 contentHeight = 0,
-                align_height = target.compute_size(target.get_layoutWidth()),
+                align_height = target.compute_size(target.get_flowHeight()),
                 x = 0,
                 y = 0,
                 item,
@@ -321,7 +318,7 @@
                 spacingHeight = target.compute_size(target.get_spacingHeight()),
                 x = 0,
                 y = 0,
-                align_width = target.compute_size(target.get_layoutHeight()),
+                align_width = target.compute_size(target.get_flowWidth()),
                 contentWidth = 0,
                 contentHeight = 0,
                 item,
@@ -393,11 +390,11 @@
 
                 if (vertical)
                 {
-                    arguments[1] = target.offsetWidth + box.marginLeft + box.marginRight + "px";
+                    arguments[1] = target.offsetWidth + box.margin_width + "px";
                 }
                 else
                 {
-                    arguments[2] = target.offsetHeight + box.marginTop + box.marginBottom + "px";
+                    arguments[2] = target.offsetHeight + box.margin_height + "px";
                 }
 
                 base.__fn_splitter.apply(this, arguments);
@@ -2064,7 +2061,7 @@
                 value,
                 cache;
 
-            if ((cache = target.get_layoutTables()) && (cache = layouts[cache] || (layouts[cache] = eval(cache))))
+            if ((cache = target.get_layoutTables()) && (cache = layouts[cache] || (layouts[cache] = eval("[" + cache + "]"))))
             {
                 for (var i = 0, _ = cache.length; i < _; i++)
                 {
@@ -2153,5 +2150,117 @@
 
 
 
+
+
+(function (flyingon) {
+
+
+
+    //dom暂存器
+    var dom_cache = document.createDocumentFragment(),
+
+        panel_properties = {
+
+            "layout-type": 0,
+            "layout-vertical": 1,
+            "layout-mirror": 1,
+            "layout-spacing-width": 1,
+            "layout-spacing-height": 1,
+            "layout-flow-width": 1,
+            "layout-flow-height": 1,
+            "layout-split": 0,
+            "layout-rows": 0,
+            "layout-columns": 0,
+            "layout-table": 0,
+            "layout-tables": 0
+        },
+
+        control_properties = {
+
+            "layout-align-x": 1,
+            "layout-align-y": 1,
+            "layout-newline": 1,
+            "layout-dock": 1,
+            "layout-row-span": 1,
+            "layout-column-span": 1,
+            "layout-column-index": 1,
+            "layout-spacing-cells": 1,
+            "layout-left": 1,
+            "layout-top": 1,
+            "layout-offset-x": 1,
+            "layout-offset-y": 1,
+            "layout-width": 1,
+            "layout-height": 1,
+            "layout-min-width": 1,
+            "layout-max-width": 1,
+            "layout-min-height": 1,
+            "layout-max-height": 1
+        },
+
+        translate_styles = ["marginLeft", "marginTop", "marginRight", "marginBottom", "paddingLeft", "paddingTop", "paddingRight", "paddingBottom"];
+
+
+
+    function dom_wrapper(dom) {
+
+        var items = dom.attributes;
+
+        if (dom.getAttribute("layout-type")) //面板
+        {
+            for (var i = 0; i < items.length; i++)
+            {
+                if (cache = panel_properties[item = list[i]])
+                {
+                    result["set_" + item](cache);
+                }
+            }
+        }
+        else //控件
+        {
+
+        }
+
+        //设置控件属性
+        for (var i = 0; i < items.length; i++)
+        {
+
+        }
+    };
+
+
+
+    //自动dom布局器
+    flyingon.layout = function (dom, layoutType, parameters) {
+
+        if (dom)
+        {
+            var result = new flyingon.Window(dom),
+                list = dom.attributes,
+                items = [],
+                item,
+                cache;
+
+            for (var i = 0, _ = list.length; i < _; i++)
+            {
+                if (cache = panel_properties[item = list[i]])
+                {
+                    result["set_" + item](cache);
+                }
+            }
+
+            for (var i = 0, _ = (list = dom.children).length; i < _; i++)
+            {
+                items.push(item = list[i]);
+                result.appendChild(new flyingon.DomWrapper(item));
+            }
+
+            dom_cache.appendChild.apply(dom_cache, items);
+
+            return result;
+        }
+    };
+
+
+})(flyingon);
 
 

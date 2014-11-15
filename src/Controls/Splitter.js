@@ -12,7 +12,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
     //重载resizable不允许调整大小
-    this.defineProperty("resizable", function () {
+    flyingon.defineProperty(this, "resizable", function () {
 
         return "none";
     });

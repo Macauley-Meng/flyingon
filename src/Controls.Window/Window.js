@@ -67,11 +67,6 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
 
 
-    //创建模板
-    this.create_dom_template("div", null, "<div style=\"position:relative;overflow:hidden;\"></div>");
-
-
-
 
     //扩展窗口接口
     flyingon.extend(this, flyingon.IWindow, base);
@@ -80,21 +75,21 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
 
     //主窗口
-    this.defineProperty("mainWindow", function () {
+    flyingon.defineProperty(this, "mainWindow", function () {
 
         return this;
     });
 
 
     //活动窗口
-    this.defineProperty("activeWindow", function () {
+    flyingon.defineProperty(this, "activeWindow", function () {
 
         return this.__activeWindow || this;
     });
 
 
     //父窗口
-    this.defineProperty("parentWindow", function () {
+    flyingon.defineProperty(this, "parentWindow", function () {
 
         return null;
     });

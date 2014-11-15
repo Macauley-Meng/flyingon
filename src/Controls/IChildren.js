@@ -20,7 +20,7 @@ flyingon.IChildren = function (base) {
 
 
     //子控件集合
-    this.defineProperty("children", function () {
+    flyingon.defineProperty(this, "children", function () {
 
         return this.__children || (this.__children = new flyingon.ControlCollection());
     });
@@ -73,11 +73,16 @@ flyingon.IChildren = function (base) {
     //测量完毕后执行方法
     this.after_measure = function (box) {
 
-        var dom = this.dom_children.parentNode,
+        var dom = this.dom_children,
             width,
             height;
 
+        //设置内容区位置
+        dom.style.left = box.paddingLeft + "px";
+        dom.style.top = box.paddingTop + "px";
+
         //计算客户区大小(包含滚动条)
+        dom = dom.parentNode;
         width = dom.offsetWidth - box.spacingWidth;
         height = dom.offsetHeight - box.spacingHeight;
 
@@ -122,8 +127,8 @@ flyingon.IChildren = function (base) {
         //计算客户区大小
         this.clientLeft = dom.clientLeft + box.paddingLeft;
         this.clientTop = dom.clientTop + box.paddingTop;
-        this.clientWidth = dom.clientWidth - box.paddingLeft - box.paddingRight;
-        this.clientHeight = dom.clientHeight - box.paddingTop - box.paddingBottom;
+        this.clientWidth = dom.clientWidth - box.padding_width;
+        this.clientHeight = dom.clientHeight - box.padding_height;
 
         if (items && items.length > 0)
         {
