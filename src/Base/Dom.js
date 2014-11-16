@@ -17,22 +17,53 @@
 
             if (body)
             {
-                for (var i = 0, _ = list.length; i < _; i++)
+                if (list)
                 {
-                    list[i++].call(list[i], body);
-                }
+                    for (var i = 0, _ = list.length; i < _; i++)
+                    {
+                        list[i++].call(list[i], body);
+                    }
 
-                list.length = 0;
-                list = null;
+                    list.length = 0;
+                    list = null;
+                }
             }
-            else
-            {
-                setTimeout(execute, 0);
-            }
+            //else
+            //{
+            //    setTimeout(execute, 0);
+            //}
         };
 
-        setTimeout(execute, 0);
-        
+        //setTimeout(execute, 0);
+
+
+        if (document.addEventListener)
+        {
+            document.addEventListener("DOMContentLoaded", function (event) {
+
+                execute();
+
+            }, false);
+        }
+
+        if (flyingon.browser_MSIE)
+        {
+            document.write("<script id=\"__document_ready__\" src=\"//:\" defer=\"defer\"></script>");
+
+            document.getElementById("__document_ready__").onreadystatechange = function () {
+
+                if (this.readyState === "complete")
+                {
+                    execute();
+                    this.parentNode.removeChild(this);
+                }
+            };
+        }
+
+        flyingon.addEventListener(window, "load", function (event) {
+
+            execute();
+        });
 
 
         return function (fn, thisArg) {

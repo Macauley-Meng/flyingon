@@ -53,17 +53,26 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         //自动显示窗口
         setTimeout(function () {
 
-            if (host && dom.parentNode !== host)
-            {
-                host.appendChild(dom);
-            }
+            flyingon.ready(function () {
 
-            self.render();
+                if (host)
+                {
+                    if (host.constructor === String)
+                    {
+                        host = document.getElementById(host);
+                    }
+
+                    if (host && host.nodeType === 1 && dom.parentNode !== host)
+                    {
+                        host.appendChild(dom);
+                    }
+                }
+
+                self.render();
+            });
 
         }, 0);
     };
-
-
 
 
 
@@ -110,7 +119,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                 width,
                 height;
 
-            if (dom && (dom = dom.parentNode))
+            if (dom && dom.parentNode)
             {
                 if (this.__update_dirty === 1)
                 {
@@ -120,7 +129,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
                 if ((height = dom.clientHeight) <= 0)
                 {
-                    if ((height = (body.clientHeight || host.clientHeight || body.offsetWidth) - dom.offsetTop - 8) <= 0)
+                    if ((height = (body.clientHeight || window.innerHeight || host.clientHeight || body.offsetWidth) - dom.offsetTop) <= 0)
                     {
                         height = 600;
                     }

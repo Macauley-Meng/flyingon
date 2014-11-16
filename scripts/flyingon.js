@@ -2707,22 +2707,53 @@ flyingon.defineClass("XmlSerializeWriter", flyingon.SerializeWriter, function (b
 
             if (body)
             {
-                for (var i = 0, _ = list.length; i < _; i++)
+                if (list)
                 {
-                    list[i++].call(list[i], body);
-                }
+                    for (var i = 0, _ = list.length; i < _; i++)
+                    {
+                        list[i++].call(list[i], body);
+                    }
 
-                list.length = 0;
-                list = null;
+                    list.length = 0;
+                    list = null;
+                }
             }
-            else
-            {
-                setTimeout(execute, 0);
-            }
+            //else
+            //{
+            //    setTimeout(execute, 0);
+            //}
         };
 
-        setTimeout(execute, 0);
-        
+        //setTimeout(execute, 0);
+
+
+        if (document.addEventListener)
+        {
+            document.addEventListener("DOMContentLoaded", function (event) {
+
+                execute();
+
+            }, false);
+        }
+
+        if (flyingon.browser_MSIE)
+        {
+            document.write("<script id=\"__document_ready__\" src=\"//:\" defer=\"defer\"></script>");
+
+            document.getElementById("__document_ready__").onreadystatechange = function () {
+
+                if (this.readyState === "complete")
+                {
+                    execute();
+                    this.parentNode.removeChild(this);
+                }
+            };
+        }
+
+        flyingon.addEventListener(window, "load", function (event) {
+
+            execute();
+        });
 
 
         return function (fn, thisArg) {
@@ -10706,12 +10737,10 @@ flyingon.defineClass("ControlCollection", function (base) {
 
         if (dom)
         {
-            var result = new flyingon.Window(dom),
+            var result = new flyingon.Window(),
                 items = children_wrapper(dom),
                 item,
                 name;
-
-            dom.style.visibility = "hidden";
 
             result.appendChild.apply(result, items);
 
@@ -10722,7 +10751,8 @@ flyingon.defineClass("ControlCollection", function (base) {
                     result["set_" + properties[name]](item.value);
                 }
             }
-
+            
+            dom.appendChild(result.dom_window);
             result.render();
 
             return result;
@@ -12428,17 +12458,26 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         //自动显示窗口
         setTimeout(function () {
 
-            if (host && dom.parentNode !== host)
-            {
-                host.appendChild(dom);
-            }
+            flyingon.ready(function () {
 
-            self.render();
+                if (host)
+                {
+                    if (host.constructor === String)
+                    {
+                        host = document.getElementById(host);
+                    }
+
+                    if (host && host.nodeType === 1 && dom.parentNode !== host)
+                    {
+                        host.appendChild(dom);
+                    }
+                }
+
+                self.render();
+            });
 
         }, 0);
     };
-
-
 
 
 
@@ -12485,7 +12524,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                 width,
                 height;
 
-            if (dom && (dom = dom.parentNode))
+            if (dom && dom.parentNode)
             {
                 if (this.__update_dirty === 1)
                 {
@@ -12495,7 +12534,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
                 if ((height = dom.clientHeight) <= 0)
                 {
-                    if ((height = (body.clientHeight || host.clientHeight || body.offsetWidth) - dom.offsetTop - 8) <= 0)
+                    if ((height = (body.clientHeight || window.innerHeight || host.clientHeight || body.offsetWidth) - dom.offsetTop) <= 0)
                     {
                         height = 600;
                     }

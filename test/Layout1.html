@@ -20,6 +20,9 @@
             margin-left: 2px;
         }
     </style>
+
+
+
 </head>
 <body style="margin: 0;">
 
@@ -128,19 +131,13 @@
     </div>
 
 
-    <script type="text/javascript">
-
-
-        var date = new Date();
-
-    </script>
-
-
     <script src="../scripts/flyingon.js"></script>
     <script src="../themes/default/flyingon.js"></script>
 
     <script type="text/javascript">
 
+
+        var date = new Date();
 
 
         //定义样式
@@ -167,7 +164,7 @@
         });
 
 
-        var w = new flyingon.Window(host).sets({
+        var w = new flyingon.Window("host").sets({
 
             layoutType: "flow",
             padding: "10px",
@@ -234,27 +231,9 @@
             w.appendChild(panel);
         }
 
-
         alert(new Date() - date);
 
-
-
-
-        var inputs = tool.getElementsByTagName("input");
-
-        for (var i = 0; i < inputs.length; i++)
-        {
-            inputs[i].onkeydown = function (event) {
-
-                event = event || window.event;
-
-                if (event.keyCode === 13)
-                {
-                    this.blur();
-                }
-            };
-        }
-
+        var control = w.get_children()[0].get_children()[0];
 
 
 
@@ -276,7 +255,109 @@
         };
 
 
-        to_panel();
+
+        function to_control() {
+
+            if (control)
+            {
+                var nodes = control_property.getElementsByTagName("span");
+
+                for (var i = 0; i < nodes.length; i++)
+                {
+                    var node = nodes[i],
+                        name = node.innerText || node.textContent,
+                        value = node.children[0].value;
+
+                    switch (name)
+                    {
+                        case "newline":
+                            control.set(name, value && value !== "false");
+                            break;
+
+                        case "alignX":
+                            if (value !== "left" && value !== "center" && value !== "right")
+                            {
+                                alert("可选值: left, center, right");
+                            }
+                            else
+                            {
+                                control.set(name, value);
+                            }
+                            break;
+
+                        case "alignY":
+                            if (value !== "top" && value !== "middle" && value !== "bottom")
+                            {
+                                alert("可选值: top, middle, bottom");
+                            }
+                            else
+                            {
+                                control.set(name, value);
+                            }
+                            break;
+
+                        case "draggable":
+                        case "resizable":
+                            if (value !== "none" && value !== "both" && value !== "horizontal" && value !== "vertical")
+                            {
+                                alert("可选值: none, both, horizontal, vertical");
+                            }
+                            else
+                            {
+                                control.set(name, value);
+                            }
+                            break;
+
+                        default:
+                            control.set(name, value);
+                            break;
+                    }
+
+                }
+            }
+        };
+
+
+
+        function from_control() {
+
+            var nodes = control_property.getElementsByTagName("span");
+
+            for (var i = 0; i < nodes.length; i++)
+            {
+                var node = nodes[i];
+                var name = node.innerText || node.textContent;
+
+                node.children[0].value = control.get(name);
+            }
+        };
+
+
+
+        flyingon.ready(function () {
+
+            var inputs = tool.getElementsByTagName("input");
+
+            for (var i = 0; i < inputs.length; i++)
+            {
+                inputs[i].onkeydown = function (event) {
+
+                    event = event || window.event;
+
+                    if (event.keyCode === 13)
+                    {
+                        this.blur();
+                    }
+                };
+            }
+
+            to_panel();
+
+            from_control();
+
+        });
+
+
 
 
 
@@ -358,89 +439,6 @@
 
 
 
-        var control = w.get_children()[0].get_children()[0];
-
-
-        function to_control() {
-
-            if (control)
-            {
-                var nodes = control_property.getElementsByTagName("span");
-
-                for (var i = 0; i < nodes.length; i++)
-                {
-                    var node = nodes[i],
-                        name = node.innerText || node.textContent,
-                        value = node.children[0].value;
-
-                    switch (name)
-                    {
-                        case "newline":
-                            control.set(name, value && value !== "false");
-                            break;
-
-                        case "alignX":
-                            if (value !== "left" && value !== "center" && value !== "right")
-                            {
-                                alert("可选值: left, center, right");
-                            }
-                            else
-                            {
-                                control.set(name, value);
-                            }
-                            break;
-
-                        case "alignY":
-                            if (value !== "top" && value !== "middle" && value !== "bottom")
-                            {
-                                alert("可选值: top, middle, bottom");
-                            }
-                            else
-                            {
-                                control.set(name, value);
-                            }
-                            break;
-
-                        case "draggable":
-                        case "resizable":
-                            if (value !== "none" && value !== "both" && value !== "horizontal" && value !== "vertical")
-                            {
-                                alert("可选值: none, both, horizontal, vertical");
-                            }
-                            else
-                            {
-                                control.set(name, value);
-                            }
-                            break;
-
-                        default:
-                            control.set(name, value);
-                            break;
-                    }
-
-                }
-            }
-        };
-
-
-
-        function from_control() {
-
-            var nodes = control_property.getElementsByTagName("span");
-
-            for (var i = 0; i < nodes.length; i++)
-            {
-                var node = nodes[i];
-                var name = node.innerText || node.textContent;
-
-                node.children[0].value = control.get(name);
-            }
-        };
-
-
-        from_control();
-
-
 
         w.on("mousedown", function (event) {
 
@@ -461,6 +459,8 @@
 
 
     </script>
+
+
 
 </body>
 </html>

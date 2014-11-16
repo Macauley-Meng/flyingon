@@ -2306,12 +2306,10 @@
 
         if (dom)
         {
-            var result = new flyingon.Window(dom),
+            var result = new flyingon.Window(),
                 items = children_wrapper(dom),
                 item,
                 name;
-
-            dom.style.visibility = "hidden";
 
             result.appendChild.apply(result, items);
 
@@ -2322,7 +2320,8 @@
                     result["set_" + properties[name]](item.value);
                 }
             }
-
+            
+            dom.appendChild(result.dom_window);
             result.render();
 
             return result;
