@@ -343,7 +343,7 @@
                     callback(dom);
                 }
 
-                flyingon.dispose_dom(dom);
+                flyingon.dom_dispose(dom);
             }
         };
 

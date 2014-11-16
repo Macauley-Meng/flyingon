@@ -17,14 +17,6 @@
 flyingon.css({
 
 
-    //分隔条内容
-    ".flyingon-Splitter-content": {
-
-        width: "100%",
-        height: "100%"
-    },
-
-
     //标题面板标题区样式
     ".flyingon-TitlePanel-header": {
 
@@ -181,6 +173,12 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 */
 flyingon.style({
+
+
+    //控件默认样式
+    "@flyingon-Control": {
+
+    },
 
 
     //面板控件样式

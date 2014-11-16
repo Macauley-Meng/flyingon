@@ -25,62 +25,6 @@ flyingon.defineClass("Control", function () {
 
 
 
-    //打印指定dom
-    flyingon.print_dom = (function () {
-
-        var iframe;
-
-        return function (dom, children_only) {
-
-            iframe = iframe || (iframe = document.createElement("iframe"));
-            iframe.style.cssText = "position:absolute;width:0px;height:0px;";
-
-            document.body.appendChild(iframe);
-
-            var target = iframe.contentWindow;
-
-            target.document.write(children_only ? dom.innerHTML : "");
-            target.document.close();
-
-            if (!children_only)
-            {
-                target.document.body.appendChild(dom.cloneNode(true));
-            }
-
-            target.focus();
-            target.print();
-
-            document.body.removeChild(iframe);
-            target.document.write("");  //清空iframe的内容
-        };
-
-    })();
-
-
-    //销毁dom节点
-    //注:IE6/7/8使用removeChild方法无法回收内存及清空parentNode
-    flyingon.dispose_dom = (function () {
-
-        var div = document.createElement("div");
-
-        return function (dom) {
-
-            if (dom)
-            {
-                if (dom.parentNode)
-                {
-                    div.appendChild(dom);
-                }
-
-                div.innerHTML = "";
-            }
-        };
-
-    })();
-
-
-
-
     //所属窗口
     flyingon.defineProperty(this, "ownerWindow", function () {
 
@@ -524,11 +468,16 @@ flyingon.defineClass("Control", function () {
 
             cssText = "position:absolute;left:0;top:0;height:0;overflow:hidden;visibility:hidden;";
 
-        compute_style1.cssText = cssText + "width:0;";
+        compute_style1.cssText = cssText + "width:1000px;";
         compute_style2.cssText = cssText + "width:0;";
 
         compute_dom1.appendChild(compute_dom2);
-        document.body.appendChild(compute_dom1);
+
+        flyingon.ready(function (body) {
+
+            body.appendChild(compute_dom1);
+        });
+
 
 
         //计算css单位值为实际大小
@@ -906,38 +855,44 @@ flyingon.defineClass("Control", function () {
         //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
         //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
         //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
-        var offset_fn = document.body.getBoundingClientRect || (function () {
+        var offset_fn;
 
-            var body = document.compatMode == "BackCompat" ? document.body : document.documentElement;
+        flyingon.ready(function (body) {
 
-            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
-            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
-            //问题2: 在table或iframe中offsetParent取值可能不准确
-            return function () {
+            offset_fn = body.getBoundingClientRect || (function () {
 
-                var dom = this,
-                    x = 0,
-                    y = 0;
+                var dom = document.compatMode == "BackCompat" ? body : document.documentElement;
 
-                while (dom)
-                {
-                    x += dom.offsetLeft;
-                    y += dom.offsetTop;
+                //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
+                //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
+                //问题2: 在table或iframe中offsetParent取值可能不准确
+                return function () {
 
-                    if (dom = dom.offsetParent)
+                    var dom = this,
+                        x = 0,
+                        y = 0;
+
+                    while (dom)
                     {
-                        x += dom.clientLeft;
-                        y += dom.clientTop;
+                        x += dom.offsetLeft;
+                        y += dom.offsetTop;
+
+                        if (dom = dom.offsetParent)
+                        {
+                            x += dom.clientLeft;
+                            y += dom.clientTop;
+                        }
                     }
-                }
 
-                x -= body.scrollLeft;
-                y -= body.scrollTop;
+                    x -= dom.scrollLeft;
+                    y -= dom.scrollTop;
 
-                return { left: x, top: y };
-            };
+                    return { left: x, top: y };
+                };
 
-        })();
+            })();
+
+        });
 
 
         //获取控件相对浏览器视口坐标的偏移
@@ -1282,7 +1237,7 @@ flyingon.defineClass("Control", function () {
                 cache.onblue = null;
             }
 
-            flyingon.dispose_dom(cache);
+            flyingon.dom_dispose(cache);
 
             return this;
         };
@@ -1344,25 +1299,9 @@ flyingon.defineClass("Control", function () {
         //创建dom模板(必须在创建类时使用此方法创建dom模板)
         this.create_dom_template = function (tagName, cssText, attributes) {
 
-            //计算盒模型在不同浏览器中的偏差
-            var dom = document.createElement(tagName = tagName || "div");
 
-            if (attributes && attributes.type)
-            {
-                dom.type = attributes.type;
-            }
-
-            dom.style.cssText = "position:absolute;width:100px;height:0;padding:1px;visibility:hidden;";
-
-            document.body.appendChild(dom);
-
-            //盒模型的宽度是否包含边框
-            this.box_border_sizing = dom.offsetWidth === 100;
-
-            flyingon.dispose_dom(dom); //销毁dom
-
-            //创建dom模板(使用上次的dom创建节点时在某些浏览器性能较差,故重新创建dom节点作为模板)
-            dom = this.dom_template = document.createElement(tagName);
+            //创建dom模板
+            var dom = this.dom_template = document.createElement(tagName);
 
             //处理className
             if ((Class.css_className = this.css_className = this.__className0 = this.xtype.replace(/\./g, "-")) !== "flyingon-Control")
@@ -1405,6 +1344,28 @@ flyingon.defineClass("Control", function () {
             {
                 dom.style.cssText = cssText;
             }
+
+            //计算盒模型在不同浏览器中的偏差
+            //需等document初始化完毕后才可执行
+            flyingon.ready(function (body) {
+
+                var dom = document.createElement(tagName = tagName || "div");
+
+                if (attributes && attributes.type)
+                {
+                    dom.type = attributes.type;
+                }
+
+                dom.style.cssText = "position:absolute;width:100px;height:0;padding:1px;visibility:hidden;";
+
+                body.appendChild(dom);
+
+                //盒模型的宽度是否包含边框
+                this.box_border_sizing = dom.offsetWidth === 100;
+
+                flyingon.dom_dispose(dom); //销毁dom
+
+            }, this);
 
             return dom;
         };
@@ -1476,8 +1437,7 @@ flyingon.defineClass("Control", function () {
             var dom = (this.dom_template = this.dom_template.cloneNode(true)),
                 className = this.css_className = Class.css_className = Class.xtype.replace(/\./g, "-");
 
-            this.__className0 = className = "flyingon-Control " + this.css_className + " ";
-            dom.className = className + dom.className;
+            this.__className0 = dom.className = className = "flyingon-Control " + this.css_className + " ";
         }
     };
 

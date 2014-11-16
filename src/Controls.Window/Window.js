@@ -17,7 +17,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         document.documentElement.flyingon = this;
 
         //设置dom_window
-        dom.style.cssText = "position:relative;width:100%;height:100%;overflow:hidden;";
+        dom.style.cssText = "position:relative;overflow:hidden;width:100%;height:100%";
 
         //设置dom_children
         this.dom_children = this.dom.children[0];
@@ -53,7 +53,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         //自动显示窗口
         setTimeout(function () {
 
-            if (host)
+            if (host && dom.parentNode !== host)
             {
                 host.appendChild(dom);
             }
@@ -100,11 +100,17 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
     //渲染
     this.render = (function (render) {
 
+
         return function () {
 
-            var dom = this.dom_window;
+            var host = document.documentElement,
+                body = document.body,
+                dom = this.dom_window,
+                style = dom.style,
+                width,
+                height;
 
-            if (dom)
+            if (dom && (dom = dom.parentNode))
             {
                 if (this.__update_dirty === 1)
                 {
@@ -112,7 +118,17 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                     this.__update_dirty = 2;
                 }
 
-                this.measure(dom.clientWidth, dom.clientHeight, true, true);
+                if ((height = dom.clientHeight) <= 0)
+                {
+                    if ((height = (body.clientHeight || host.clientHeight || body.offsetWidth) - dom.offsetTop - 8) <= 0)
+                    {
+                        height = 600;
+                    }
+
+                    style.height = height + "px";
+                }
+
+                this.measure(dom.clientWidth || body.clientWidth, height, true, true);
                 this.locate(0, 0);
 
                 render.call(this);
@@ -120,6 +136,8 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
             flyingon.__initializing = false;
         };
+
+
 
     })(this.render);
 

@@ -4,10 +4,31 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
+
+    Class.create_mode = "replace";
+
+    Class.create = function (dom) {
+
+        //变量管理器
+        this.__fields = Object.create(this.__defaults);
+
+        if (dom)
+        {
+            (this.dom = dom).flyingon = this;
+
+            dom.style.position = "absolute";
+            dom.className = this.__className0 + " " + dom.className;
+        }
+        else
+        {
+            (this.dom = this.dom_template.cloneNode(false)).flyingon = this;
+        }
+    };
+
+
+
+
     this.defaultWidth = this.defaultHeight = 4;
-
-
-    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;", "<div class=\"flyingon-Splitter-content\" />");
 
 
 

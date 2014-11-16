@@ -396,12 +396,6 @@
         //number%   控件客户区高度的百分比
         style("flow-height", "0", "last-value");
 
-        //拆分布局位置(此值仅对拆分布局(split)有效)
-        //before    前面位置
-        //after     后面位置
-        //center    中间位置
-        style("layout-split", "before", "last-value");
-
         //均匀网格布局行数(此值仅对网格布局(grid)有效)
         //number	整数值 
         //string    自定义行 如:"20 30% 20* *"表示4行 第一行固定宽度为20 第2行使用可用空间的30% 第3,4行使用全部剩余空间,第3行占比20/120 第4行占比100/120
@@ -476,6 +470,12 @@
         //fals
         //true
         style("newline", false, "last-value");
+
+        //拆分布局位置(此值仅对拆分布局(split)有效)
+        //before    前面位置
+        //after     后面位置
+        //center    中间位置
+        style("layout-split", "before", "last-value");
 
         //控件停靠方式(此值仅在当前布局类型为停靠布局(dock)时有效)
         //left:     左见枚举
@@ -750,9 +750,8 @@
 
             end_code: "this.dom.style." + (function () {
 
-                if ("opacity" in document.body.style)
+                if ("opacity" in document.createElement("div").style)
                 {
-
                     return "opacity = value;"
                 }
 

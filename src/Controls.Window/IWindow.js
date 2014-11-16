@@ -38,10 +38,7 @@
             cursor_list,                            //cursor暂存集合
 
             pressdown,                              //按下时dom事件
-            host_mousemove = true,                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
-
-            selection1 = window.getSelection,       //获取选区方法1
-            selection2 = document.selection;        //获取选区方法2
+            host_mousemove = true;                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
 
 
 
@@ -176,7 +173,6 @@
 
 
 
-
         //注:IE6/7/8的鼠标事件的event中鼠标数据是全局的,不能直接记录,需要把相关的数据存储至pressdown对象中
         events.mousedown = function (event) {
 
@@ -236,7 +232,7 @@
                         setCapture(capture_dom = event.target, event);
 
                         //记录状态
-                        draggable = cache; 
+                        draggable = cache;
                     }
                     else
                     {
@@ -260,8 +256,6 @@
 
             if (pressdown && (target = pressdown.capture))
             {
-                //selection1 ? selection1().removeAllRanges() : selection2.empty(); //清除选中内容防止浏览器默认拖动操作
-
                 if (resizable) //调整大小
                 {
                     target.__fn_resize(resizable, event, pressdown);
