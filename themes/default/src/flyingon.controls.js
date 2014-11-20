@@ -1,9 +1,9 @@
 ﻿
 /*
 
-//定义标准css样式
+//定义标准css样式表
 
-注: 不能定义扩展控件样式,扩展控件样式请使用flyingon.style定义,与标准css定义类同
+注: 不能定义扩展控件样式,扩展控件样式请使用flyingon.defineStyle定义,与标准css定义类同
 
 
 //可引入其它样式, 示例如下:
@@ -14,7 +14,7 @@
 }
 
 */
-flyingon.css({
+flyingon.defineStyleSheets({
 
 
 
@@ -31,7 +31,7 @@ flyingon.css({
 
 //定义扩展控件样式
 
-注: 不能定义dom样式,定义dom样式请使用flyingon.css定义,跨浏览器兼容
+注: 不能定义dom样式,定义dom样式请使用flyingon.defineStyleSheets定义,跨浏览器兼容
 
 
 //定义样式示例: 定义扩展控件样式 "@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式如下
@@ -115,7 +115,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 */
-flyingon.style({
+flyingon.defineStyle({
 
 
 

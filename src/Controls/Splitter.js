@@ -14,10 +14,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         if (dom)
         {
-            (this.dom = dom).flyingon = this;
-
-            dom.style.position = "absolute";
-            dom.className = this.__className0 + " " + dom.className;
+            this.__fn_from_dom(dom);
         }
         else
         {
@@ -57,7 +54,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
     this.__event_bubble_mousedown = function (event) {
 
-        if (!event.ctrlKey) //如果未按下control键则不允许拖动
+        if (!event.ctrlKey) //未按下control键禁止拖动或调整大小
         {
             event.stopImmediatePropagation(false);
         }

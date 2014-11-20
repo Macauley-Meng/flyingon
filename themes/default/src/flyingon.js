@@ -1,9 +1,9 @@
 ﻿
 /*
 
-//定义标准css样式
+//定义标准css样式表
 
-注: 不能定义扩展控件样式,扩展控件样式请使用flyingon.style定义,与标准css定义类同
+注: 不能定义扩展控件样式,扩展控件样式请使用flyingon.defineStyle定义,与标准css定义类同
 
 
 //可引入其它样式, 示例如下:
@@ -14,43 +14,7 @@
 }
 
 */
-flyingon.css({
-
-
-    //标题面板标题区样式
-    ".flyingon-TitlePanel-header": {
-
-        paddingLeft: "4px",
-        paddingRight: "4px",
-        height: "25px",
-        lineHeight: "25px",
-        verticalAlign: "middle",
-        backgroundColor: "silver"
-    },
-
-    //标题面板标题样式
-    ".flyingon-TitlePanel-title": {
-
-    },
-
-    //标题面板内容区样式
-    ".flyingon-TitlePanel-body": {
-
-        top: "25px",
-        backgroundColor: "white"
-    },
-
-    //标题面板收拢样式
-    ".flyingon-TitlePanel-collapse": {
-
-        width: "20px",
-        wordBreak: "break-all",
-        letterSpacing: "15px",
-        lineHeight: "15px",
-        backgroundColor: "silver",
-        textAlign: "center",
-        padding: "4px"
-    },
+flyingon.defineStyleSheets({
 
 
     //弹出窗口标题区样式
@@ -64,15 +28,9 @@ flyingon.css({
         backgroundColor: "silver"
     },
 
-    //弹出窗口标题样式
-    ".flyingon-Dialog-title": {
-
-    },
-
     //弹出窗口内容区样式
     ".flyingon-Dialog-body": {
 
-        top: "25px",
         backgroundColor: "white"
     }
 
@@ -88,7 +46,7 @@ flyingon.css({
 
 //定义扩展控件样式
 
-注: 不能定义dom样式,定义dom样式请使用flyingon.css定义,跨浏览器兼容
+注: 不能定义dom样式,定义dom样式请使用flyingon.defineStyleSheets定义,跨浏览器兼容
 
 
 //定义样式示例: 定义扩展控件样式 "@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式如下
@@ -172,7 +130,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 */
-flyingon.style({
+flyingon.defineStyle({
 
 
     //控件默认样式

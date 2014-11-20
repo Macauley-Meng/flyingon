@@ -8,11 +8,6 @@ flyingon.IChildren = function (base) {
     //是否需要重新排列子控件
     this.__arrange_dirty = true;
 
-    //排列宽度
-    this.__arrange_width = 0;
-
-    //排列高度
-    this.__arrange_height = 0;
 
     //是否需要重新处理子dom
     this.__dom_dirty = true;
@@ -69,36 +64,6 @@ flyingon.IChildren = function (base) {
 
 
 
-
-    //测量完毕后执行方法
-    this.after_measure = function (box) {
-
-        var dom = this.dom_children,
-            width,
-            height;
-
-        //设置内容区位置
-        dom.style.left = box.paddingLeft + "px";
-        dom.style.top = box.paddingTop + "px";
-
-        //计算客户区大小(包含滚动条)
-        dom = dom.parentNode;
-        width = dom.offsetWidth - box.spacingWidth;
-        height = dom.offsetHeight - box.spacingHeight;
-
-        //客户区变化时才会请求重新排列
-        if (width !== this.__arrange_width || height !== this.__arrange_height)
-        {
-            this.__arrange_dirty = true;
-            this.__arrange_width = width;
-            this.__arrange_height = height;
-        }
-
-        return false;
-    };
-
-
-
     //渲染控件
     this.render = function () {
 
@@ -124,12 +89,6 @@ flyingon.IChildren = function (base) {
             items = this.__children,
             cache;
 
-        //计算客户区大小
-        this.clientLeft = dom.clientLeft + box.paddingLeft;
-        this.clientTop = dom.clientTop + box.paddingTop;
-        this.clientWidth = dom.clientWidth - box.padding_width;
-        this.clientHeight = dom.clientHeight - box.padding_height;
-
         if (items && items.length > 0)
         {
             //重排
@@ -154,7 +113,11 @@ flyingon.IChildren = function (base) {
                     this.__compute_style.fontSize = cache;
                 }
 
-                this.arrange(this.__arrange_width, this.__arrange_height);
+                cache = this.dom_children.style;
+                cache.left = box.paddingLeft + "px";
+                cache.top = box.paddingTop + "px";
+
+                this.arrange(this.clientWidth, this.clientHeight);
 
                 this.__arrange_dirty = false;
             }
@@ -187,6 +150,27 @@ flyingon.IChildren = function (base) {
 
     //当前布局类型
     this.__layout = flyingon.layouts["line"];
+
+
+    //测量自动大小
+    this.__fn_measure_auto = function (box, change) {
+
+        var dom = this.dom_children.parentNode,
+            value = this.__compute_style.fontSize; //记录原来的字体大小
+
+        this.render();
+        this.__compute_style.fontSize = value;
+
+        if (box.auto_width)
+        {
+            change.width = this.contentWidth - this.clientWidth;
+        }
+
+        if (box.auto_height)
+        {
+            change.height = this.contentHeight - this.clientHeight;
+        }
+    };
 
 
     //排列子控件

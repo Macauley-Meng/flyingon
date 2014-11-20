@@ -1,5 +1,7 @@
 ﻿
 
+
+
 //样式相关
 (function (flyingon) {
 
@@ -20,7 +22,15 @@
 
         style_type_fn = Object.create(null),    //样式类型检查函数
 
-        style_pseudo_fn = Object.create(null),  //样式伪类检查函数
+        style_pseudo_fn = Object.create(null),  //
+
+        style_test = document.createElement("div").style,
+
+        style_prefix1,  //样式前缀1
+
+        style_prefix2,  //样式前缀2
+
+        regex_name = /[-_](\w)/g,   //名称转换规则 例: margin-left || margin_left -> marginLeft
 
         check_property = flyingon.__fn_check_property,  //检查属性
 
@@ -41,50 +51,150 @@
             hover: 13,
             focus: 12,
             checked: 11
-        },
+        };
 
-        remove_rule,
 
-        add_rule = (function () {  //添加css规则
 
-            var target = document.createElement("style");
 
-            target.type = "text/css";
-            document.getElementsByTagName("head")[0].appendChild(target);
+    //转换名字为驼峰写法
+    function convert_name(name) {
 
-            target = document.styleSheets,
-            target = target[target.length - 1];
+        return name ? name.replace(regex_name, function (_, x) {
 
-            if (target.addRule) //IE
+            return x.toUpperCase();
+
+        }) : "";
+    };
+
+
+
+
+    //获取浏览器样式前缀
+    if (flyingon.browser_MSIE)
+    {
+        style_prefix1 = "ms";
+        style_prefix2 = "-ms-";
+    }
+    else if (flyingon.browser_Firefox)
+    {
+        style_prefix1 = "moz";
+        style_prefix2 = "-moz-";
+    }
+    else if (flyingon.browser_Opera)
+    {
+        style_prefix1 = "o";
+        style_prefix2 = "-o-";
+    }
+    else
+    {
+        style_prefix1 = "webkit";
+        style_prefix2 = "-webkit-";
+    }
+
+
+
+    //获取带前缀的样式名
+    flyingon.__fn_style_prefix = function (name) {
+
+        name = name.indexOf("-") >= 0 ? convert_name(name) : name;
+
+        if (name in style_test)
+        {
+            return name;
+        }
+
+        name = style_prefix1 + name.charAt(0).toUpperCase() + name.substring(1);
+
+        return name in style_test ? name : null;
+    };
+
+
+    //获取带前缀的css名
+    flyingon.__fn_css_prefix = function (name) {
+
+        var key = name.indexOf("-") >= 0 ? convert_name(name) : name;
+
+        if (key in style_test)
+        {
+            return name;
+        }
+
+        key = style_prefix1 + key.charAt(0).toUpperCase() + key.substring(1);
+
+        return key in style_test ? style_prefix2 + name : null;
+    };
+
+
+
+
+    //标准css样式表操作
+    (function (flyingon) {
+
+
+        var dom = document.createElement("style"),
+            css,
+            rules,
+            add,
+            remove;
+
+        dom.type = "text/css";
+        document.getElementsByTagName("head")[0].appendChild(dom);
+
+        css = document.styleSheets[document.styleSheets.length - 1];
+        rules = css.rules || css.cssRules;
+        remove = (add = css.addRule) ? css.removeRule : css.deleteRule;
+
+
+        //添加或删除样式表规则
+        flyingon.css_rule = function (selector, cssText) {
+
+            var index;
+
+            switch (arguments.length)
             {
-                remove_rule = function () {
-
-                    for (var i = target.rules.length - 1; i >= 0; i--)
+                case 0: //清除所有样式
+                    for (var i = rules.length - 1; i >= 0; i--)
                     {
-                        target.removeRule(i);
+                        remove.call(css, i);
                     }
-                };
+                    break;
 
-                return function (name, cssText) {
+                case 1: //删除指定名称或索引的样式
+                    if ((index = +selector) >= 0)
+                    {
+                        remove.call(css, index);
+                    }
+                    else
+                    {
+                        for (var i = rules.length - 1; i >= 0; i--)
+                        {
+                            if (rules[i].name === selector)
+                            {
+                                remove.call(css, i);
+                            }
+                        }
+                    }
+                    break;
 
-                    cssText && target.addRule(name, cssText, target.rules.length);
-                };
+                default: //添加样式
+                    index = rules.length;
+
+                    if (add)
+                    {
+                        add.call(css, selector, cssText || "", index);
+                    }
+                    else
+                    {
+                        css.insertRule(selector + "{" + (cssText || "") + "}", index);
+                    }
+
+                    return index;
             }
 
-            remove_rule = function () {
+        };
 
-                for (var i = target.cssRules.length - 1; i >= 0; i--)
-                {
-                    target.deleteRule(i);
-                }
-            };
 
-            return function (name, cssText) {
-
-                cssText && target.insertRule(name + "{" + cssText + "}", target.cssRules.length);
-            };
-
-        })();
+    })(flyingon);
 
 
 
@@ -118,7 +228,7 @@
             registry_types = Object.create(null);
             registry_names = Object.create(null);
 
-            remove_rule();
+            flyingon.css_rule();
 
             for (var i = 0, _ = this.length; i < length; i++)
             {
@@ -139,12 +249,10 @@
 
 
     //样式声明
-    flyingon.__fn_style = function (defaultWidth, defaultHeight) {
+    flyingon.__fn_style_declare = function (defaultWidth, defaultHeight) {
 
 
         var self = this,
-
-            regex_name = /[-_](\w)/g,   //名称转换规则 例: margin-left || margin_left -> marginLeft
 
             items = ["left", "top", "right", "bottom"]; //复合样式子项值
 
@@ -171,25 +279,11 @@
 
             for (var i = 0; i < length; i++)
             {
-                result[i] = template.replace("?", values[i]).replace(regex_name, function (_, x) {
-
-                    return x.toUpperCase();
-                });
+                result[i] = convert_name(template.replace("?", values[i]));
             }
 
             return result;
         };
-
-
-        //转换名称为驼峰写法
-        function convert_name(name) {
-
-            return name.replace(regex_name, function (_, x) {
-
-                return x.toUpperCase();
-            });
-        };
-
 
 
         //定义复合属性 不存储实际数据 通过定义属性进行操作
@@ -750,7 +844,7 @@
 
             end_code: "this.dom.style." + (function () {
 
-                if ("opacity" in document.createElement("div").style)
+                if ("opacity" in style_test)
                 {
                     return "opacity = value;"
                 }
@@ -760,12 +854,7 @@
                     return "filter = \"alpha(opacity=\" + (value * 100) + \")\";";
                 }
 
-                if (flyingon.browser_Firefox)
-                {
-                    return "MozOpacity = value;";
-                }
-
-                return "KthmlOpacity = value;"
+                return style_prefix1 + "Opacity = value;"
 
             })()
         });
@@ -1546,15 +1635,15 @@
 
 
 
-    //定义标准css样式
-    flyingon.css = function (styles) {
+    //定义标准css样式表
+    flyingon.defineStyleSheets = function (styles) {
 
-        flyingon.style(styles, true);
+        flyingon.defineStyle(styles, true);
     };
 
 
-    //定义系统扩展样式
-    flyingon.style = function (styles, css_style) {
+    //定义扩展控件样式
+    flyingon.defineStyle = function (styles, css_style) {
 
         //预处理样式集
         if (styles)
@@ -1682,9 +1771,19 @@
                 switch (name) //修改css值
                 {
                     case "opacity":
-                        cssText.push("filter:alpha(opacity=" + (value * 100) + ");");
-                        cssText.push("-moz-opacity:" + value + ";");
-                        cssText.push("-khtml-opacity:" + value + ";");
+                        if (!(name in style_test))
+                        {
+                            if (flyingon.browser_MSIE)
+                            {
+                                cssText.push("filter:alpha(opacity=" + (value * 100) + ");");
+                            }
+                            else
+                            {
+                                cssText.push(style_prefix2 + "opacity:" + value + ";");
+                            }
+
+                            return;
+                        }
                         break;
                 }
 
@@ -1891,7 +1990,7 @@
         {
             if (selector.rule) //复用且保存css
             {
-                add_rule(selector.rule, selector.cssText);
+                flyingon.css_rule(selector.rule, selector.cssText);
             }
 
             return;
@@ -1907,7 +2006,7 @@
         {
             if (selector.rule) //复用且保存css
             {
-                add_rule(selector.rule, selector.cssText);
+                flyingon.css_rule(selector.rule, selector.cssText);
             }
         }
         else

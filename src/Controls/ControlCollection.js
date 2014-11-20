@@ -7,9 +7,10 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
 
-    Class.create = function (target) {
+    Class.create = function (target, control_type) {
 
         this.target = target;
+        this.control_type = control_type || flyingon.Control;
     };
 
 
@@ -142,7 +143,7 @@ flyingon.defineClass("ControlCollection", function (base) {
     //添加进集合时进行验证
     function validate(target, item, change) {
 
-        if (item instanceof flyingon.Control)
+        if (item instanceof target.control_type)
         {
             var parent = target.target,
                 oldValue = item.__parent;
@@ -173,7 +174,7 @@ flyingon.defineClass("ControlCollection", function (base) {
             return true;
         }
 
-        throw new flyingon.Exception("只能添加Control类型的子控件!");
+        throw new flyingon.Exception("只能添加" + this.control_type.xtype + "类型的子控件!");
     };
 
 

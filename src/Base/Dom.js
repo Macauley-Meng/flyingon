@@ -8,7 +8,7 @@
     flyingon.ready = (function () {
 
 
-        var list = [];
+        var list;
 
 
         function execute() {
@@ -28,42 +28,46 @@
                     list = null;
                 }
             }
-            //else
-            //{
-            //    setTimeout(execute, 0);
-            //}
+            else
+            {
+                setTimeout(execute, 0);
+            }
         };
 
-        //setTimeout(execute, 0);
 
-
-        if (document.addEventListener)
+        if (!document.body)
         {
-            document.addEventListener("DOMContentLoaded", function (event) {
+            list = [];
+
+            if (document.addEventListener)
+            {
+                document.addEventListener("DOMContentLoaded", function (event) {
+
+                    execute();
+
+                }, false);
+            }
+
+            if (flyingon.browser_MSIE)
+            {
+                document.write("<" + "script id=\"__flyingon_ready__\" src=\"//:\" defer=\"defer\"></" + "script>");
+                document.getElementById("__flyingon_ready__").onreadystatechange = function () {
+
+                    if (this.readyState === "complete")
+                    {
+                        execute();
+                        this.parentNode.removeChild(this);
+                    }
+                };
+            }
+
+            flyingon.addEventListener(window, "load", function (event) {
 
                 execute();
+            });
 
-            }, false);
+            setTimeout(execute, 0);
         }
-
-        if (flyingon.browser_MSIE)
-        {
-            document.write("<script id=\"__document_ready__\" src=\"//:\" defer=\"defer\"></script>");
-
-            document.getElementById("__document_ready__").onreadystatechange = function () {
-
-                if (this.readyState === "complete")
-                {
-                    execute();
-                    this.parentNode.removeChild(this);
-                }
-            };
-        }
-
-        flyingon.addEventListener(window, "load", function (event) {
-
-            execute();
-        });
 
 
         return function (fn, thisArg) {

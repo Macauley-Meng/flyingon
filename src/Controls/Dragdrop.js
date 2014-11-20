@@ -88,7 +88,7 @@
             }
         }
 
-        __dom_proxy.style.cssText = "position:absolute;left:0;top:0;"
+        __dom_proxy.style.cssText = "position:absolute;left:0;top:0;";
         __ownerWindow.dom.appendChild(__dom_proxy);
         __execute = true;
     };
@@ -161,7 +161,7 @@
         }
 
         //缓存状态
-        __ownerWindow = target.get_ownerWindow()
+        __ownerWindow = target.get_ownerWindow();
         __dragTarget = target;
         __draggable = draggable;
         __execute = false;

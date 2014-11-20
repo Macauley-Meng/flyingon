@@ -9,10 +9,8 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        this.initialize_header(this.header = new flyingon.Panel());
+        this.initialize_header(this.dom_header = this.dom.children[0]);
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
-
-        (this.dom_header = this.dom.children[0]).appendChild(this.header.dom);
 
         this.__fn_init_window(this.dom);
     };
@@ -27,7 +25,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //创建模板
-    this.create_dom_template("div", "overflow:hidden;", "<div class='flyingon-Dialog-header' style='position:absolute;left:0;top:0;width:100%;overflow:hidden;'></div><div class='flyingon-Dialog-body' style='position:absolute;left:0;width:100%;'><div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div></div>");
+    this.create_dom_template("div", "overflow:hidden;", "<div class='flyingon-TabPanel-title' style='position:absolute;top:0;width:100%;overflow:hidden;'><div class='flyingon-Dialog-title'></div></div><div class='flyingon-TabPanel-body' style='position:absolute;width:100%;bottom:0;'><div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div></div>");
 
 
 
@@ -48,10 +46,6 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
     this.defineProperty("start", "center");
 
 
-    //是否显示标题栏
-    this.defineProperty("header_visible", true, "layout");
-
-
     //窗口关闭前事件
     this.defineEvent("closing");
 
@@ -64,9 +58,9 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //初始化窗口标题栏
-    this.initialize_header = function (header) {
+    this.initialize_header = function (dom) {
 
-        header.appendChild(new flyingon.HtmlControl().set_text("dddddddd"))
+
     };
 
 
@@ -172,37 +166,12 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-
-    //this.__fn_arrange = function (box, width, height) {
-
-    //    var header = this.dom_header,
-    //        style1 = header.style,
-    //        style2 = this.dom_body.style,
-    //        y = 0;
-
-    //    if (this.get_header_visible())
-    //    {
-    //        style1.display = "";
-    //        y = header.offsetHeight;
-
-    //        this.header.measure(this.offsetWidth, y);
-    //        this.header.render();
-    //    }
-    //    else
-    //    {
-    //        style1.display = "none";
-    //    }
-
-    //    style2.top = y + "px";
-    //    style2.height = this.offsetHeight - box.border_width - y + "px";
-
-    //    base.__fn_arrange.call(this, box, width, height);
-    //};
-
-
     this.render = function (center) {
 
-        var dom = this.dom;
+        var dom = this.dom,
+            style = dom.style,
+            width = dom.parentNode.clientWidth,
+            height = dom.parentNode.clientHeight;
 
         if (this.__update_dirty === 1)
         {
@@ -210,16 +179,16 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
             this.__update_dirty = 2;
         }
 
-        this.measure(+this.get_width() || this.defaultWidth, +this.get_height() || this.defaultHeight);
+        this.measure(width, height);
 
         if (center)
         {
-            this.set_left(((dom.parentNode.clientWidth - this.offsetWidth) >> 1) + "px");
-            this.set_top(((dom.parentNode.clientHeight - this.offsetHeight) >> 1) + "px");
+            this.set_left(((width - this.offsetWidth) >> 1) + "px");
+            this.set_top(((height - this.offsetHeight) >> 1) + "px");
         }
 
-        dom.style.left = this.get_left();
-        dom.style.top = this.get_top();
+        style.left = this.get_left();
+        style.top = this.get_top();
 
         this.offsetLeft = dom.offsetLeft;
         this.offsetTop = dom.offsetTop;

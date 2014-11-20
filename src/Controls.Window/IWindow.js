@@ -11,11 +11,14 @@
 
 
     //注册的事件列表
-    (function (events) {
+    flyingon.ready(function () {
 
 
 
         var host = document.documentElement,        //主容器
+            body = document.body,                   //
+
+            events = Object.create(null),           //注册的事件集合
 
             KeyEvent = flyingon.KeyEvent,
             MouseEvent = flyingon.MouseEvent,
@@ -27,19 +30,21 @@
             draggable,                              //拖动方式
             resizable,                              //调整大小的方式
 
-            mousemove_time = new Date(),
-
             hover_control,                          //鼠标指向控件
 
             setCapture,                             //捕获鼠标
             releaseCapture,                         //释放鼠标
             capture_dom,                            //捕获的dom
+            capture_cache,                          //捕获时缓存数据
 
-            cursor_list,                            //cursor暂存集合
+            cursor_list,                            //锁定鼠标指针集合
 
             pressdown,                              //按下时dom事件
-            host_mousemove = true;                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
+            host_mousemove = true,                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
 
+            user_select = flyingon.__fn_style_prefix("user-select"),
+
+            event_false = function () { return false; };
 
 
 
@@ -74,19 +79,37 @@
 
 
 
-
-
         //捕获或释放鼠标
-        if (host.setCapture)
+        if (body.setCapture)
         {
 
             setCapture = function (dom, event) {
 
-                dom.setCapture(true);
+                if (user_select)
+                {
+                    capture_cache = body.style[user_select];
+                    body.style[user_select] = "none";
+                }
+                else
+                {
+                    capture_cache = body.onselectstart; //禁止选中内容
+                    body.onselectstart = event_false;
+                }
+
+                dom.setCapture();
                 //dom.onlosecapture = pressdown_cancel; //IE特有 注册此方法会造成IE7无法拖动滚动条
             };
 
             releaseCapture = function (dom) {
+
+                if (user_select)
+                {
+                    body.style[user_select] = capture_cache;
+                }
+                else
+                {
+                    body.onselectstart = capture_cache;
+                }
 
                 dom.releaseCapture();
                 //dom.onlosecapture = null;
@@ -99,13 +122,22 @@
             //设置捕获
             setCapture = function (dom, event) {
 
-                event.preventDefault(); //阻止默认拖动操作
+                if (user_select)
+                {
+                    capture_cache = body.style[user_select];
+                    body.style[user_select] = "none";
+                }
             };
 
 
             //释放捕获
-            releaseCapture = function (dom) { };
+            releaseCapture = function (dom) {
 
+                if (user_select)
+                {
+                    body.style[user_select] = capture_cache;
+                }
+            };
 
 
             //捕获全局mousemove事件
@@ -130,25 +162,23 @@
         };
 
 
-
-
-        //捕获全局mouseover事件修改cursor防止拖动时鼠标闪烁
+        //锁定拖动时鼠标指针
         flyingon.addEventListener(host, "mouseover", function (event) {
 
             if (pressdown)
             {
-                var target = event.target;
+                var style = this.style;
 
-                if (target && !target.__save_cursor && target !== capture_dom)
+                if (!style.__cursor__)
                 {
-                    (cursor_list || (cursor_list = [])).push(target, target.style.cursor);
-
-                    target.__save_cursor = true;
-                    target.style.cursor = pressdown.cursor;
+                    style.__cursor__ = true;
+                    (cursor_list || (cursor_list = [])).push(style, style.cursor);
                 }
-            }
 
+                style.cursor = pressdown.cursor;
+            }
         });
+
 
 
 
@@ -243,6 +273,8 @@
                 {
                     resizable = null;
                     target.__fn_to_active(true); //设置活动状态
+
+                    setCapture(capture_dom = event.target, event); //返回false则自动捕获鼠标
                 }
             }
         };
@@ -251,6 +283,12 @@
         events.mousemove = function (event) {
 
             var target, cache;
+
+            //防止host处理
+            if (this !== host)
+            {
+                host_mousemove = false;
+            }
 
             event || (event = fix_event(window.event));
 
@@ -268,6 +306,8 @@
                 {
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
                 }
+
+                //window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty(); //清除选区
             }
             else if ((target = dom_target(event)) && ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event)))) //调整大小状态不触发相关事件
             {
@@ -287,12 +327,6 @@
 
                 target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
             }
-
-            //防止host处理
-            if (this !== host)
-            {
-                host_mousemove = false;
-            }
         };
 
 
@@ -300,12 +334,12 @@
 
             var target;
 
-            if (cursor_list) //恢复鼠标状态
+            if (cursor_list) //恢复锁定的指针
             {
                 for (var i = 0, _ = cursor_list.length; i < _; i++)
                 {
-                    cursor_list[i].__save_cursor = undefined;
-                    cursor_list[i++].style.cursor = cursor_list[i];
+                    cursor_list[i].__cursor__ = undefined;
+                    cursor_list[i++].cursor = cursor_list[i];
                 }
 
                 cursor_list = null;
@@ -387,6 +421,16 @@
             event.wheelDelta = value;
 
             return target.dispatchEvent(event);
+        };
+
+
+        //调整大小或拖动时禁止系统拖动事件
+        events.dragstart = function (event) {
+
+            if (resizable || draggable)
+            {
+                event.stopImmediatePropagation();
+            }
         };
 
 
@@ -488,7 +532,7 @@
 
 
 
-    })(Object.create(null));
+    });
 
 
 
