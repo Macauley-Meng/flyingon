@@ -162,6 +162,11 @@ flyingon.IComponent = function () {
             body.push("\n\t");
             body.push("this.update(true);");
         }
+        else if (attributes.update)
+        {
+            body.push("\n\t");
+            body.push("this.update();");
+        }
 
         //闭合
         body.push("\n\n}\n\n");

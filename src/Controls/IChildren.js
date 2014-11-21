@@ -5,12 +5,30 @@ flyingon.IChildren = function (base) {
 
 
 
+
+    //如果未指定构造函数则创建默认构造函数
+    Class.create || (Class.create = function () {
+
+        this.dom_children = this.dom.children[0];
+        this.__children = new flyingon.ControlCollection(this);
+    });
+
+
+
+
     //是否需要重新排列子控件
     this.__arrange_dirty = true;
 
 
     //是否需要重新处理子dom
     this.__dom_dirty = true;
+
+
+
+
+    //dom元素模板
+    this.create_dom_template("div", null, "<div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div>");
+
 
 
 
@@ -149,7 +167,7 @@ flyingon.IChildren = function (base) {
 
 
     //当前布局类型
-    this.__layout = flyingon.layouts["line"];
+    this.__layout = flyingon.layouts["split"];
 
 
     //测量自动大小

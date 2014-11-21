@@ -62,6 +62,23 @@ flyingon.defineClass("Control", function () {
 
 
 
+    //检查当前控件是否指定控件或指定控件的父控件
+    this.isParent = function (control) {
+
+        while (control)
+        {
+            if (control === this)
+            {
+                return true;
+            }
+
+            control = control.__parent;
+        }
+
+        return false;
+    };
+
+
     //获取父控件中的索引位置
     this.childIndex = function () {
 
@@ -509,7 +526,6 @@ flyingon.defineClass("Control", function () {
             var box = this.__boxModel || (this.__boxModel = {}),
                 fn = this.compute_size,
                 dom = this.dom,
-                dom_body = dom,
                 dom_children = this.dom_children, //复合控件容器
                 style = dom.style,
                 width,
@@ -657,7 +673,7 @@ flyingon.defineClass("Control", function () {
             //复合控件不设置padding, 通过布局调整内容区的大小来模拟padding, 否则有些浏览器滚动条的宽高不包含paddingRight或paddingBottom
             if (dom_children)
             {
-                dom_body = dom_children.parentNode;
+                dom = dom_children.parentNode || dom;
             }
             else  //设置padding样式
             {
@@ -703,23 +719,7 @@ flyingon.defineClass("Control", function () {
 
 
             //计算客户区大小
-            this.clientLeft = box.borderLeft + box.paddingLeft;
-            this.clientTop = box.borderTop + box.paddingTop;
-            this.clientWidth = dom_body.clientWidth - box.padding_width;
-            this.clientHeight = dom_body.clientHeight - box.padding_height;
-
-            if (dom_body !== dom)
-            {
-                value = dom_body;
-
-                while (value !== dom)
-                {
-                    this.clientLeft += value.offsetLeft + value.clientLeft;
-                    this.clientTop += value.offsetTop + value.clientTop;
-
-                    value = value.parentNode;
-                }
-            }
+            this.__fn_measure_client(box, dom);
 
 
             //处理自动大小
@@ -778,6 +778,24 @@ flyingon.defineClass("Control", function () {
                 width: this.offsetWidth + box.margin_width,
                 height: this.offsetHeight + box.margin_height
             };
+        };
+
+
+        //测量客户区大小
+        this.__fn_measure_client = function (box, dom_body) {
+
+            this.clientLeft = box.borderLeft + box.paddingLeft;
+            this.clientTop = box.borderTop + box.paddingTop;
+            this.clientWidth = dom_body.clientWidth - box.padding_width;
+            this.clientHeight = dom_body.clientHeight - box.padding_height;
+
+            while (dom_body !== this.dom)
+            {
+                this.clientLeft += dom_body.offsetLeft + dom_body.clientLeft;
+                this.clientTop += dom_body.offsetTop + dom_body.clientTop;
+
+                dom_body = dom_body.parentNode;
+            }
         };
 
 

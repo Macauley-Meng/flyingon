@@ -81,6 +81,7 @@ flyingon.defineClass("Event", function () {
     };
 
 
+
 });
 
 
@@ -154,6 +155,25 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
     this.disable_dbclick = function (disable) {
 
         flyingon.__disable_dbclick = disable !== false;
+    };
+
+
+    //当前事件触发时的dom是否从属于指定的dom
+    this.in_dom = function (dom) {
+
+        var target = this.dom;
+
+        while (target)
+        {
+            if (target === dom)
+            {
+                return true;
+            }
+
+            target = target.parentNode;
+        }
+
+        return false;
     };
 
 
@@ -317,7 +337,7 @@ flyingon.defineClass("PropertyChangeEvent", flyingon.Event, function (base) {
 
 
 
-    Class.create = "replace";
+    Class.create_mode = "replace";
 
     Class.create = function (name, value, oldValue) {
 

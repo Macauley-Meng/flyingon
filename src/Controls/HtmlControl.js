@@ -20,7 +20,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         else
         {
             //根据dom模板创建关联的dom元素
-            (this.dom = this.dom_template.cloneNode(this.dom_template.firstChild)).flyingon = this;
+            (this.dom = this.dom_template.cloneNode(false)).flyingon = this;
         }
     };
 

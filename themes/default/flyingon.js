@@ -17,22 +17,7 @@
 flyingon.defineStyleSheets({
 
 
-    //弹出窗口标题区样式
-    ".flyingon-Dialog-header": {
 
-        paddingLeft: "2px",
-        paddingRight: "2px",
-        height: "25px",
-        lineHeight: "25px",
-        verticalAlign: "middle",
-        backgroundColor: "silver"
-    },
-
-    //弹出窗口内容区样式
-    ".flyingon-Dialog-body": {
-
-        backgroundColor: "white"
-    }
 
 });
 
@@ -165,8 +150,19 @@ flyingon.defineStyle({
     //弹出窗口样式
     "@flyingon-Dialog": {
 
-    }
+        backgroundColor: "white"
+    },
 
+    //弹出窗口标题栏样式
+    "@flyingon-DialogHead": {
+
+        paddingLeft: "2px",
+        paddingRight: "2px",
+        height: "25px",
+        verticalAlign: "middle",
+        backgroundColor: "silver",
+        cursor: "default"
+    }
 
 
 });

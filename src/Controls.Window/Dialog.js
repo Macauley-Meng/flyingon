@@ -1,4 +1,23 @@
 ﻿
+//弹出窗口标题栏
+flyingon.defineClass("DialogHead", flyingon.Control, function (base) {
+
+
+
+    Class.create_mode = "merge";
+
+
+
+    //扩展子控件接口
+    flyingon.extend(this, flyingon.IChildren, base);
+
+
+});
+
+
+
+
+
 //弹出窗口
 flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
@@ -9,10 +28,12 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        this.initialize_header(this.header = new flyingon.Panel());
-        this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
+        this.initialize_head(this.head = new flyingon.DialogHead());
+        this.head.__parent = this;
 
-        (this.dom_header = this.dom.children[0]).appendChild(this.header.dom);
+        (this.dom_head = this.dom.children[0]).appendChild(this.head.dom);
+
+        this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
 
         this.__fn_init_window(this.dom);
     };
@@ -27,7 +48,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //创建模板
-    this.create_dom_template("div", "overflow:hidden;", "<div class='flyingon-Dialog-header' style='position:absolute;left:0;top:0;width:100%;overflow:hidden;'></div><div class='flyingon-Dialog-body' style='position:absolute;left:0;width:100%;'><div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div></div>");
+    this.create_dom_template("div", "overflow:hidden;", "<div style='position:absolute;left:0;top:0;width:100%;overflow:hidden;'></div><div style='position:absolute;left:0;width:100%;'><div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div></div>");
 
 
 
@@ -49,7 +70,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //是否显示标题栏
-    this.defineProperty("header_visible", true, "layout");
+    this.defineProperty("head_visible", true, "layout");
 
 
     //窗口关闭前事件
@@ -64,19 +85,26 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //初始化窗口标题栏
-    this.initialize_header = function (header) {
+    this.initialize_head = function (head) {
 
-        header.appendChild(new flyingon.HtmlControl().set_text("dddddddd"))
+        head.appendChild(new flyingon.HtmlControl().set_text("dddddddd"))
     };
 
 
 
 
+    this.__event_capture_mousedown = function (event) {
+
+        if (this.__dialog_move__ = event.which === 1 && event.in_dom(this.dom_head)) //按标题栏拖动
+        {
+            return false;
+        }
+    };
 
 
     this.__event_capture_mousemove = function (event) {
 
-        if (event.pressdown && event.which === 1 && event.dom === this.dom_header) //按标题栏拖动
+        if (event.pressdown && this.__dialog_move__) //按标题栏拖动
         {
             var start = event.pressdown.start || (event.pressdown.start = { x: this.offsetLeft, y: this.offsetTop });
 
@@ -173,31 +201,32 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-    //this.__fn_arrange = function (box, width, height) {
+    this.__fn_measure_client = function (box, dom_body) {
 
-    //    var header = this.dom_header,
-    //        style1 = header.style,
-    //        style2 = this.dom_body.style,
-    //        y = 0;
+        var head = this.head,
+            style1 = this.dom_head.style,
+            style2 = dom_body.style,
+            y = 0;
 
-    //    if (this.get_header_visible())
-    //    {
-    //        style1.display = "";
-    //        y = header.offsetHeight;
+        if (this.get_head_visible())
+        {
+            style1.display = "";
 
-    //        this.header.measure(this.offsetWidth, y);
-    //        this.header.render();
-    //    }
-    //    else
-    //    {
-    //        style1.display = "none";
-    //    }
+            head.measure(this.offsetWidth, 25, true, true);
+            head.render();
 
-    //    style2.top = y + "px";
-    //    style2.height = this.offsetHeight - box.border_width - y + "px";
+            style1.height = (y = head.offsetHeight) + "px";
+        }
+        else
+        {
+            style1.display = "none";
+        }
 
-    //    base.__fn_arrange.call(this, box, width, height);
-    //};
+        style2.top = y + "px";
+        style2.height = this.offsetHeight - box.border_width - y + "px";
+
+        base.__fn_measure_client.call(this, box, dom_body);
+    };
 
 
     this.render = function (center) {
@@ -210,19 +239,22 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
             this.__update_dirty = 2;
         }
 
-        this.measure(+this.get_width() || this.defaultWidth, +this.get_height() || this.defaultHeight);
-
-        if (center)
+        if (this.__arrange_dirty)
         {
-            this.set_left(((dom.parentNode.clientWidth - this.offsetWidth) >> 1) + "px");
-            this.set_top(((dom.parentNode.clientHeight - this.offsetHeight) >> 1) + "px");
+            this.measure(+this.get_width() || this.defaultWidth, +this.get_height() || this.defaultHeight);
+
+            if (center)
+            {
+                this.set_left(((dom.parentNode.clientWidth - this.offsetWidth) >> 1) + "px");
+                this.set_top(((dom.parentNode.clientHeight - this.offsetHeight) >> 1) + "px");
+            }
+
+            dom.style.left = this.get_left();
+            dom.style.top = this.get_top();
+
+            this.offsetLeft = dom.offsetLeft;
+            this.offsetTop = dom.offsetTop;
         }
-
-        dom.style.left = this.get_left();
-        dom.style.top = this.get_top();
-
-        this.offsetLeft = dom.offsetLeft;
-        this.offsetTop = dom.offsetTop;
 
         base.render.call(this);
     };

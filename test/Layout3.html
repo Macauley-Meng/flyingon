@@ -14,6 +14,7 @@
 
     //布局容器相关的attribute
 
+    layout-control          //布局控件 splitter|tab-panel|tab
     layout-type             //布局类型 flow|line|split|dock|cascade|grid|table|absolute
     layout-vertical         //是否竖排 true|false
     layout-mirror           //镜向 x|y|center
@@ -74,13 +75,16 @@
 
         <div layout-dock="top" style="height:50px;border:1px solid blue;margin-bottom:2px;">top</div>
         <div layout-dock="bottom" style="height:50px;border:1px solid blue;margin-top:2px;">bottom</div>
-        <div layout-dock="left" layout-type="line" layout-vertical="1" style="width:200px;border:1px solid blue;">
-            <div>left 1</div>
-            <div>left 2</div>
-            <div>left 3</div>
-            <div>left 4</div>
+        <div layout-control="tab-panel" layout-dock="left" layout-type="line" layout-vertical="1" style="width:200px;border:1px solid blue;">
+            <div>title</div>
+            <div>
+                <div>left 1</div>
+                <div>left 2</div>
+                <div>left 3</div>
+                <div>left 4</div>
+            </div>
         </div>
-        <div layout-type="splitter"></div>
+        <div layout-control="splitter"></div>
 
         <div layout-dock="right" layout-type="line" layout-vertical="1" style="width:200px;border:1px solid blue;">
             <div>right 1</div>
@@ -89,7 +93,7 @@
             <div>right 4</div>
         </div>
 
-        <div layout-type="splitter" layout-dock="right"></div>
+        <div layout-control="splitter" layout-dock="right"></div>
         <div layout-dock="fill" style="border: 1px solid blue;">fill</div>
 
     </div>

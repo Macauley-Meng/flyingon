@@ -239,29 +239,48 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
         var control, items, item, name;
 
-        if (item = dom.getAttribute("layout-type")) //面板
+        switch (dom.getAttribute("layout-control")) //指定布局控件
         {
-            if (item === "splitter")
-            {
+            case "splitter":
                 control = new flyingon.Splitter(dom);
-            }
-            else
-            {
-                control = new flyingon.Panel();
+                break;
 
-                if ((items = children_wrapper(dom)).length > 0)
+            case "tab-panel":
+                control = new flyingon.TabPanel();
+
+                if ((items = children_wrapper(dom.children[1])).length > 0)
                 {
                     control.appendChild.apply(control, items);
                 }
 
-                control.__fn_from_dom(dom);
-                dom.appendChild(control.dom_children);
-            }
+                //control.__fn_from_dom(dom);
+                //dom.appendChild(control.dom_children);
+                break;
+
+            case "tab":
+                control = new flyingon.TabControl();
+                break;
+
+            default:
+                if (dom.getAttribute("layout-type")) //有layout-type解析为面板
+                {
+                    control = new flyingon.Panel();
+
+                    if ((items = children_wrapper(dom)).length > 0)
+                    {
+                        control.appendChild.apply(control, items);
+                    }
+
+                    control.__fn_from_dom(dom);
+                    dom.appendChild(control.dom_children);
+                }
+                else //否则解析成html控件
+                {
+                    control = new flyingon.HtmlControl(dom);
+                }
+                break;
         }
-        else
-        {
-            control = new flyingon.HtmlControl(dom);
-        }
+
 
         //同步dom属性至控件
         for (var i = 0, _ = (items = dom.attributes).length; i < _; i++)

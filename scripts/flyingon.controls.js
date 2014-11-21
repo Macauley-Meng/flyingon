@@ -784,11 +784,11 @@
             }
         }
 
-        if (options.headers)
+        if (options.head)
         {
-            for (var name in options.headers)
+            for (var name in options.head)
             {
-                request.setRequestHeader(name, options.headers[name]);
+                request.setRequestHeader(name, options.head[name]);
             }
         }
 

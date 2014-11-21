@@ -13,8 +13,7 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
 
     Class.create = function () {
 
-        this.dom_div = this.dom.children[0];
-        this.dom_image = this.dom_div.children[0];
+        this.dom_image = this.dom.children[0];
 
         this.dom_image.onload = this.__fn_image_load;
         this.dom_image.onerror = this.__fn_image_error;
@@ -22,7 +21,7 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
 
 
 
-    this.create_dom_template("div", null, "<div style=\"position:relative;overflow:hidden;\"><img style=\"position:relative;\"/></div>");
+    this.create_dom_template("div", null, "<img style=\"position:relative;\"/>");
 
 
     //设置默认大小
@@ -32,26 +31,15 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
     //url目录
     //theme:        当前主题目录
     //language:     当前语言目录
-    this.defineProperty("directory", "", {
-
-        end_code: "if (cache = this.get_src()) this.__fn_image_src(cache);"
-    });
+    this.defineProperty("directory", "", "update");
 
 
     //图片路径
-    this.defineProperty("src", "", {
-
-        end_code: "this.__fn_image_src(value);"
-    });
+    this.defineProperty("src", "", "update");
 
 
-    //图片区域剪切
-    //示例: "100,100,16,16"表示从图片坐标为100,100的位置剪切16*16大小的图像
-    this.defineProperty("clip", "", {
-
-        attributes: "layout",
-        end_code: "this.__fn_image_clip(value);"
-    });
+    //图片key
+    this.defineProperty("key", "", "update");
 
 
     //未能正常加载图片时的提醒文字
@@ -95,30 +83,6 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
         this.dom_image.src = directory + url;
     };
 
-
-    this.__fn_image_clip = function (value) {
-
-        var style = this.dom_div.style;
-
-        if (value && (value = value.match(/\d+/g)) && value.length >= 4)
-        {
-            this.__clip_data = [+value[0], +value[1], +value[2], +value[3]];
-
-            style.width = value[2] + "px";
-            style.height = value[3] + "px";
-        }
-        else
-        {
-            this.__clip_data = null;
-
-            style.width = style.height = "";
-
-            if ((style = this.dom_image.style).clip)
-            {
-                style.left = style.top = style.clip = "";
-            }
-        }
-    };
 
 
     this.__fn_image_load = function (event) {

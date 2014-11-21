@@ -5,36 +5,19 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
 
-    Class.create_mode = "replace";
-
-    Class.create = function () {
-
-        //变量管理器
-        this.__fields = Object.create(this.__defaults);
-
-        //根据dom模板创建关联的dom元素
-        (this.dom = this.dom_template.cloneNode(true)).flyingon = this;
-
-        this.dom_children = this.dom.children[0];
-        this.__children = new flyingon.ControlCollection(this);
-    };
-
-
-
-
     var layouts = flyingon.layouts,         //缓存布局服务
         layout_unkown = layouts["flow"];    //默认布局类型
 
+    
 
 
-    //dom元素模板
-    this.create_dom_template("div", null, "<div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div>");
+    Class.create_mode = "merge";
+
 
 
 
     //修改默认宽高
     this.defaultWidth = this.defaultHeight = 400;
-
 
 
 

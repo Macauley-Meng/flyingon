@@ -171,11 +171,11 @@
 
                 if (!style.__cursor__)
                 {
-                    style.__cursor__ = true;
                     (cursor_list || (cursor_list = [])).push(style, style.cursor);
-                }
 
-                style.cursor = pressdown.cursor;
+                    style.__cursor__ = true;
+                    style.cursor = pressdown.cursor;
+                }
             }
         });
 
@@ -214,7 +214,7 @@
             }
 
             var ownerWindow = this.flyingon,
-                target = dom_target(event || (event = fix_event(window.event))),
+                target = dom_target(event || (event = fix_event(window.event))) || ownerWindow,
                 cache;
 
             //活动窗口不是当前点击窗口则设置为活动窗口
@@ -231,51 +231,48 @@
                 event.which = event.button & 1 ? 1 : (event.button & 2 ? 3 : 2);
             }
 
+            //记录鼠标按下位置
+            pressdown = {
+
+                dom: event.target, //按下时触发事件的dom
+                capture: target,
+                which: event.which,
+                cursor: target.dom.style.cursor || "default",
+                clientX: event.clientX,
+                clientY: event.clientY
+            };
+
             //先分发mousedown事件,如果取消默认行为则不执行后续处理
-            if (target)
+            if (target.dispatchEvent(new MouseEvent("mousedown", event)) !== false)
             {
-                //记录鼠标按下位置
-                pressdown = {
-
-                    dom: event.target, //按下时触发事件的dom
-                    capture: target,
-                    which: event.which,
-                    cursor: target.dom.style.cursor,
-                    clientX: event.clientX,
-                    clientY: event.clientY
-                };
-
-                if (target.dispatchEvent(new MouseEvent("mousedown", event)) !== false)
+                //可调整大小 触控版目前不支持调整大小
+                if (resizable)
                 {
-                    //可调整大小 触控版目前不支持调整大小
-                    if (resizable)
-                    {
-                        //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
-                        setCapture(capture_dom = event.target, event);
+                    //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
+                    setCapture(capture_dom = event.target, event);
 
-                        //禁止点击事件
-                        flyingon.__disable_click = flyingon.__disable_dbclick = true;
-                    }
-                    else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
-                    {
-                        //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
-                        setCapture(capture_dom = event.target, event);
+                    //禁止点击事件
+                    flyingon.__disable_click = flyingon.__disable_dbclick = true;
+                }
+                else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
+                {
+                    //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
+                    setCapture(capture_dom = event.target, event);
 
-                        //记录状态
-                        draggable = cache;
-                    }
-                    else
-                    {
-                        target.__fn_to_active(true); //设置活动状态
-                    }
+                    //记录状态
+                    draggable = cache;
                 }
                 else
                 {
-                    resizable = null;
                     target.__fn_to_active(true); //设置活动状态
-
-                    setCapture(capture_dom = event.target, event); //返回false则自动捕获鼠标
                 }
+            }
+            else
+            {
+                resizable = null;
+                target.__fn_to_active(true); //设置活动状态
+
+                setCapture(capture_dom = event.target, event); //返回false则自动捕获鼠标
             }
         };
 
@@ -421,16 +418,6 @@
             event.wheelDelta = value;
 
             return target.dispatchEvent(event);
-        };
-
-
-        //调整大小或拖动时禁止系统拖动事件
-        events.dragstart = function (event) {
-
-            if (resizable || draggable)
-            {
-                event.stopImmediatePropagation();
-            }
         };
 
 
