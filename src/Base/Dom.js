@@ -89,6 +89,33 @@
     })();
 
 
+    //转换url为绝对路径
+    flyingon.absolute_url = (function () {
+
+        var dom = document.createElement("a"),
+            regex;
+
+        function fn(url) {
+
+            dom.href = url;
+            return dom.href;
+        };
+
+        if (fn(""))
+        {
+            return fn;
+        }
+
+        dom = document.createElement("div");
+        regex = /"/g;
+
+        return function (url) {
+
+            dom.innerHTML = "<a href=\"" + url.replace(regex, "%22") + "\"/>";
+            return dom.firstChild.href;
+        };
+
+    })();
 
 
     //打印指定dom

@@ -146,26 +146,6 @@ flyingon.defineStyle({
     },
 
 
-    //按钮样式
-    "@flyingon-Button": {
-
-        backgroundColor: ""
-    },
-
-    //活动状态时按钮样式
-    "@flyingon-Button:hover": {
-
-        backgroundColor: "yellow"
-    },
-
-    //鼠标按下时按钮样式
-    "@flyingon-Button:active": {
-
-        backgroundColor: "blue"
-    },
-
-
-
 
     //面板控件样式
     "@flyingon-DesignPanel": {

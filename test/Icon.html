@@ -3,11 +3,14 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title></title>
+    <style type="text/css">
+        span {
+            font-size: 16px;
+        }
+    </style>
 
     <script src="../scripts/flyingon.js"></script>
-    <script src="../scripts/flyingon.controls.js"></script>
     <script src="../themes/default/flyingon.js"></script>
-
 
     <script type="text/javascript">
 
@@ -23,16 +26,23 @@
         });
 
 
+        var date = new Date();
 
-        var image = new flyingon.Image().sets({
+        for (var i = 0; i < 10000; i++)
+        {
+            w.__fn_className("a b");
+        }
 
-            width: "200px",
-            height: "200px",
+        alert(new Date() - date);
+
+
+
+        var image = new flyingon.Icon().sets({
+
+            width: "100px",
             overflow: "hidden",
-            textAlign: "center",
-            src: "/themes/default/images/tool.png",
-            //src: "mhtml:http://localhost/themes/default/images.html!polloloco",
-            title: "why?"
+            backgroundPosition: "20px 0px",
+            backgroundImage: "url(/themes/default/images/tool.png)"
         });
 
         w.appendChild(image);
@@ -41,6 +51,7 @@
 
 
     </script>
+
 
 </head>
 <body>

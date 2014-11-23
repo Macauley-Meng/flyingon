@@ -12,7 +12,7 @@
 
 
 
-//根命名空间
+//根名字空间
 window.flyingon = (function () {
 
 
@@ -452,7 +452,7 @@ flyingon.Exception = function (message, parameters) {
 
 
 
-    var namespace_list = { "flyingon": flyingon }, //缓存命名空间
+    var namespace_list = { "flyingon": flyingon }, //缓存名字空间
 
         class_list = flyingon.__registry_class_list = {}, //已注册类型集合
 
@@ -464,7 +464,7 @@ flyingon.Exception = function (message, parameters) {
 
         regex_has = /\w/, //检测非空函数的正则表达式
 
-        self = this; //记下根对象
+        _this = this; //系统名字空间
 
 
 
@@ -534,11 +534,11 @@ flyingon.Exception = function (message, parameters) {
         {
             if (result.constructor === String && !(result = namespace_list[result]))
             {
-                result = self;
-
                 var names = namespace.split("."),
                     name,
                     value;
+
+                result = _this;
 
                 for (var i = 0, _ = names.length; i < _; i++)
                 {

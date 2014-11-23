@@ -3,11 +3,6 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title></title>
-</head>
-<body>
-
-    <div id="host" style="width: 100%; height: 600px;">
-    </div>
 
 
     <script src="../scripts/flyingon.js"></script>
@@ -72,7 +67,7 @@
         //var data = w.stringify(true);
 
         //w = new flyingon.SerializeReader().deserialize(data);
-        host.appendChild(w.dom_window);
+        w.show("host");
 
 
         alert(w.stringify(false));
@@ -80,6 +75,12 @@
 
 
     </script>
+
+</head>
+<body>
+
+    <div id="host" style="width: 100%; height: 0;">
+    </div>
 
 
 </body>

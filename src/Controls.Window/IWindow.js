@@ -11,12 +11,12 @@
 
 
     //注册的事件列表
-    flyingon.ready(function () {
+    (function () {
 
 
 
         var host = document.documentElement,        //主容器
-            body = document.body,                   //
+            body,                                   //
 
             events = Object.create(null),           //注册的事件集合
 
@@ -59,6 +59,13 @@
 
 
 
+        flyingon.ready(function () {
+
+            body = document.body;
+        });
+
+
+
         //获取dom目标控件
         function dom_target(event) {
 
@@ -80,7 +87,7 @@
 
 
         //捕获或释放鼠标
-        if (body.setCapture)
+        if (document.createElement("div").setCapture)
         {
 
             setCapture = function (dom, event) {
@@ -455,8 +462,19 @@
         };
 
 
-
         events.contextmenu = function (event) {
+
+            return dom_target(event || fix_event(window.event)).dispatchEvent("contextmenu");
+        };
+
+
+        events.load = function (event) {
+
+            return dom_target(event || fix_event(window.event)).dispatchEvent("contextmenu");
+        };
+
+
+        events.error = function (event) {
 
             return dom_target(event || fix_event(window.event)).dispatchEvent("contextmenu");
         };
@@ -519,7 +537,7 @@
 
 
 
-    });
+    })();
 
 
 

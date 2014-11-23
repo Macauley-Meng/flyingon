@@ -16,9 +16,7 @@
 */
 flyingon.defineStyleSheets({
 
-
-
-
+    
 });
 
 
@@ -137,6 +135,25 @@ flyingon.defineStyle({
         width: "2px",
         height: "2px",
         backgroundColor: "silver"
+    },
+
+
+    //按钮样式
+    "@flyingon-Button": {
+
+        backgroundColor: ""
+    },
+
+    //活动状态时按钮样式
+    "@flyingon-Button:hover": {
+
+        backgroundColor: "yellow"
+    },
+
+    //鼠标按下时按钮样式
+    "@flyingon-Button:active": {
+
+        backgroundColor: "blue"
     },
 
 

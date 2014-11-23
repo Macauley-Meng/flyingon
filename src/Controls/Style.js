@@ -41,16 +41,6 @@
             ">": true,
             "+": true,
             "~": true
-        },
-
-        pseudo_keys = {             //伪类key 不在此列即为伪元素 value为伪元素权重 默认为10
-
-            enabled: 15,
-            disabled: 15,
-            active: 14,
-            hover: 13,
-            focus: 12,
-            checked: 11
         };
 
 
@@ -133,16 +123,13 @@
 
         var dom = document.createElement("style"),
             css,
-            rules,
-            add,
-            remove;
+            rules;
 
         dom.type = "text/css";
         document.getElementsByTagName("head")[0].appendChild(dom);
 
         css = document.styleSheets[document.styleSheets.length - 1];
         rules = css.rules || css.cssRules;
-        remove = (add = css.addRule) ? css.removeRule : css.deleteRule;
 
 
         //添加或删除样式表规则
@@ -155,14 +142,28 @@
                 case 0: //清除所有样式
                     for (var i = rules.length - 1; i >= 0; i--)
                     {
-                        remove.call(css, i);
+                        if (css.removeRule)
+                        {
+                            css.removeRule(i);
+                        }
+                        else
+                        {
+                            css.deleteRule(i);
+                        }
                     }
                     break;
 
                 case 1: //删除指定名称或索引的样式
                     if ((index = +selector) >= 0)
                     {
-                        remove.call(css, index);
+                        if (css.removeRule)
+                        {
+                            css.removeRule(i);
+                        }
+                        else
+                        {
+                            css.deleteRule(i);
+                        }
                     }
                     else
                     {
@@ -170,7 +171,14 @@
                         {
                             if (rules[i].name === selector)
                             {
-                                remove.call(css, i);
+                                if (css.removeRule)
+                                {
+                                    css.removeRule(i);
+                                }
+                                else
+                                {
+                                    css.deleteRule(i);
+                                }
                             }
                         }
                     }
@@ -179,9 +187,9 @@
                 default: //添加样式
                     index = rules.length;
 
-                    if (add)
+                    if (css.addRule)
                     {
-                        add.call(css, selector, cssText || "", index);
+                        css.addRule(selector, cssText || "", index);
                     }
                     else
                     {
@@ -252,8 +260,7 @@
     flyingon.__fn_style_declare = function (defaultWidth, defaultHeight) {
 
 
-        var self = this,
-
+        var _this = this,
             items = ["left", "top", "right", "bottom"]; //复合样式子项值
 
 
@@ -306,7 +313,7 @@
 
             style_split[name = convert_name(name)] = split_fn;
 
-            flyingon.defineProperty(self, name, getter, function (value) {
+            flyingon.defineProperty(_this, name, getter, function (value) {
 
                 var values = split_fn(value);
 
@@ -338,7 +345,7 @@
             original_names[key] = name;
 
             //解析属性
-            attributes = self.__define_attributes(attributes);
+            attributes = _this.__define_attributes(attributes);
             attributes.style = true;
 
             if (attributes.no)
@@ -351,7 +358,7 @@
             }
 
             //注册默认值
-            self.__defaults[key] = defaultValue;
+            _this.__defaults[key] = defaultValue;
 
             //设置样式数据类型
             if ((style_data_types[key] = typeof defaultValue) === "number" && !("" + defaultValue).indexOf("."))
@@ -381,10 +388,10 @@
                         "this.__parent ? this.__parent.get_" + key + "() : this.__defaults[name];" :
                         "this.__css_values[name] = this.__defaults[name];\n")),
 
-                setter = self.__define_setter(key, style_data_types[key], attributes);
+                setter = _this.__define_setter(key, style_data_types[key], attributes);
 
             //定义属性
-            flyingon.defineProperty(self, key, getter, setter);
+            flyingon.defineProperty(_this, key, getter, setter);
 
             //扩展至选择器
             flyingon.query[key] = new Function("value", "return this.value(\"" + key + "\", value);");
@@ -439,6 +446,7 @@
             };
 
         };
+
 
 
 
@@ -950,7 +958,10 @@
         //控件背景图片
         //string        图像名(空字符串则表示无背景)
         //url('URL')	指向图像的路径
-        style("background-image", "");
+        style("background-image", "", {
+
+            end_code: "this.dom.style.backgroundImage = value !== undefined ? value.replace(\"@theme\", flyingon.current_theme).replace(\"@language\", flyingon.current_language) : \"\";"
+        });
 
         //控件背景重复方式
         //repeat	背景图像将在垂直方向和水平方向重复 
@@ -976,7 +987,7 @@
         //bottom right  如果您仅规定了一个关键词, 那么第二个值将是"center"     默认值：0% 0% 
         //x% y%	        第一个值是水平位置, 第二个值是垂直位置     左上角是 0% 0% 右下角是 100% 100%     如果您仅规定了一个值, 另一个值将是 50% 
         //xpos ypos	    第一个值是水平位置, 第二个值是垂直位置     左上角是 0 0 单位是像素 (0px 0px) 或任何其他的 CSS 单位     如果您仅规定了一个值, 另一个值将是50%     您可以混合使用 % 和 position 值 
-        style("background-position", "0% 0%");
+        style("background-position", "center center");
 
         //控件背景显示范围
         //padding-box	背景图像相对于内边距框来定位 	
@@ -1198,7 +1209,7 @@
             flyingon.__fn_dom_event(target);
         }
 
-        if ((target.__css_types || get_css_types(target)).rule) //是否使用css
+        if ((target.__css_types || get_css_types(target)).use_css) //是否使用css
         {
             if (target.__css_names)
             {
@@ -1260,17 +1271,30 @@
         if (css_list)
         {
             var types = target.__css_types || get_css_types(target),
-                style,
-                weights;
+                weights,
+                cache;
 
+            //按顺序获取权重值集合
             for (var i = types.length - 1; i >= 0; i--)
             {
-                if ((style = css_list[types[i]]) && (weights = style.__weights__))
+                if (cache = css_list[types[i]])
                 {
-                    for (var j = weights.length - 1; j >= 0; j--)
+                    for (var j = 0, _ = cache.length; j < _; j++)
+                    {
+                        (weights || (weights = {}))[cache[j]] = true;
+                    }
+                }
+            }
+
+            //按权重顺序查找样式值
+            if (weights)
+            {
+                for (var name in weights)
+                {
+                    if ((cache = +name) >= 0)
                     {
                         var item = target,
-                            values = style[weights[j]],
+                            values = css_list[cache],
                             selector = values[0],
                             end = selector.length - 1,
                             node = selector[end];
@@ -1294,6 +1318,10 @@
                         }
 
                         return values[1];
+                    }
+                    else
+                    {
+                        return;
                     }
                 }
             }
@@ -1335,6 +1363,7 @@
 
         var result = [],
             types = registry_types,
+            css, //是否利用css
             name,
             cache;
 
@@ -1342,11 +1371,11 @@
         if (cache = types["@flyingon-Control"])
         {
             result.push("@flyingon-Control");
-            result.rule = cache[0];
+            css = cache[0];
         }
         else
         {
-            result.rule = true;
+            css = true;
         }
 
         //添加类型class
@@ -1354,13 +1383,13 @@
         {
             result.push(name);
 
-            if (result.rule)
+            if (css)
             {
-                result.rule = cache[0];
+                css = cache[0];
             }
         }
 
-        //class 后置优先
+        //class
         if (target.__class_list)
         {
             for (var name in target.__class_list)
@@ -1369,9 +1398,9 @@
                 {
                     result.push(name);
 
-                    if (result.rule)
+                    if (css)
                     {
-                        result.rule = cache[0];
+                        css = cache[0];
                     }
                 }
             }
@@ -1381,8 +1410,15 @@
         if ((name = target.__fields.id) && types[name = "#" + name])
         {
             result.push(name);
-            result.rule = false;
+
+            if (css)
+            {
+                css = cache[0];
+            }
         }
+
+        //是否按样式表的方式处理
+        result.use_css = css;
 
         //清空相关缓存
         target.__css_keys = target.__class_keys = null;
@@ -1867,7 +1903,7 @@
 
                 for (var i = 0; i < length; i++)
                 {
-                    if (value = selector_rule(selector[i]))
+                    if (value = selector_rule(selector, i))
                     {
                         values.push(value);
                     }
@@ -1877,7 +1913,7 @@
                     }
                 }
 
-                selector.rule = values.join(""); //复用且保存css
+                selector.rule = (selector.prefix || "") + values.join(""); //复用且保存css
             }
         }
         else
@@ -1897,34 +1933,37 @@
 
 
     //获取选择器规则(伪元素及Id选择器及多伪类不支持生成css)
-    function selector_rule(selector) {
+    function selector_rule(selector, index) {
 
-        if (selector.token === "::" || selector.token === "#" || selector.length > 1)
+        var item = selector[index],
+            type,
+            result;
+
+        if (item.token === "::" || item.token === "#" || item.length > 1)
         {
             return null;
         }
 
-        var type = selector.type;
-
-        if (type && !selector_rule_type[type])
+        if ((type = item.type) && !selector_rule_type[type])
         {
             return null;
         }
 
-        var result = [];
+        result = [];
 
         if (type)
         {
             result.push(type);
         }
 
-        result.push(selector.token === "@" ? "." : selector.token);
-        result.push(selector.name);
+        result.push(item.token === "@" ? "." : item.token);
+        result.push(item.name);
 
         //单个伪类
-        if (selector.length > 0)
+        if (item.length > 0)
         {
-            result.push("--" + selector[0].name);
+            selector.prefix = ".flyingon "; //添加前缀使权重等于伪类
+            result.push("--" + item[0].name);
         }
 
         return result.join("");
@@ -1940,7 +1979,7 @@
     通用选择符的权重为：0000
     子选择符的权重为：0000
     属性选择符的权重为：0010
-    伪类选择符的权重为：0010 (此处做了特殊处理:默认为10, 其它伪类提升至11-16)
+    伪类选择符的权重为：0010
     伪元素选择符的权重为：0010
     包含选择符的权重为：包含的选择符权重值之和
     内联样式的权重为：1000
@@ -1973,13 +2012,10 @@
                     break;
             }
 
-            for (var j = 0, _ = node.length; j < _; j++)
-            {
-                result += pseudo_keys[node[j].name] || 10;
-            }
+            result += node.length * 10;
         }
 
-        return selector.weight = result << 8; //左移8个字节以留足中间插入的空间(即中间最多可插入256个元素)
+        return selector.weight = result << 16; //左移16个字节以留足中间插入的空间
     };
 
 
@@ -1992,63 +2028,59 @@
             {
                 flyingon.css_rule(selector.rule, selector.cssText);
             }
-
-            return;
         }
-
-        var style = selector.style,
-            type = selector.type,
-            types = registry_types[type] || (registry_types[type] = [true, Object.create(null)]), //注册类型
-            no_names = style_no_names,
-            value;
-
-        if (selector.rule !== undefined)
+        else //否则按扩展控件样式处理
         {
-            if (selector.rule) //复用且保存css
-            {
-                flyingon.css_rule(selector.rule, selector.cssText);
-            }
-        }
-        else
-        {
-            types[0] = false; //不可复用样式
-        }
-
-        for (var name in style)
-        {
-            var value = style[name],
-                weight = selector.weight, //当前权重
+            var style = selector.style,
+                type = selector.type,
+                types = registry_types[type] || (registry_types[type] = [true, Object.create(null)]), //注册类型
+                no_names = style_no_names,
+                weight,
                 cache_name,
+                cache_type,
                 cache;
 
-            //注册类型
-            if (!(name in no_names || name in types[1]))
+            if (selector.rule !== undefined)
             {
-                types[1][name] = true;
-            }
-
-            //注册属性
-            if (cache_name = registry_names[name]) //已有属性
-            {
-                if (cache = cache_name[type])
+                if (selector.rule) //复用且保存css
                 {
-                    while ((cache_name = cache[weight]) && cache_name[0].key !== selector.key) //如果选择器相等则后置优先
-                    {
-                        weight++;
-                    }
-                }
-                else
-                {
-                    cache = cache_name[type] = Object.create(null);
+                    flyingon.css_rule(selector.rule, selector.cssText);
                 }
             }
             else
             {
-                cache = (registry_names[name] = {})[type] = Object.create(null);
+                types[0] = false; //不可复用样式
             }
 
-            cache[weight] = [selector, value];
-            (cache.__weights__ || (cache.__weights__ = [])).push(weight);
+            for (var name in style)
+            {
+                weight = selector.weight; //当前权重
+
+                //注册类型
+                if (!(name in no_names || name in types[1]))
+                {
+                    types[1][name] = true;
+                }
+
+                //注册属性
+                if (cache_name = registry_names[name]) //已有属性
+                {
+                    if (cache = cache_name[weight]) //如果已存在权重则往后累加
+                    {
+                        cache[2] = weight = (cache[2] || weight) + 1;
+                    }
+
+                    cache_type = cache_name[type] || (cache_name[type] = []);
+                }
+                else
+                {
+                    cache_name = registry_names[name] = {};
+                    cache_type = cache_name[type] = [];
+                }
+
+                cache_name[weight] = [selector, style[name]];
+                cache_type.push(weight);
+            }
         }
     };
 

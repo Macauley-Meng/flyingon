@@ -20,102 +20,6 @@
             margin-left: 2px;
         }
     </style>
-</head>
-<body style="margin: 0;">
-
-    <div style="width: 100%; height: 100%;">
-
-        <div id="tool">
-
-            <div id="drag" style="border:1px solid black; padding:2px; background-color: yellow;">
-
-                <input type="button" value="horizontal" onclick="vertical(false)" />
-                <input type="button" value="vertical" onclick="vertical(true)" />
-
-                <span style="width: 10px"></span>
-                <input type="button" value="mirror-none" onclick="mirror('none')" />
-                <input type="button" value="mirror-y" onclick="mirror('y')" />
-                <input type="button" value="mirror-x" onclick="mirror('x')" />
-                <input type="button" value="mirror-center" onclick="mirror('center')" />
-
-                <span style="width: 10px"></span>
-                <input type="button" value="Paint" onclick="paint()" />
-                <span style="width: 10px"></span>
-                <span style="color:red;">可拖动分隔条调整布局</span>
-            </div>
-
-            <table style="border:1px solid black;">
-                <tr>
-                    <td style="width:60px;">面板参数:</td>
-                    <td>
-                        <div id="panel_property" style="padding:2px;">
-
-                            <span>layoutType<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
-
-                            <span>spacingWidth<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
-                            <span>spacingHeight<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
-
-                            <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " readonly="readonly" value="" /></span>
-                            <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " readonly="readonly" value="" /></span>
-
-                            <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 500px; " readonly="readonly" value="" /></span>
-                            <span style="display: none;" tag="table">layoutTables<input type="text" style="width: 500px; " readonly="readonly" value="" /></span>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="width:60px;">控件参数:</td>
-                    <td>
-                        <div id="control_property" style="padding:2px;">
-
-                            <span>width<input type="text" style="width:50px;" value="default" onchange="to_control()" /></span>
-                            <span>height<input type="text" style="width:50px;" value="default" onchange="to_control()" /></span>
-
-                            <span>minWidth<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-                            <span>maxWidth<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-
-                            <span>minHeight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-                            <span>maxHeight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-
-                            <span>offsetX<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-                            <span>offsetY<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-
-                            <span>alignX<input type="text" style="width:50px;" value="center" onchange="to_control()" /></span>
-                            <span>alignY<input type="text" style="width:50px;" value="middle" onchange="to_control()" /></span>
-
-                            <span>resizable<input type="text" style="width:50px;" value="both" onchange="to_control()" /></span>
-                            <span>draggable<input type="text" style="width:50px;" value="both" onchange="to_control()" /></span>
-
-                            <span>marginLeft<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-                            <span>marginTop<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-                            <span>marginRight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-                            <span>marginBottom<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-
-                            <span tag="flow">newline<input type="text" style="width:50px;" value="false" onchange="to_control()" /></span>
-
-                            <span style="display: none;" tag="split">layoutSplit<input type="text" style="width: 50px; " value="before" onchange="to_control()" /></span>
-
-                            <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="to_control()" /></span>
-
-                            <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="to_control()" /></span>
-                            <span style="display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="to_control()" /></span>
-                            <span style="display: none;" tag="grid">columnIndex<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-                            <span style="display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="to_control()" /></span>
-
-                            <span style="display: none;" tag="absolute">left<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
-                            <span style="display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="to_control()" /></span>
-
-                        </div>
-                    </td>
-                </tr>
-            </table>
-
-        </div>
-
-        <div id="host" style="width: 100%; height: 600px;">
-        </div>
-
-    </div>
 
 
 
@@ -155,7 +59,7 @@
 
 
 
-        var w = new flyingon.Window(host).sets({
+        var w = new flyingon.Window("host").sets({
 
             layoutType: "flow",
             padding: "10px",
@@ -274,25 +178,6 @@
 
 
 
-
-
-        var inputs = tool.getElementsByTagName("input");
-
-        for (var i = 0; i < inputs.length; i++)
-        {
-            inputs[i].onkeydown = function (event) {
-
-                event = event || window.event;
-
-                if (event.keyCode === 13)
-                {
-                    this.blur();
-                }
-            };
-        }
-
-
-
         function paint() {
 
             var date = new Date();
@@ -361,8 +246,7 @@
             }
         };
 
-        from_panel();
-
+   
 
         function from_control() {
 
@@ -376,8 +260,6 @@
                 node.children[0].value = control.get(name);
             }
         };
-
-        from_control();
 
 
         function to_control() {
@@ -469,6 +351,37 @@
 
 
 
+
+
+
+        flyingon.ready(function () {
+
+            var inputs = tool.getElementsByTagName("input");
+
+            for (var i = 0; i < inputs.length; i++)
+            {
+                inputs[i].onkeydown = function (event) {
+
+                    event = event || window.event;
+
+                    if (event.keyCode === 13)
+                    {
+                        this.blur();
+                    }
+                };
+            }
+
+            from_panel();
+
+            from_control();
+
+        });
+
+
+
+        w.show("host");
+
+
         //flyingon.trace_start();
 
         //w.render();
@@ -483,6 +396,104 @@
 
 
     </script>
+</head>
+<body style="margin: 0;">
+
+    <div style="width: 100%; height: 100%;">
+
+        <div id="tool">
+
+            <div id="drag" style="border:1px solid black; padding:2px; background-color: yellow;">
+
+                <input type="button" value="horizontal" onclick="vertical(false)" />
+                <input type="button" value="vertical" onclick="vertical(true)" />
+
+                <span style="width: 10px"></span>
+                <input type="button" value="mirror-none" onclick="mirror('none')" />
+                <input type="button" value="mirror-y" onclick="mirror('y')" />
+                <input type="button" value="mirror-x" onclick="mirror('x')" />
+                <input type="button" value="mirror-center" onclick="mirror('center')" />
+
+                <span style="width: 10px"></span>
+                <input type="button" value="Paint" onclick="paint()" />
+                <span style="width: 10px"></span>
+                <span style="color:red;">可拖动分隔条调整布局</span>
+            </div>
+
+            <table style="border:1px solid black;">
+                <tr>
+                    <td style="width:60px;">面板参数:</td>
+                    <td>
+                        <div id="panel_property" style="padding:2px;">
+
+                            <span>layoutType<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
+
+                            <span>spacingWidth<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
+                            <span>spacingHeight<input type="text" style="width:50px;" value="" readonly="readonly" /></span>
+
+                            <span style="display: none;" tag="grid">layoutRows<input type="text" style="width: 100px; " readonly="readonly" value="" /></span>
+                            <span style="display: none;" tag="grid">layoutColumns<input type="text" style="width: 100px; " readonly="readonly" value="" /></span>
+
+                            <span style="display: none;" tag="table">layoutTable<input type="text" style="width: 500px; " readonly="readonly" value="" /></span>
+                            <span style="display: none;" tag="table">layoutTables<input type="text" style="width: 500px; " readonly="readonly" value="" /></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:60px;">控件参数:</td>
+                    <td>
+                        <div id="control_property" style="padding:2px;">
+
+                            <span>width<input type="text" style="width:50px;" value="default" onchange="to_control()" /></span>
+                            <span>height<input type="text" style="width:50px;" value="default" onchange="to_control()" /></span>
+
+                            <span>minWidth<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>maxWidth<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+
+                            <span>minHeight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>maxHeight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+
+                            <span>offsetX<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>offsetY<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+
+                            <span>alignX<input type="text" style="width:50px;" value="center" onchange="to_control()" /></span>
+                            <span>alignY<input type="text" style="width:50px;" value="middle" onchange="to_control()" /></span>
+
+                            <span>resizable<input type="text" style="width:50px;" value="both" onchange="to_control()" /></span>
+                            <span>draggable<input type="text" style="width:50px;" value="both" onchange="to_control()" /></span>
+
+                            <span>marginLeft<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginTop<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginRight<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span>marginBottom<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+
+                            <span tag="flow">newline<input type="text" style="width:50px;" value="false" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="split">layoutSplit<input type="text" style="width: 50px; " value="before" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="grid">rowSpan<input type="text" style="width: 50px; " value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">columnSpan<input type="text" style="width: 50px; " value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">columnIndex<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="grid">spacingCells<input type="text" style="width: 50px;" value="0" onchange="to_control()" /></span>
+
+                            <span style="display: none;" tag="absolute">left<input type="text" style="width:50px;" value="0" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="absolute">top<input type="text" style="width: 50px;" value="0" onchange="to_control()" /></span>
+
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+        <div id="host" style="width: 100%; height: 0;">
+        </div>
+
+    </div>
+
+
 
 </body>
 </html>

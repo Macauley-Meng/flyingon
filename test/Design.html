@@ -3,11 +3,6 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title></title>
-</head>
-<body>
-
-    <div id="host" style="width: 100%; height: 600px;">
-    </div>
 
     <script src="../scripts/flyingon.js"></script>
     <script src="../scripts/flyingon.controls.js"></script>
@@ -16,7 +11,7 @@
     <script type="text/javascript">
 
 
-        var w = new flyingon.Window(host).sets({
+        var w = new flyingon.Window().sets({
 
             layoutType: "flow",
             padding: "10px",
@@ -54,10 +49,17 @@
         }
 
         w.appendChild(panel);
+        w.show("host");
 
 
     </script>
 
+
+</head>
+<body>
+
+    <div id="host" style="width: 100%; height: 0;">
+    </div>
 
 </body>
 </html>

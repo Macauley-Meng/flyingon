@@ -407,6 +407,8 @@ flyingon.defineClass("Control", function () {
     (function (flyingon) {
 
 
+        var _this = this;
+
 
         //边框区大小(含边框及滚动条)
         this.offsetLeft = 0;    //相对父控件客户区偏移
@@ -436,8 +438,6 @@ flyingon.defineClass("Control", function () {
 
 
 
-        var self = this;
-
         function defineProperty(name, setter) {
 
             var getter = new Function("return this.dom." + name + ";");
@@ -447,7 +447,7 @@ flyingon.defineClass("Control", function () {
                 setter = new Function("value", "this.dom." + name + " = value;");
             }
 
-            self.defineProperty(name, getter, setter);;
+            _this.defineProperty(name, getter, setter);;
         };
 
 
@@ -915,40 +915,36 @@ flyingon.defineClass("Control", function () {
         //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
         var offset_fn;
 
-        flyingon.ready(function (body) {
+        document.createElement("div").getBoundingClientRect || flyingon.ready(function (body) {
 
-            offset_fn = body.getBoundingClientRect || (function () {
+            var dom = document.compatMode == "BackCompat" ? body : document.documentElement;
 
-                var dom = document.compatMode == "BackCompat" ? body : document.documentElement;
+            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
+            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
+            //问题2: 在table或iframe中offsetParent取值可能不准确
+            offset_fn = function () {
 
-                //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
-                //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
-                //问题2: 在table或iframe中offsetParent取值可能不准确
-                return function () {
+                var dom = this,
+                    x = 0,
+                    y = 0;
 
-                    var dom = this,
-                        x = 0,
-                        y = 0;
+                while (dom)
+                {
+                    x += dom.offsetLeft;
+                    y += dom.offsetTop;
 
-                    while (dom)
+                    if (dom = dom.offsetParent)
                     {
-                        x += dom.offsetLeft;
-                        y += dom.offsetTop;
-
-                        if (dom = dom.offsetParent)
-                        {
-                            x += dom.clientLeft;
-                            y += dom.clientTop;
-                        }
+                        x += dom.clientLeft;
+                        y += dom.clientTop;
                     }
+                }
 
-                    x -= dom.scrollLeft;
-                    y -= dom.scrollTop;
+                x -= dom.scrollLeft;
+                y -= dom.scrollTop;
 
-                    return { left: x, top: y };
-                };
-
-            })();
+                return { left: x, top: y };
+            };
 
         });
 
@@ -956,7 +952,8 @@ flyingon.defineClass("Control", function () {
         //获取控件相对浏览器视口坐标的偏移
         this.offset = function (clientX, clientY) {
 
-            var offset = offset_fn.call(this.dom);
+            var dom = this.dom,
+                offset = dom.getBoundingClientRect ? dom.getBoundingClientRect() : offset_fn.call(dom); //IE6不能使用offset_fn.call的方式调用
 
             return {
 
@@ -1460,53 +1457,6 @@ flyingon.defineClass("Control", function () {
 
             (this.dom = dom).flyingon = this;
         };
-
-
-        ////水平对齐dom
-        //this.__fn_dom_textAlign = function (dom, align) {
-
-        //    var width = dom.parentNode.clientWidth;
-
-        //    switch (align)
-        //    {
-        //        case "left":
-        //            dom.style.left = "0";
-        //            break;
-
-        //        case "center":
-        //            dom.style.left = ((width - dom.offsetWidth) >> 1) + "px";
-        //            break;
-
-        //        default:
-        //            dom.style.left = (width - dom.offsetWidth) + "px";
-        //            break;
-        //    }
-        //};
-
-
-        ////竖直对齐dom
-        //this.__fn_dom_verticalAlign = function (dom, align) {
-
-        //    var height;
-
-        //    switch (align)
-        //    {
-        //        case "top":
-        //            dom.style.top = "0";
-        //            return;
-
-        //        case "middle":
-        //            height = (dom.parentNode.clientHeight - dom.offsetHeight) >> 1;
-        //            break;
-
-        //        default:
-        //            height = dom.parentNode.clientHeight - dom.offsetHeight;
-        //            break;
-        //    }
-
-        //    dom.style.top = (height >= 0 ? height : 0) + "px";
-        //};
-
 
 
     }).call(this, flyingon);
