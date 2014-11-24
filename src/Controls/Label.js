@@ -30,11 +30,7 @@ flyingon.defineClass("Label", flyingon.Control, function (base) {
     this.defineProperty("text", "", {
 
         attributes: "layout",
-        end_code: (function () {
-
-            return document.createElement("div").textContent ? "this.dom_span.textContent = value;" : "this.dom_span.innerText = value;";
-
-        })()
+        end_code: "this.dom_span." + this.__textContent_name + " = value;"
     });
 
 

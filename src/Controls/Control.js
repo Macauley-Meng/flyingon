@@ -1459,6 +1459,11 @@ flyingon.defineClass("Control", function () {
         };
 
 
+        //dom文本内容属性名
+        this.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+
+
+
     }).call(this, flyingon);
 
 

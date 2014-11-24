@@ -16,7 +16,7 @@
 */
 flyingon.defineStyleSheets({
 
-    
+
 });
 
 
@@ -138,19 +138,33 @@ flyingon.defineStyle({
     },
 
 
-    //按钮样式
+    //图标控件样式
+    "@flyingon-Icon": {
+
+        fontSize: "18px",
+        cursor: "default"
+    },
+
+    //鼠标划过时图标控件样式
+    "@flyingon-Icon:hover": {
+
+        color: "orange"
+    },
+
+
+    //按钮控件样式
     "@flyingon-Button": {
 
         backgroundColor: ""
     },
 
-    //活动状态时按钮样式
+    //鼠标划过时按钮控件样式
     "@flyingon-Button:hover": {
 
         backgroundColor: "yellow"
     },
 
-    //鼠标按下时按钮样式
+    //鼠标按下时按钮控件样式
     "@flyingon-Button:active": {
 
         backgroundColor: "blue"

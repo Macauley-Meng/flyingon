@@ -26,26 +26,32 @@
         });
 
 
-        var date = new Date();
 
-        for (var i = 0; i < 10000; i++)
-        {
-            w.__fn_className("a b");
-        }
+        var image1 = new flyingon.Icon().sets({
 
-        alert(new Date() - date);
-
-
-
-        var image = new flyingon.Icon().sets({
-
-            width: "100px",
-            overflow: "hidden",
-            backgroundPosition: "20px 0px",
+            border: "1px solid red",
+            //backgroundPosition: "0px 0px",
             backgroundImage: "url(/themes/default/images/tool.png)"
         });
 
-        w.appendChild(image);
+
+        var image2 = new flyingon.Icon().sets({
+
+            border: "1px solid red",
+            fontFamily: "flyingon",
+            icon: "upload"
+        });
+
+
+        var image3 = new flyingon.Icon().sets({
+
+            border: "1px solid red",
+            fontFamily: "flyingon",
+            icon: "download"
+        });
+
+
+        w.appendChild(image1, image2, image3);
         w.show();
 
 

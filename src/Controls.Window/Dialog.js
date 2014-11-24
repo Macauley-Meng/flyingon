@@ -266,20 +266,40 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-
-//处理全局异常
-flyingon.addEventListener(window, "error", function (message, url, line) {
-
-    var error = flyingon.last_error;
-
-    if (error && (message = flyingon.translate("error.js", error.message)) && error.parameters)
-    {
-        error = error.parameters;
-        message = message.replace(/\{(\d+)\}/g, function (_, key) { return error[key] || ""; });
-    }
-
-    alert(message);
-    return true;
-});
+//处理异常信息
+(function (flyingon) {
 
 
+
+    //多语言缓存
+    var language = {};
+
+
+
+    //翻译多语言
+    flyingon.translate = function (file, message) {
+
+        var value = language[file] || (language[file] = flyingon.ajax_get(file.replace("@langauge", flyingon.current_language), "json"));
+        return (value = value[message]) != null ? value : message;
+    };
+
+
+
+    //处理全局异常
+    flyingon.addEventListener(window, "error", function (message, url, line) {
+
+        var error = flyingon.last_error;
+
+        if (error && (message = flyingon.translate("error.js", error.message)) && error.parameters)
+        {
+            error = error.parameters;
+            message = message.replace(/\{(\d+)\}/g, function (_, key) { return error[key] || ""; });
+        }
+
+        alert(message);
+        return true;
+    });
+
+
+
+})(flyingon);

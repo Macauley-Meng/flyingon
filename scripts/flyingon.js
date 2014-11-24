@@ -335,6 +335,7 @@ window.flyingon = (function () {
     //}
 
 
+
 })(flyingon);
 
 
@@ -347,6 +348,172 @@ flyingon.Exception = function (message, parameters) {
     flyingon.last_error = this; //记录当前异常对象
     this.message = message;
 };
+
+
+
+
+
+//脚本及资源
+(function (flyingon) {
+
+
+
+    //加载资源
+    (function () {
+
+
+        var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+
+
+        function load(dom, callback, thisArg, error) {
+
+            dom.onload = dom.onerror = dom.onreadystatechange = null;
+
+            if (callback)
+            {
+                callback.call(thisArg, error);
+            }
+
+            if (dom.parentNode)
+            {
+                dom.parentNode.removeChild(dom);
+            }
+        };
+
+
+        flyingon.load = function (url, callback, thisArg) {
+
+            var dom = document.createElement("script");
+
+            dom.type = "text/javascript";
+            dom.src = url;
+
+            dom.onerror = function (error) {
+
+                //alert(error);
+                load(dom, callback, thisArg, error);
+            };
+
+            dom.onload = dom.onreadystatechange = function () {
+
+                var state = dom.readyState;
+
+                if (!state || state === "loaded" || state === "complete")
+                {
+                    load(dom, callback, thisArg);
+                }
+            };
+
+            head.appendChild(dom);
+        };
+
+
+        //引入样式
+        flyingon.link = function (url) {
+
+            var dom = document.createElement("link");
+
+            dom.rel = "stylesheet"
+            dom.href = url;
+
+            head.appendChild(dom);
+
+            return dom;
+        };
+
+
+        //动态创建样式表
+        flyingon.style = function (cssText) {
+
+            var style;
+
+            if (document.createStyleSheet)  //ie
+            {
+                style = document.createStyleSheet();
+                style.cssText = cssText;
+            }
+            else
+            {
+                style = document.createElement("style");//w3c
+                style.setAttribute("type", "text/css");
+
+                style.innerHTML = cssText;
+                //style.appendChild(document.createTextNode(cssText));
+
+                head.appendChild(style)
+            }
+
+            return style;
+        };
+
+
+    })();
+
+
+
+    //jsonp
+    flyingon.jsonp = (function () {
+
+        var id = 0;
+
+        return function (url, callback_name) {
+
+            callback_name = "callback=" + encodeURIComponent(callback_name) + "&unique=" + (++id);
+            flyingon.load((url.indexOf("?") > 0 ? "&" : "?") + callback_name);
+        };
+
+    })();
+
+
+
+    //脚本依赖
+    flyingon.require = (function () {
+
+
+        function load(files, index, callback, thisArg) {
+
+            flyingon.load(files[index++], function () {
+
+                if (index < files.length)
+                {
+                    load(files, index, callback, thisArg);
+                }
+                else
+                {
+                    callback.call(thisArg);
+                }
+            });
+        };
+
+
+        return function (files, callback, thisArg) {
+
+            if (files)
+            {
+                if (files.constructor === String)
+                {
+                    flyingon.load(files, function () {
+
+                        callback.call(thisArg);
+                    });
+                }
+                else if (files.length > 0) //多个文件按顺序加载执行
+                {
+                    load(files, 0, callback, thisArg);
+                }
+            }
+            else if (callback)
+            {
+                callback.call(thisArg);
+            }
+        };
+
+
+    })();
+
+
+
+})(flyingon);
 
 
 
@@ -526,7 +693,7 @@ flyingon.Exception = function (message, parameters) {
 
 
     //创建或切换名字空间方法
-    flyingon.namespace = function (namespace, fn) {
+    flyingon.namespace = function (namespace, files, fn) {
 
         var result = namespace;
 
@@ -561,7 +728,11 @@ flyingon.Exception = function (message, parameters) {
 
         if (fn)
         {
-            fn.call(result, flyingon);
+            flyingon.require(files, fn, result);
+        }
+        else if (fn = files)
+        {
+            fn.call(result);
         }
 
         return result;
@@ -646,7 +817,7 @@ flyingon.Exception = function (message, parameters) {
 
 
         //类功能扩展
-        class_fn.call(prototype, base, flyingon);
+        class_fn.call(prototype, base);
 
 
         //回滚全局对象
@@ -4215,8 +4386,7 @@ flyingon.defineClass("Component", function () {
 
         return key in style_test ? style_prefix2 + name : null;
     };
-
-
+    
 
 
     //标准css样式表操作
@@ -8387,6 +8557,11 @@ flyingon.defineClass("Control", function () {
         };
 
 
+        //dom文本内容属性名
+        this.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+
+
+
     }).call(this, flyingon);
 
 
@@ -11954,11 +12129,7 @@ flyingon.defineClass("Label", flyingon.Control, function (base) {
     this.defineProperty("text", "", {
 
         attributes: "layout",
-        end_code: (function () {
-
-            return document.createElement("div").textContent ? "this.dom_span.textContent = value;" : "this.dom_span.innerText = value;";
-
-        })()
+        end_code: "this.dom_span." + this.__textContent_name + " = value;"
     });
 
 
@@ -12044,10 +12215,7 @@ flyingon.defineClass("Button", flyingon.Control, function (base) {
 
 
 
-﻿/// <reference path="../Base/Core.js" />
-/// <reference path="Control.js" />
-
-
+﻿
 /*
 
 */
@@ -12061,23 +12229,100 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
 
     //创建dom元素模板
-    this.create_dom_template("div", "text-align:center;vertical-align:middle;background-position:center center;background-repeat:no-repeat;");
+    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;");
 
 
 
 
+    //字体图标路径(注:在IE6中测试不支持绝对路径,写成../icons/就正常)
+    flyingon.icons_path = "/icons/";
 
 
 
+    //字库名
+    this.defineProperty("fontFamily", "flyingon", {
 
-    //图片路径
-    //变量
-    //@theme        当前主题目录 
-    //@language     当前语言目录
+        end_code: "this.__fn_font_face(value || \"flyingon\");"
+    });
+
+
+    //图标名称
     this.defineProperty("icon", "", {
 
-        end_code: ""
+        end_code: "this.__fn_font_icon(fields.fontFamily || \"flyingon\", value);"
     });
+
+
+
+
+    var font_list = {};    //字体图标库
+
+
+    //注册字体名值对回调函数
+    flyingon.icons = function (name, icons) {
+
+        if (name && icons)
+        {
+            var cache = font_list[name],
+                icon;
+
+            font_list[name] = icons;
+
+            if (cache && cache.constructor === Array) //设置未处理图标
+            {
+                for (var i = 0, _ = cache.length; i < _; i++)
+                {
+                    if (icon = cache[i].__fields.icon)
+                    {
+                        cache[i].__fn_font_icon(name, icon);
+                    }
+                }
+            }
+        }
+    };
+
+
+    //设置字体库
+    this.__fn_font_face = function (name) {
+
+        var cache = font_list[name];
+
+        this.dom.style.fontFamily = name;
+
+        if (cache)
+        {
+            if (cache.constructor === Array)
+            {
+                cache.push(this);
+            }
+            else if (this.__fields.icon)
+            {
+                this.__fn_font_icon(name, this.__fields.icon);
+            }
+        }
+        else
+        {
+            font_list[name] = [this];
+            name = flyingon.icons_path + name;
+
+            flyingon.load(name + ".js");
+            flyingon.link(name + ".css");
+        }
+    };
+
+
+    //设置字体图标
+    this.__fn_font_icon = (function (name) {
+
+        return function (fontFamily, icon) {
+
+            if (fontFamily = font_list[fontFamily])
+            {
+                this.dom[name] = fontFamily[icon] || "";
+            }
+        };
+
+    })(this.__textContent_name);
 
 
 
@@ -12090,6 +12335,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
             this.dom.style.lineHeight = this.clientHeight + "px";
         }
     };
+
 
 
 });
@@ -12211,11 +12457,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
     this.defineProperty("text", "", {
 
-        end_code: (function () {
-
-            return document.createElement("div").textContent ? "this.dom.textContent = value;" : "this.dom.innerText = value;";
-
-        })()
+        end_code: "this.dom." + this.__textContent_name + " = value;"
     });
 
 
@@ -13396,24 +13638,43 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-
-//处理全局异常
-flyingon.addEventListener(window, "error", function (message, url, line) {
-
-    var error = flyingon.last_error;
-
-    if (error && (message = flyingon.translate("error.js", error.message)) && error.parameters)
-    {
-        error = error.parameters;
-        message = message.replace(/\{(\d+)\}/g, function (_, key) { return error[key] || ""; });
-    }
-
-    alert(message);
-    return true;
-});
+//处理异常信息
+(function (flyingon) {
 
 
 
+    //多语言缓存
+    var language = {};
+
+
+
+    //翻译多语言
+    flyingon.translate = function (file, message) {
+
+        var value = language[file] || (language[file] = flyingon.ajax_get(file.replace("@langauge", flyingon.current_language), "json"));
+        return (value = value[message]) != null ? value : message;
+    };
+
+
+
+    //处理全局异常
+    flyingon.addEventListener(window, "error", function (message, url, line) {
+
+        var error = flyingon.last_error;
+
+        if (error && (message = flyingon.translate("error.js", error.message)) && error.parameters)
+        {
+            error = error.parameters;
+            message = message.replace(/\{(\d+)\}/g, function (_, key) { return error[key] || ""; });
+        }
+
+        alert(message);
+        return true;
+    });
+
+
+
+})(flyingon);
 
 
 

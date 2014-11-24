@@ -335,6 +335,7 @@ window.flyingon = (function () {
     //}
 
 
+
 })(flyingon);
 
 
@@ -347,6 +348,172 @@ flyingon.Exception = function (message, parameters) {
     flyingon.last_error = this; //记录当前异常对象
     this.message = message;
 };
+
+
+
+
+
+//脚本及资源
+(function (flyingon) {
+
+
+
+    //加载资源
+    (function () {
+
+
+        var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+
+
+        function load(dom, callback, thisArg, error) {
+
+            dom.onload = dom.onerror = dom.onreadystatechange = null;
+
+            if (callback)
+            {
+                callback.call(thisArg, error);
+            }
+
+            if (dom.parentNode)
+            {
+                dom.parentNode.removeChild(dom);
+            }
+        };
+
+
+        flyingon.load = function (url, callback, thisArg) {
+
+            var dom = document.createElement("script");
+
+            dom.type = "text/javascript";
+            dom.src = url;
+
+            dom.onerror = function (error) {
+
+                //alert(error);
+                load(dom, callback, thisArg, error);
+            };
+
+            dom.onload = dom.onreadystatechange = function () {
+
+                var state = dom.readyState;
+
+                if (!state || state === "loaded" || state === "complete")
+                {
+                    load(dom, callback, thisArg);
+                }
+            };
+
+            head.appendChild(dom);
+        };
+
+
+        //引入样式
+        flyingon.link = function (url) {
+
+            var dom = document.createElement("link");
+
+            dom.rel = "stylesheet"
+            dom.href = url;
+
+            head.appendChild(dom);
+
+            return dom;
+        };
+
+
+        //动态创建样式表
+        flyingon.style = function (cssText) {
+
+            var style;
+
+            if (document.createStyleSheet)  //ie
+            {
+                style = document.createStyleSheet();
+                style.cssText = cssText;
+            }
+            else
+            {
+                style = document.createElement("style");//w3c
+                style.setAttribute("type", "text/css");
+
+                style.innerHTML = cssText;
+                //style.appendChild(document.createTextNode(cssText));
+
+                head.appendChild(style)
+            }
+
+            return style;
+        };
+
+
+    })();
+
+
+
+    //jsonp
+    flyingon.jsonp = (function () {
+
+        var id = 0;
+
+        return function (url, callback_name) {
+
+            callback_name = "callback=" + encodeURIComponent(callback_name) + "&unique=" + (++id);
+            flyingon.load((url.indexOf("?") > 0 ? "&" : "?") + callback_name);
+        };
+
+    })();
+
+
+
+    //脚本依赖
+    flyingon.require = (function () {
+
+
+        function load(files, index, callback, thisArg) {
+
+            flyingon.load(files[index++], function () {
+
+                if (index < files.length)
+                {
+                    load(files, index, callback, thisArg);
+                }
+                else
+                {
+                    callback.call(thisArg);
+                }
+            });
+        };
+
+
+        return function (files, callback, thisArg) {
+
+            if (files)
+            {
+                if (files.constructor === String)
+                {
+                    flyingon.load(files, function () {
+
+                        callback.call(thisArg);
+                    });
+                }
+                else if (files.length > 0) //多个文件按顺序加载执行
+                {
+                    load(files, 0, callback, thisArg);
+                }
+            }
+            else if (callback)
+            {
+                callback.call(thisArg);
+            }
+        };
+
+
+    })();
+
+
+
+})(flyingon);
 
 
 
@@ -526,7 +693,7 @@ flyingon.Exception = function (message, parameters) {
 
 
     //创建或切换名字空间方法
-    flyingon.namespace = function (namespace, fn) {
+    flyingon.namespace = function (namespace, files, fn) {
 
         var result = namespace;
 
@@ -561,7 +728,11 @@ flyingon.Exception = function (message, parameters) {
 
         if (fn)
         {
-            fn.call(result, flyingon);
+            flyingon.require(files, fn, result);
+        }
+        else if (fn = files)
+        {
+            fn.call(result);
         }
 
         return result;
@@ -646,7 +817,7 @@ flyingon.Exception = function (message, parameters) {
 
 
         //类功能扩展
-        class_fn.call(prototype, base, flyingon);
+        class_fn.call(prototype, base);
 
 
         //回滚全局对象
