@@ -17,28 +17,40 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
 
 
-    //字体图标路径(注:在IE6中测试不支持绝对路径,写成../icons/就正常)
-    flyingon.icons_path = "/icons/";
-
-
-
     //字库名
-    this.defineProperty("fontFamily", "flyingon", {
+    this.defineProperty("fontFamily", "", {
 
-        end_code: "this.__fn_font_face(value || \"flyingon\");"
+        end_code: "this.__fn_fontFamily(value || \"flyingon\");"
     });
 
 
     //图标名称
     this.defineProperty("icon", "", {
 
-        end_code: "this.__fn_font_icon(fields.fontFamily || \"flyingon\", value);"
+        end_code: "this.__fn_font_icon(value);"
     });
 
 
 
 
-    var font_list = {};    //字体图标库
+    var font_list = {},    //字体图标库
+
+        regex0 = /0/g,
+
+        regex1 = /1/g,
+
+        css_template = "@font-face {\n"
+            + "font-family: \"0\";\n"
+            + "font-style: normal;\n"
+            + "font-weight: normal;\n"
+            + "src: url(\"1.eot\");\n" /* ie9 */
+            + "src: url(\"1.eot?#iefix\") format(\"embedded-opentype\"),\n" /* ie6-ie8 */
+                + "url(\"1.woff\") format(\"woff\"),\n" /* chrome, firefox */
+                + "url(\"1.ttf\") format(\"truetype\"),\n" /* chrome, firefox, opera, safari, android, ios4.2+ */
+                + "url(\"1.svg#0\") format(\"svg\");\n" /* ios4.1- */
+        + "}";
+
+
 
 
     //注册字体名值对回调函数
@@ -46,19 +58,16 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
         if (name && icons)
         {
-            var cache = font_list[name],
-                icon;
+            var list = font_list[name],
+                item;
 
             font_list[name] = icons;
 
-            if (cache && cache.constructor === Array) //设置未处理图标
+            if (list && list.constructor === Array) //设置未处理图标
             {
-                for (var i = 0, _ = cache.length; i < _; i++)
+                for (var i = 0, _ = list.length; i < _; i++)
                 {
-                    if (icon = cache[i].__fields.icon)
-                    {
-                        cache[i].__fn_font_icon(name, icon);
-                    }
+                    (item = list[i]).__fn_font_icon(item.__fields.icon);
                 }
             }
         }
@@ -66,7 +75,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
 
     //设置字体库
-    this.__fn_font_face = function (name) {
+    this.__fn_fontFamily = function (name) {
 
         var cache = font_list[name];
 
@@ -74,22 +83,27 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
         if (cache)
         {
-            if (cache.constructor === Array)
+            if (this.__fields.icon)
             {
-                cache.push(this);
-            }
-            else if (this.__fields.icon)
-            {
-                this.__fn_font_icon(name, this.__fields.icon);
+                if (cache.constructor === Array)
+                {
+                    cache.push(this);
+                }
+                else
+                {
+                    this.__fn_font_icon(this.__fields.icon);
+                }
             }
         }
         else
         {
             font_list[name] = [this];
-            name = flyingon.icons_path + name;
+            cache = flyingon.icons_path + name;
 
-            flyingon.load(name + ".js");
-            flyingon.link(name + ".css");
+            flyingon.script(cache + ".js");
+            //flyingon.link(cache + ".css");
+
+            flyingon.style(css_template.replace(regex0, name).replace(regex1, cache));
         }
     };
 
@@ -97,11 +111,20 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
     //设置字体图标
     this.__fn_font_icon = (function (name) {
 
-        return function (fontFamily, icon) {
+        return function (icon) {
 
-            if (fontFamily = font_list[fontFamily])
+            var fontFamily = this.__fields.fontFamily;
+
+            if (fontFamily)
             {
-                this.dom[name] = fontFamily[icon] || "";
+                if (fontFamily = font_list[fontFamily])
+                {
+                    this.dom[name] = fontFamily[icon] || "";
+                }
+            }
+            else
+            {
+                this.set_fontFamily("flyingon");
             }
         };
 

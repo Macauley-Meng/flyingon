@@ -3,12 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="no-cache" />
     <title></title>
-    <style type="text/css">
-        html, body {
-            margin: 0;
-            height: 100%;
-        }
-    </style>
+
 
     <script src="../scripts/flyingon.js"></script>
     <script src="../scripts/flyingon.controls.js"></script>
@@ -17,7 +12,7 @@
     <script type="text/javascript">
 
 
-        var w = new flyingon.Window(host).init({
+        var w = new flyingon.Window().init({
 
             border: "4px solid blue",
             spacingWidth: "10px",
@@ -59,17 +54,13 @@
             this.set_width(this.offsetWidth - 10 + "px");
         });
 
-        w.show("host");
+        w.show();
 
 
     </script>
 
 </head>
-<body style="background-color: yellow;">
-
-
-    <div id="host" style="width: 100%; height: 0;">
-    </div>
+<body>
 
 
 </body>

@@ -13,6 +13,9 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         var _this = this,
             dom = this.dom_window = document.createElement("div");
 
+        //默认设置为初始化状态,在渲染窗口后终止
+        flyingon.__initializing = true;
+
         //绑定对象
         document.documentElement.flyingon = this;
 
@@ -40,7 +43,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         });
 
         //设为活动窗口
-        this.__activeWindow = this;
+        this.__activeWindow = this.__mainWindow = this;
 
         //子控件集合
         this.__children = new flyingon.ControlCollection(this);

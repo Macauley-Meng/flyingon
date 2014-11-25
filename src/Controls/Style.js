@@ -1,7 +1,4 @@
 ﻿
-
-
-
 //样式相关
 (function (flyingon) {
 
@@ -29,6 +26,8 @@
         style_prefix1,  //样式前缀1
 
         style_prefix2,  //样式前缀2
+
+        style_object = flyingon.style(),    //保存样式对象
 
         regex_name = /[-_](\w)/g,   //名称转换规则 例: margin-left || margin_left -> marginLeft
 
@@ -113,95 +112,6 @@
 
         return key in style_test ? style_prefix2 + name : null;
     };
-    
-
-
-    //标准css样式表操作
-    (function (flyingon) {
-
-
-        var dom = document.createElement("style"),
-            css,
-            rules;
-
-        dom.type = "text/css";
-        document.getElementsByTagName("head")[0].appendChild(dom);
-
-        css = document.styleSheets[document.styleSheets.length - 1];
-        rules = css.rules || css.cssRules;
-
-
-        //添加或删除样式表规则
-        flyingon.css_rule = function (selector, cssText) {
-
-            var index;
-
-            switch (arguments.length)
-            {
-                case 0: //清除所有样式
-                    for (var i = rules.length - 1; i >= 0; i--)
-                    {
-                        if (css.removeRule)
-                        {
-                            css.removeRule(i);
-                        }
-                        else
-                        {
-                            css.deleteRule(i);
-                        }
-                    }
-                    break;
-
-                case 1: //删除指定名称或索引的样式
-                    if ((index = +selector) >= 0)
-                    {
-                        if (css.removeRule)
-                        {
-                            css.removeRule(i);
-                        }
-                        else
-                        {
-                            css.deleteRule(i);
-                        }
-                    }
-                    else
-                    {
-                        for (var i = rules.length - 1; i >= 0; i--)
-                        {
-                            if (rules[i].name === selector)
-                            {
-                                if (css.removeRule)
-                                {
-                                    css.removeRule(i);
-                                }
-                                else
-                                {
-                                    css.deleteRule(i);
-                                }
-                            }
-                        }
-                    }
-                    break;
-
-                default: //添加样式
-                    index = rules.length;
-
-                    if (css.addRule)
-                    {
-                        css.addRule(selector, cssText || "", index);
-                    }
-                    else
-                    {
-                        css.insertRule(selector + "{" + (cssText || "") + "}", index);
-                    }
-
-                    return index;
-            }
-
-        };
-
-
-    })(flyingon);
 
 
 
@@ -232,18 +142,22 @@
         //更新样式
         this.update = function () {
 
+            var cssText = [];
+
             registry_types = Object.create(null);
             registry_names = Object.create(null);
 
-            flyingon.css_rule();
+            flyingon.style(null, style_object);
 
             for (var i = 0, _ = this.length; i < length; i++)
             {
                 for (var j = 0, __ = result.length; j < __; j++)
                 {
-                    handle_style(result[j]);
+                    handle_style(result[j], cssText);
                 }
             }
+
+            flyingon.style(cssText.join("\n"), style_object);
         };
 
 
@@ -1165,7 +1079,7 @@
             {
                 for (var i = 0, _ = files.length; i < _; i++)
                 {
-                    flyingon.ajax_get("/themes/" + theme_name + "/" + files[i], "javascript");
+                    flyingon.ajax_get(flyingon.themes_path + theme_name + "/" + files[i], "javascript");
                 }
             }
 
@@ -1670,12 +1584,6 @@
 
 
 
-    //定义标准css样式表
-    flyingon.defineStyleSheets = function (styles) {
-
-        flyingon.defineStyle(styles, true);
-    };
-
 
     //定义扩展控件样式
     flyingon.defineStyle = function (styles, css_style) {
@@ -1683,14 +1591,22 @@
         //预处理样式集
         if (styles)
         {
-            var rules = [],
+            var result = [],
                 style,
-                cssText;
+                cssText,
+                css_style;
 
             //解析样式(处理引入及合并)
             for (var selector in styles)
             {
-                if ((style = styles[selector]) && (style = parse_style(Object.create(null), style, styles, cssText = [], css_style)))
+                style = styles[selector];
+
+                if (css_style = selector.indexOf("css:") === 0) //css:开头表示定义标准css样式
+                {
+                    selector = selector.substring(4);
+                }
+
+                if (style = parse_style(Object.create(null), style, styles, cssText = [], css_style))
                 {
                     cssText = cssText.join("");
 
@@ -1703,24 +1619,29 @@
 
                         for (var i = 0, _ = selector.length ; i < _; i++)
                         {
-                            rules.push(handle_selector(selector[i], style, cssText, css_style));
+                            result.push(handle_selector(selector[i], style, cssText, css_style));
                         }
                     }
                     else
                     {
-                        rules.push(handle_selector(selector, style, cssText, css_style));
+                        result.push(handle_selector(selector, style, cssText, css_style));
                     }
                 }
             }
 
             //存储样式表
-            flyingon.styleSheets.push(rules);
+            flyingon.styleSheets.push(result);
 
             //处理样式
-            for (var i = 0, _ = rules.length; i < _; i++)
+            cssText = [];
+
+            for (var i = 0, _ = result.length; i < _; i++)
             {
-                handle_style(rules[i]);
+                handle_style(result[i], cssText);
             }
+
+            //写入样式表
+            flyingon.style(cssText.join("\n"), style_object);
         }
     };
 
@@ -1890,11 +1811,11 @@
         selector.weight = selector_weight(selector);
 
         //如果控件dom使用css方式关联样式
-        if (selector.cssText = cssText)
+        if (cssText)
         {
             if (selector.css_style = css_style) //css样式直接按原样生成规则
             {
-                selector.rule = "" + selector;
+                selector.cssText = selector + "{" + cssText + "}";
             }
             else
             {
@@ -1912,12 +1833,12 @@
                     }
                 }
 
-                selector.rule = (selector.prefix || "") + values.join(""); //复用且保存css
+                selector.cssText = (selector.prefix || "") + values.join("") + "{" + cssText + "}"; //复用且保存css
             }
         }
         else
         {
-            selector.rule = ""; //复用但不保存css
+            selector.cssText = ""; //复用但不保存css
         }
 
         return selector;
@@ -2019,13 +1940,13 @@
 
 
     //保存样式
-    function handle_style(selector) {
+    function handle_style(selector, cssText) {
 
         if (selector.css_style) //如果是css样式直接生成css规则
         {
-            if (selector.rule) //复用且保存css
+            if (selector.cssText) //复用且保存css
             {
-                flyingon.css_rule(selector.rule, selector.cssText);
+                cssText.push(selector.cssText);
             }
         }
         else //否则按扩展控件样式处理
@@ -2039,11 +1960,11 @@
                 cache_type,
                 cache;
 
-            if (selector.rule !== undefined)
+            if (selector.cssText !== undefined)
             {
-                if (selector.rule) //复用且保存css
+                if (selector.cssText) //复用且保存css
                 {
-                    flyingon.css_rule(selector.rule, selector.cssText);
+                    cssText.push(selector.cssText);
                 }
             }
             else

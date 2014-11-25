@@ -1,58 +1,11 @@
 ﻿
 /*
 
-//定义标准css样式表
+//定义控件样式
 
-注: 不能定义扩展控件样式,扩展控件样式请使用flyingon.defineStyle定义,与标准css定义类同
-
-
-//可引入其它样式, 示例如下:
-".class2": {
-
-    import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
-    border: "1px solid blue"
-}
-
-*/
-flyingon.defineStyleSheets({
-
-
-
-
-});
-
-
-
-
-
-
-
-/*
-
-//定义扩展控件样式
-
-注: 不能定义dom样式,定义dom样式请使用flyingon.defineStyleSheets定义,跨浏览器兼容
-
-
-//定义样式示例: 定义扩展控件样式 "@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式如下
-"@flyingon-Button": {
-
-    backgroundColor: "red",
-}
-
-//定义样式示例: 定义名为.class1样式
-".class1": {
-
-    backgroundColor: "red",
-}
-
-//定义样式示例: 定义名为.class2样式,并引入其它样式
-".class2": {
-
-    import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
-    border: "1px solid blue"
-}
-
+注1: 可在选择器前加"css:"定义标准css样式, 不能在控件中查询css标准样式值, 且需注意选择器的兼容问题
+注2: 扩展控件样式以"@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式为: @flyingon-Button
+注3: 扩展控件样式支持选择器如下(跨浏览器兼容: 支持IE6+及其它常见浏览器)
 
 
 本系统支持的基础选择器如下(注:本系统不支持html标签选择器):
@@ -112,6 +65,33 @@ A~B                    匹配任何在A控件之后的同级B控件
 ::last-of-type         匹配当前控件下使用同种标签的最后一个子控件, 等同于::nth-last-of-type(1)
 ::only-child           匹配当前控件下仅有的一个子控件, 等同于::first-child ::last-child或::nth-child(0) ::nth-last-child(1)
 ::only-of-type         匹配当前控件下使用同种标签的唯一一个子控件, 等同于::first-of-type ::last-of-type或::nth-of-type(1) ::nth-last-of-type(1)
+
+
+
+//定义标准css样式
+"css:.flyingon-Control": {
+
+    backgroundColor: "red"
+}
+
+//定义样式示例: 定义扩展控件Button样式
+"@flyingon-Button": {
+
+    backgroundColor: "red"
+}
+
+//定义样式示例: 定义名为.class1样式
+".class1": {
+
+    backgroundColor: "red"
+}
+
+//定义样式示例: 定义名为.class2样式,并引入其它样式
+".class2": {
+
+    import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
+    border: "1px solid blue"
+}
 
 
 */

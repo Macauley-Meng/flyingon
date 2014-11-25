@@ -37,8 +37,6 @@
             capture_dom,                            //捕获的dom
             capture_cache,                          //捕获时缓存数据
 
-            cursor_list,                            //锁定鼠标指针集合
-
             pressdown,                              //按下时dom事件
             host_mousemove = true,                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
 
@@ -169,25 +167,6 @@
         };
 
 
-        //锁定拖动时鼠标指针
-        flyingon.addEventListener(host, "mouseover", function (event) {
-
-            if (pressdown)
-            {
-                var style = this.style;
-
-                if (!style.__cursor__)
-                {
-                    (cursor_list || (cursor_list = [])).push(style, style.cursor);
-
-                    style.__cursor__ = true;
-                    style.cursor = pressdown.cursor;
-                }
-            }
-        });
-
-
-
 
         //捕获全局mouseup事件
         //注: 当鼠标在浏览器窗口外弹起时此事件仍不能执行,暂时找不到好的办法捕获浏览器外mouseup事件
@@ -225,9 +204,10 @@
                 cache;
 
             //活动窗口不是当前点击窗口则设置为活动窗口
-            if (!ownerWindow.__activeWindow)
+            if (ownerWindow.__mainWindow.__activeWindow !== ownerWindow)
             {
                 ownerWindow.active();
+                host.flyingon = ownerWindow;
             }
 
             //鼠标按键处理
@@ -289,10 +269,7 @@
             var target, cache;
 
             //防止host处理
-            if (this !== host)
-            {
-                host_mousemove = false;
-            }
+            host_mousemove = false;
 
             event || (event = fix_event(window.event));
 
@@ -337,17 +314,6 @@
         events.mouseup = function (event, cancel) {
 
             var target;
-
-            if (cursor_list) //恢复锁定的指针
-            {
-                for (var i = 0, _ = cursor_list.length; i < _; i++)
-                {
-                    cursor_list[i].__cursor__ = undefined;
-                    cursor_list[i++].cursor = cursor_list[i];
-                }
-
-                cursor_list = null;
-            }
 
             if (capture_dom)
             {
@@ -611,8 +577,6 @@
 
         this.__fn_init_window = function (dom) {
 
-            //默认设置为初始化状态,在渲染窗口后终止
-            flyingon.__initializing = true;
 
             //标记所属窗口为自身及绑定dom对象
             this.__ownerWindow = dom.flyingon = this;
@@ -674,16 +638,16 @@
         //设置当前窗口为活动窗口
         this.active = function () {
 
-            var root = this.get_mainWindow(),
+            var first = this.get_mainWindow(),
                 target;
 
-            if ((target = root.__activeWindow) !== this)
+            if ((target = first.__activeWindow) !== this)
             {
                 if (target)
                 {
-                    if (target !== root)
+                    if (target !== first)
                     {
-                        target.dom.style.zIndex = 9990;
+                        target.dom.style.zIndex = 0;
                     }
 
                     target.dispatchEvent("deactivate");
@@ -692,12 +656,11 @@
 
                 this.dispatchEvent("activate");
 
-                root.__activeWindow = this;
-                host.flyingon = this;
+                first.__activeWindow = this;
 
-                if (this !== root)
+                if (this !== first)
                 {
-                    this.dom.style.zIndex = 9991;
+                    this.dom.style.zIndex = 1;
                 }
 
                 this.__fn_to_active(true);

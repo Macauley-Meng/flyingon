@@ -25,6 +25,11 @@ window.flyingon = (function () {
     //当前风格
     this.current_theme = this.current_theme || "default";
 
+    //风格路径
+    this.themes_path = this.themes_path || "/themes/";
+
+    //字体图标路径
+    this.icons_path = this.icons_path || "/icons/";
 
     return this;
 
@@ -358,11 +363,12 @@ flyingon.Exception = function (message, parameters) {
 
 
 
-    //加载资源
-    (function () {
+    var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
 
 
-        var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+
+    //加载脚本
+    flyingon.script = (function (head) {
 
 
         function load(dom, callback, thisArg, error) {
@@ -381,7 +387,7 @@ flyingon.Exception = function (message, parameters) {
         };
 
 
-        flyingon.load = function (url, callback, thisArg) {
+        return function (url, callback, thisArg) {
 
             var dom = document.createElement("script");
 
@@ -408,46 +414,22 @@ flyingon.Exception = function (message, parameters) {
         };
 
 
-        //引入样式
-        flyingon.link = function (url) {
-
-            var dom = document.createElement("link");
-
-            dom.rel = "stylesheet"
-            dom.href = url;
-
-            head.appendChild(dom);
-
-            return dom;
-        };
+    })(head);
 
 
-        //动态创建样式表
-        flyingon.style = function (cssText) {
 
-            var style;
+    //引入样式
+    flyingon.link = function (url) {
 
-            if (document.createStyleSheet)  //ie
-            {
-                style = document.createStyleSheet();
-                style.cssText = cssText;
-            }
-            else
-            {
-                style = document.createElement("style");//w3c
-                style.setAttribute("type", "text/css");
+        var dom = document.createElement("link");
 
-                style.innerHTML = cssText;
-                //style.appendChild(document.createTextNode(cssText));
+        dom.rel = "stylesheet"
+        dom.href = url;
 
-                head.appendChild(style)
-            }
+        head.appendChild(dom);
 
-            return style;
-        };
-
-
-    })();
+        return dom;
+    };
 
 
 
@@ -459,7 +441,7 @@ flyingon.Exception = function (message, parameters) {
         return function (url, callback_name) {
 
             callback_name = "callback=" + encodeURIComponent(callback_name) + "&unique=" + (++id);
-            flyingon.load((url.indexOf("?") > 0 ? "&" : "?") + callback_name);
+            flyingon.script((url.indexOf("?") > 0 ? "&" : "?") + callback_name);
         };
 
     })();
@@ -472,7 +454,7 @@ flyingon.Exception = function (message, parameters) {
 
         function load(files, index, callback, thisArg) {
 
-            flyingon.load(files[index++], function () {
+            flyingon.script(files[index++], function () {
 
                 if (index < files.length)
                 {
@@ -492,7 +474,7 @@ flyingon.Exception = function (message, parameters) {
             {
                 if (files.constructor === String)
                 {
-                    flyingon.load(files, function () {
+                    flyingon.script(files, function () {
 
                         callback.call(thisArg);
                     });
@@ -510,6 +492,82 @@ flyingon.Exception = function (message, parameters) {
 
 
     })();
+
+
+
+
+    //动态操作样式
+    //动态添加规则与内容在firefox或chrome中会与直接操作内容的方式优先级冲突
+    if (document.createStyleSheet)
+    {
+
+        //根据样式内容动态创建或添加或清空样式
+        flyingon.style = function (cssText, style) {
+
+            if (style)
+            {
+                if (cssText)
+                {
+                    style.cssText += cssText;
+                }
+                else
+                {
+                    style.cssText = "";
+                }
+            }
+            else
+            {
+                style = document.createStyleSheet();
+
+                if (cssText)
+                {
+                    style.cssText = cssText;
+                }
+            }
+
+            return style;
+        };
+
+
+    }
+    else
+    {
+
+        //根据样式内容动态创建或添加或清空样式
+        flyingon.style = function (cssText, style) {
+
+            if (style)
+            {
+                if (cssText)
+                {
+                    style.dom.textContent += cssText;
+                }
+                else
+                {
+                    style.dom.textContent = "";
+                }
+            }
+            else
+            {
+                var dom = document.createElement("style");//w3c
+                dom.setAttribute("type", "text/css");
+
+                if (cssText)
+                {
+                    dom.textContent = cssText;
+                }
+
+                head.appendChild(dom);
+
+                style = document.styleSheets[document.styleSheets.length - 1];
+                style.dom = dom;
+            }
+
+            return style;
+        };
+
+
+    }
 
 
 

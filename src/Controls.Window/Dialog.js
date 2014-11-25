@@ -1,22 +1,4 @@
 ﻿
-//弹出窗口标题栏
-flyingon.defineClass("DialogHead", flyingon.Control, function (base) {
-
-
-
-    Class.create_mode = "merge";
-
-
-
-    //扩展子控件接口
-    flyingon.extend(this, flyingon.IChildren, base);
-
-
-});
-
-
-
-
 
 //弹出窗口
 flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
@@ -28,10 +10,13 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        this.initialize_head(this.head = new flyingon.DialogHead());
-        this.head.__parent = this;
+        //默认设置为初始化状态,在渲染窗口后终止
+        flyingon.__initializing = true;
 
-        (this.dom_head = this.dom.children[0]).appendChild(this.head.dom);
+        this.initialize_header(this.__header = new flyingon.Panel());
+        this.__header.__parent = this;
+
+        (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
 
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
 
@@ -70,24 +55,59 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //是否显示标题栏
-    this.defineProperty("head_visible", true, "layout");
+    this.defineProperty("header", true, "layout");
 
 
-    //窗口关闭前事件
-    this.defineEvent("closing");
+    //窗口图标
+    this.defineProperty("icon", "", {
+
+        end_code: "this.__header_icon.set_icon(value);"
+    });
 
 
-    //窗口关闭后事件
-    this.defineEvent("closed");
+    //窗口标题
+    this.defineProperty("text", "", {
+
+        end_code: "this.__header_text.set_text(value);"
+    });
+
+
+    //窗口关闭事件(可返回false阻止关闭窗口)
+    this.defineEvent("close");
 
 
 
 
 
     //初始化窗口标题栏
-    this.initialize_head = function (head) {
+    this.initialize_header = function (header) {
 
-        head.appendChild(new flyingon.HtmlControl().set_text("dddddddd"))
+        var target;
+
+        target = this.__header_icon = new flyingon.Icon()
+            .set_layoutSplit("before")
+            .set_icon("dialog")
+            .__fn_className("flyingon-Dialog-icon");
+
+        target = this.__header_text = new flyingon.Label()
+            .set_layoutSplit("center")
+            .__fn_className("flyingon-Dialog-text");
+
+        target = this.__header_close = new flyingon.Icon()
+            .set_layoutSplit("after")
+            .set_icon("close")
+            .__fn_className("flyingon-Dialog-close")
+
+            .on("click", function (event) {
+
+                target.close();
+            });
+
+        header.set_layoutType("split")
+            .__fn_className("flyingon-Dialog-header")
+            .appendChild(this.__header_icon, this.__header_text, target);
+
+        target = this;
     };
 
 
@@ -95,7 +115,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
     this.__event_capture_mousedown = function (event) {
 
-        if (this.__dialog_move__ = event.which === 1 && event.in_dom(this.dom_head)) //按标题栏拖动
+        if (this.__dialog_move__ = event.which === 1 && event.in_dom(this.dom_header)) //按标题栏拖动
         {
             return false;
         }
@@ -110,8 +130,6 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
             this.set_left(start.x + event.distanceX + "px");
             this.set_top(start.y + event.distanceY + "px");
-
-            event.stopPropagation(false);
         }
     };
 
@@ -139,14 +157,12 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
             var mask = this.dom_mask = document.createElement("div");
 
             mask.flyingon = this;
-            mask.style.cssText = "position:absolute;z-index:9990;width:100%;height:100%;overflow:auto;-moz-user-select:none;-webkit-user-select:none;outline:none;cursor:default;background-color:silver;opacity:0.1;";
-            host.appendChild(this.dom_mask);
+            mask.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background-color:silver;filter:alpha(opacity=60);-moz-opacity:0.6;-khtml-opacity:0.6;opacity:0.6;";
+
+            host.appendChild(mask);
         }
 
         host.appendChild(this.dom);
-
-        //设为活动窗口
-        this.__activeWindow = this;
 
         //初始化状态
         this.__states = { active: true };
@@ -164,37 +180,26 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-    this.close = function (dispose) {
+    this.close = function () {
 
         var parent = this.__parentWindow;
 
-        if (parent && this.dispatchEvent("closing") !== false)
+        if (parent && this.dispatchEvent("close") !== false)
         {
-            var root = this.__mainWindow;
+            this.__parentWindow = this.__mainWindow = null;
+            this.dispose();
 
-            if (this.dom.parentNode)
-            {
-                this.dom.parentNode.removeChild(this.dom);
-            }
+            flyingon.dom_dispose(this.dom);
+            this.dom.innerHTML = "";
 
             if (this.dom_mask)
             {
-                this.dom_mask.innerHTML = "";
+                flyingon.dom_dispose(this.dom_mask);
             }
 
-            flyingon.__all_windows.removeAt(this);
+            flyingon.__all_windows.remove(this);
 
-            this.dispatchEvent("closed");
-
-            this.__parentWindow = this.__mainWindow = root.__activeWindow = null;
             parent.active();
-
-            if (dispose)
-            {
-                this.dispose();
-            }
-
-            this.dom.innerHTML = "";
         }
     };
 
@@ -203,19 +208,21 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
     this.__fn_measure_client = function (box, dom_body) {
 
-        var head = this.head,
-            style1 = this.dom_head.style,
+        var header = this.__header,
+            style1 = this.dom_header.style,
             style2 = dom_body.style,
             y = 0;
 
-        if (this.get_head_visible())
+        if (this.get_header())
         {
             style1.display = "";
 
-            head.measure(this.offsetWidth, 25, true, true);
-            head.render();
+            header.__update_dirty = 1;
+            header.__arrange_dirty = true;
+            header.measure(this.offsetWidth - box.border_width, 25, true, true);
+            header.render();
 
-            style1.height = (y = head.offsetHeight) + "px";
+            style1.height = (y = header.offsetHeight) + "px";
         }
         else
         {

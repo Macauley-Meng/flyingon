@@ -5,17 +5,6 @@
     <!--以IE的当前版本渲染,如果安装了ChromeFrame则优先使用-->
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <title></title>
-    <style type="text/css">
-        html, body {
-            margin: 0;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        div[type] {
-            color: red;
-        }
-    </style>
 
 
     <script src="../scripts/flyingon.js"></script>
@@ -26,11 +15,11 @@
 
 
 
-        var w = new flyingon.Window(host);
+        var w = new flyingon.Window();
 
 
 
-        for (var k = 0; k < 50; k++)
+        for (var k = 0; k < 20; k++)
         {
             var panel = new flyingon.Panel().sets({
 
@@ -44,7 +33,7 @@
             });
 
 
-            for (var i = 0; i < 200; i++)
+            for (var i = 0; i < 100; i++)
             {
 
                 var ctrl = new flyingon.Button().sets({

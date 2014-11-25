@@ -25,6 +25,11 @@ window.flyingon = (function () {
     //当前风格
     this.current_theme = this.current_theme || "default";
 
+    //风格路径
+    this.themes_path = this.themes_path || "/themes/";
+
+    //字体图标路径
+    this.icons_path = this.icons_path || "/icons/";
 
     return this;
 
@@ -358,11 +363,12 @@ flyingon.Exception = function (message, parameters) {
 
 
 
-    //加载资源
-    (function () {
+    var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
 
 
-        var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+
+    //加载脚本
+    flyingon.script = (function (head) {
 
 
         function load(dom, callback, thisArg, error) {
@@ -381,7 +387,7 @@ flyingon.Exception = function (message, parameters) {
         };
 
 
-        flyingon.load = function (url, callback, thisArg) {
+        return function (url, callback, thisArg) {
 
             var dom = document.createElement("script");
 
@@ -408,46 +414,22 @@ flyingon.Exception = function (message, parameters) {
         };
 
 
-        //引入样式
-        flyingon.link = function (url) {
-
-            var dom = document.createElement("link");
-
-            dom.rel = "stylesheet"
-            dom.href = url;
-
-            head.appendChild(dom);
-
-            return dom;
-        };
+    })(head);
 
 
-        //动态创建样式表
-        flyingon.style = function (cssText) {
 
-            var style;
+    //引入样式
+    flyingon.link = function (url) {
 
-            if (document.createStyleSheet)  //ie
-            {
-                style = document.createStyleSheet();
-                style.cssText = cssText;
-            }
-            else
-            {
-                style = document.createElement("style");//w3c
-                style.setAttribute("type", "text/css");
+        var dom = document.createElement("link");
 
-                style.innerHTML = cssText;
-                //style.appendChild(document.createTextNode(cssText));
+        dom.rel = "stylesheet"
+        dom.href = url;
 
-                head.appendChild(style)
-            }
+        head.appendChild(dom);
 
-            return style;
-        };
-
-
-    })();
+        return dom;
+    };
 
 
 
@@ -459,7 +441,7 @@ flyingon.Exception = function (message, parameters) {
         return function (url, callback_name) {
 
             callback_name = "callback=" + encodeURIComponent(callback_name) + "&unique=" + (++id);
-            flyingon.load((url.indexOf("?") > 0 ? "&" : "?") + callback_name);
+            flyingon.script((url.indexOf("?") > 0 ? "&" : "?") + callback_name);
         };
 
     })();
@@ -472,7 +454,7 @@ flyingon.Exception = function (message, parameters) {
 
         function load(files, index, callback, thisArg) {
 
-            flyingon.load(files[index++], function () {
+            flyingon.script(files[index++], function () {
 
                 if (index < files.length)
                 {
@@ -492,7 +474,7 @@ flyingon.Exception = function (message, parameters) {
             {
                 if (files.constructor === String)
                 {
-                    flyingon.load(files, function () {
+                    flyingon.script(files, function () {
 
                         callback.call(thisArg);
                     });
@@ -510,6 +492,82 @@ flyingon.Exception = function (message, parameters) {
 
 
     })();
+
+
+
+
+    //动态操作样式
+    //动态添加规则与内容在firefox或chrome中会与直接操作内容的方式优先级冲突
+    if (document.createStyleSheet)
+    {
+
+        //根据样式内容动态创建或添加或清空样式
+        flyingon.style = function (cssText, style) {
+
+            if (style)
+            {
+                if (cssText)
+                {
+                    style.cssText += cssText;
+                }
+                else
+                {
+                    style.cssText = "";
+                }
+            }
+            else
+            {
+                style = document.createStyleSheet();
+
+                if (cssText)
+                {
+                    style.cssText = cssText;
+                }
+            }
+
+            return style;
+        };
+
+
+    }
+    else
+    {
+
+        //根据样式内容动态创建或添加或清空样式
+        flyingon.style = function (cssText, style) {
+
+            if (style)
+            {
+                if (cssText)
+                {
+                    style.dom.textContent += cssText;
+                }
+                else
+                {
+                    style.dom.textContent = "";
+                }
+            }
+            else
+            {
+                var dom = document.createElement("style");//w3c
+                dom.setAttribute("type", "text/css");
+
+                if (cssText)
+                {
+                    dom.textContent = cssText;
+                }
+
+                head.appendChild(dom);
+
+                style = document.styleSheets[document.styleSheets.length - 1];
+                style.dom = dom;
+            }
+
+            return style;
+        };
+
+
+    }
 
 
 
@@ -4272,9 +4330,6 @@ flyingon.defineClass("Component", function () {
 
 
 ﻿
-
-
-
 //样式相关
 (function (flyingon) {
 
@@ -4302,6 +4357,8 @@ flyingon.defineClass("Component", function () {
         style_prefix1,  //样式前缀1
 
         style_prefix2,  //样式前缀2
+
+        style_object = flyingon.style(),    //保存样式对象
 
         regex_name = /[-_](\w)/g,   //名称转换规则 例: margin-left || margin_left -> marginLeft
 
@@ -4386,95 +4443,6 @@ flyingon.defineClass("Component", function () {
 
         return key in style_test ? style_prefix2 + name : null;
     };
-    
-
-
-    //标准css样式表操作
-    (function (flyingon) {
-
-
-        var dom = document.createElement("style"),
-            css,
-            rules;
-
-        dom.type = "text/css";
-        document.getElementsByTagName("head")[0].appendChild(dom);
-
-        css = document.styleSheets[document.styleSheets.length - 1];
-        rules = css.rules || css.cssRules;
-
-
-        //添加或删除样式表规则
-        flyingon.css_rule = function (selector, cssText) {
-
-            var index;
-
-            switch (arguments.length)
-            {
-                case 0: //清除所有样式
-                    for (var i = rules.length - 1; i >= 0; i--)
-                    {
-                        if (css.removeRule)
-                        {
-                            css.removeRule(i);
-                        }
-                        else
-                        {
-                            css.deleteRule(i);
-                        }
-                    }
-                    break;
-
-                case 1: //删除指定名称或索引的样式
-                    if ((index = +selector) >= 0)
-                    {
-                        if (css.removeRule)
-                        {
-                            css.removeRule(i);
-                        }
-                        else
-                        {
-                            css.deleteRule(i);
-                        }
-                    }
-                    else
-                    {
-                        for (var i = rules.length - 1; i >= 0; i--)
-                        {
-                            if (rules[i].name === selector)
-                            {
-                                if (css.removeRule)
-                                {
-                                    css.removeRule(i);
-                                }
-                                else
-                                {
-                                    css.deleteRule(i);
-                                }
-                            }
-                        }
-                    }
-                    break;
-
-                default: //添加样式
-                    index = rules.length;
-
-                    if (css.addRule)
-                    {
-                        css.addRule(selector, cssText || "", index);
-                    }
-                    else
-                    {
-                        css.insertRule(selector + "{" + (cssText || "") + "}", index);
-                    }
-
-                    return index;
-            }
-
-        };
-
-
-    })(flyingon);
 
 
 
@@ -4505,18 +4473,22 @@ flyingon.defineClass("Component", function () {
         //更新样式
         this.update = function () {
 
+            var cssText = [];
+
             registry_types = Object.create(null);
             registry_names = Object.create(null);
 
-            flyingon.css_rule();
+            flyingon.style(null, style_object);
 
             for (var i = 0, _ = this.length; i < length; i++)
             {
                 for (var j = 0, __ = result.length; j < __; j++)
                 {
-                    handle_style(result[j]);
+                    handle_style(result[j], cssText);
                 }
             }
+
+            flyingon.style(cssText.join("\n"), style_object);
         };
 
 
@@ -5438,7 +5410,7 @@ flyingon.defineClass("Component", function () {
             {
                 for (var i = 0, _ = files.length; i < _; i++)
                 {
-                    flyingon.ajax_get("/themes/" + theme_name + "/" + files[i], "javascript");
+                    flyingon.ajax_get(flyingon.themes_path + theme_name + "/" + files[i], "javascript");
                 }
             }
 
@@ -5943,12 +5915,6 @@ flyingon.defineClass("Component", function () {
 
 
 
-    //定义标准css样式表
-    flyingon.defineStyleSheets = function (styles) {
-
-        flyingon.defineStyle(styles, true);
-    };
-
 
     //定义扩展控件样式
     flyingon.defineStyle = function (styles, css_style) {
@@ -5956,14 +5922,22 @@ flyingon.defineClass("Component", function () {
         //预处理样式集
         if (styles)
         {
-            var rules = [],
+            var result = [],
                 style,
-                cssText;
+                cssText,
+                css_style;
 
             //解析样式(处理引入及合并)
             for (var selector in styles)
             {
-                if ((style = styles[selector]) && (style = parse_style(Object.create(null), style, styles, cssText = [], css_style)))
+                style = styles[selector];
+
+                if (css_style = selector.indexOf("css:") === 0) //css:开头表示定义标准css样式
+                {
+                    selector = selector.substring(4);
+                }
+
+                if (style = parse_style(Object.create(null), style, styles, cssText = [], css_style))
                 {
                     cssText = cssText.join("");
 
@@ -5976,24 +5950,29 @@ flyingon.defineClass("Component", function () {
 
                         for (var i = 0, _ = selector.length ; i < _; i++)
                         {
-                            rules.push(handle_selector(selector[i], style, cssText, css_style));
+                            result.push(handle_selector(selector[i], style, cssText, css_style));
                         }
                     }
                     else
                     {
-                        rules.push(handle_selector(selector, style, cssText, css_style));
+                        result.push(handle_selector(selector, style, cssText, css_style));
                     }
                 }
             }
 
             //存储样式表
-            flyingon.styleSheets.push(rules);
+            flyingon.styleSheets.push(result);
 
             //处理样式
-            for (var i = 0, _ = rules.length; i < _; i++)
+            cssText = [];
+
+            for (var i = 0, _ = result.length; i < _; i++)
             {
-                handle_style(rules[i]);
+                handle_style(result[i], cssText);
             }
+
+            //写入样式表
+            flyingon.style(cssText.join("\n"), style_object);
         }
     };
 
@@ -6163,11 +6142,11 @@ flyingon.defineClass("Component", function () {
         selector.weight = selector_weight(selector);
 
         //如果控件dom使用css方式关联样式
-        if (selector.cssText = cssText)
+        if (cssText)
         {
             if (selector.css_style = css_style) //css样式直接按原样生成规则
             {
-                selector.rule = "" + selector;
+                selector.cssText = selector + "{" + cssText + "}";
             }
             else
             {
@@ -6185,12 +6164,12 @@ flyingon.defineClass("Component", function () {
                     }
                 }
 
-                selector.rule = (selector.prefix || "") + values.join(""); //复用且保存css
+                selector.cssText = (selector.prefix || "") + values.join("") + "{" + cssText + "}"; //复用且保存css
             }
         }
         else
         {
-            selector.rule = ""; //复用但不保存css
+            selector.cssText = ""; //复用但不保存css
         }
 
         return selector;
@@ -6292,13 +6271,13 @@ flyingon.defineClass("Component", function () {
 
 
     //保存样式
-    function handle_style(selector) {
+    function handle_style(selector, cssText) {
 
         if (selector.css_style) //如果是css样式直接生成css规则
         {
-            if (selector.rule) //复用且保存css
+            if (selector.cssText) //复用且保存css
             {
-                flyingon.css_rule(selector.rule, selector.cssText);
+                cssText.push(selector.cssText);
             }
         }
         else //否则按扩展控件样式处理
@@ -6312,11 +6291,11 @@ flyingon.defineClass("Component", function () {
                 cache_type,
                 cache;
 
-            if (selector.rule !== undefined)
+            if (selector.cssText !== undefined)
             {
-                if (selector.rule) //复用且保存css
+                if (selector.cssText) //复用且保存css
                 {
-                    flyingon.css_rule(selector.rule, selector.cssText);
+                    cssText.push(selector.cssText);
                 }
             }
             else
@@ -11959,8 +11938,8 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        (this.head = new flyingon.TabHead()).__parent = this;
-        (this.dom_head = this.dom.children[0]).appendChild(this.head.dom);
+        (this.header = new flyingon.TabHead()).__parent = this;
+        (this.dom_header = this.dom.children[0]).appendChild(this.header.dom);
 
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
     };
@@ -11974,13 +11953,13 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
     //是否显示页头
-    this.defineProperty("head_visible", false, "layout");
+    this.defineProperty("header_visible", false, "layout");
 
 
     //标题
     this.defineProperty("title", "", {
 
-        end_code: "this.head.title = value;"
+        end_code: "this.header.title = value;"
     });
 
 
@@ -12036,7 +12015,7 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
     //展开或收拢面板
     this.__fn_collapse = function (collapse) {
 
-        var style1 = this.dom_head.style,
+        var style1 = this.dom_header.style,
             style2 = this.dom_title.style;
 
         if (collapse)
@@ -12234,28 +12213,40 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
 
 
-    //字体图标路径(注:在IE6中测试不支持绝对路径,写成../icons/就正常)
-    flyingon.icons_path = "/icons/";
-
-
-
     //字库名
-    this.defineProperty("fontFamily", "flyingon", {
+    this.defineProperty("fontFamily", "", {
 
-        end_code: "this.__fn_font_face(value || \"flyingon\");"
+        end_code: "this.__fn_fontFamily(value || \"flyingon\");"
     });
 
 
     //图标名称
     this.defineProperty("icon", "", {
 
-        end_code: "this.__fn_font_icon(fields.fontFamily || \"flyingon\", value);"
+        end_code: "this.__fn_font_icon(value);"
     });
 
 
 
 
-    var font_list = {};    //字体图标库
+    var font_list = {},    //字体图标库
+
+        regex0 = /0/g,
+
+        regex1 = /1/g,
+
+        css_template = "@font-face {\n"
+            + "font-family: \"0\";\n"
+            + "font-style: normal;\n"
+            + "font-weight: normal;\n"
+            + "src: url(\"1.eot\");\n" /* ie9 */
+            + "src: url(\"1.eot?#iefix\") format(\"embedded-opentype\"),\n" /* ie6-ie8 */
+                + "url(\"1.woff\") format(\"woff\"),\n" /* chrome, firefox */
+                + "url(\"1.ttf\") format(\"truetype\"),\n" /* chrome, firefox, opera, safari, android, ios4.2+ */
+                + "url(\"1.svg#0\") format(\"svg\");\n" /* ios4.1- */
+        + "}";
+
+
 
 
     //注册字体名值对回调函数
@@ -12263,19 +12254,16 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
         if (name && icons)
         {
-            var cache = font_list[name],
-                icon;
+            var list = font_list[name],
+                item;
 
             font_list[name] = icons;
 
-            if (cache && cache.constructor === Array) //设置未处理图标
+            if (list && list.constructor === Array) //设置未处理图标
             {
-                for (var i = 0, _ = cache.length; i < _; i++)
+                for (var i = 0, _ = list.length; i < _; i++)
                 {
-                    if (icon = cache[i].__fields.icon)
-                    {
-                        cache[i].__fn_font_icon(name, icon);
-                    }
+                    (item = list[i]).__fn_font_icon(item.__fields.icon);
                 }
             }
         }
@@ -12283,7 +12271,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
 
     //设置字体库
-    this.__fn_font_face = function (name) {
+    this.__fn_fontFamily = function (name) {
 
         var cache = font_list[name];
 
@@ -12291,22 +12279,27 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
         if (cache)
         {
-            if (cache.constructor === Array)
+            if (this.__fields.icon)
             {
-                cache.push(this);
-            }
-            else if (this.__fields.icon)
-            {
-                this.__fn_font_icon(name, this.__fields.icon);
+                if (cache.constructor === Array)
+                {
+                    cache.push(this);
+                }
+                else
+                {
+                    this.__fn_font_icon(this.__fields.icon);
+                }
             }
         }
         else
         {
             font_list[name] = [this];
-            name = flyingon.icons_path + name;
+            cache = flyingon.icons_path + name;
 
-            flyingon.load(name + ".js");
-            flyingon.link(name + ".css");
+            flyingon.script(cache + ".js");
+            //flyingon.link(cache + ".css");
+
+            flyingon.style(css_template.replace(regex0, name).replace(regex1, cache));
         }
     };
 
@@ -12314,11 +12307,20 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
     //设置字体图标
     this.__fn_font_icon = (function (name) {
 
-        return function (fontFamily, icon) {
+        return function (icon) {
 
-            if (fontFamily = font_list[fontFamily])
+            var fontFamily = this.__fields.fontFamily;
+
+            if (fontFamily)
             {
-                this.dom[name] = fontFamily[icon] || "";
+                if (fontFamily = font_list[fontFamily])
+                {
+                    this.dom[name] = fontFamily[icon] || "";
+                }
+            }
+            else
+            {
+                this.set_fontFamily("flyingon");
             }
         };
 
@@ -12357,6 +12359,10 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
     //设置默认大小
     this.defaultHeight = 100;
 
+    this.defaultValue("width", "auto");
+
+    this.defaultValue("height", "auto");
+
 
     //创建模板
     this.create_dom_template("img");
@@ -12369,49 +12375,16 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
     //@language     当前语言目录
     this.defineProperty("src", "", {
 
-        end_code: "this.dom.style.backgroundImage = \"url(\" + value.replace(\"@theme\", flyingon.current_theme).replace(\"@language\", flyingon.current_language) + \")\";"
+        end_code: "this.dom.src = value ? value.replace(\"@theme\", flyingon.current_theme).replace(\"@language\", flyingon.current_language) : \"\";"
     });
 
-    
+
     //未能正常加载图片时的提醒文字
     this.defineProperty("alt", "", {
 
         end_code: "this.dom.alt = value;"
     });
 
-
-
-
-    this.__fn_image_load = function (event) {
-
-        var target = this.__fn_dom_control(event.target),
-            dom = target.dom_div,
-            style1 = this.style,
-            style2 = dom.style,
-            data,
-            width,
-            height;
-
-        if (data = target.__clip_data)
-        {
-            width = data[2];
-            height = data[3];
-
-            style1.left = -data[0] + "px";
-            style1.top = -data[1] + "px";
-        }
-        else
-        {
-            style2.width = (width = this.width) + "px";
-            style2.height = (height = this.height) + "px";
-
-            //自动
-            if ((data = target.__boxModel) && (data.auto_width || data.auto_height))
-            {
-                target.update();
-            }
-        }
-    };
 
 
 
@@ -12526,8 +12499,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             releaseCapture,                         //释放鼠标
             capture_dom,                            //捕获的dom
             capture_cache,                          //捕获时缓存数据
-
-            cursor_list,                            //锁定鼠标指针集合
 
             pressdown,                              //按下时dom事件
             host_mousemove = true,                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
@@ -12659,25 +12630,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         };
 
 
-        //锁定拖动时鼠标指针
-        flyingon.addEventListener(host, "mouseover", function (event) {
-
-            if (pressdown)
-            {
-                var style = this.style;
-
-                if (!style.__cursor__)
-                {
-                    (cursor_list || (cursor_list = [])).push(style, style.cursor);
-
-                    style.__cursor__ = true;
-                    style.cursor = pressdown.cursor;
-                }
-            }
-        });
-
-
-
 
         //捕获全局mouseup事件
         //注: 当鼠标在浏览器窗口外弹起时此事件仍不能执行,暂时找不到好的办法捕获浏览器外mouseup事件
@@ -12715,9 +12667,10 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 cache;
 
             //活动窗口不是当前点击窗口则设置为活动窗口
-            if (!ownerWindow.__activeWindow)
+            if (ownerWindow.__mainWindow.__activeWindow !== ownerWindow)
             {
                 ownerWindow.active();
+                host.flyingon = ownerWindow;
             }
 
             //鼠标按键处理
@@ -12779,10 +12732,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             var target, cache;
 
             //防止host处理
-            if (this !== host)
-            {
-                host_mousemove = false;
-            }
+            host_mousemove = false;
 
             event || (event = fix_event(window.event));
 
@@ -12827,17 +12777,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         events.mouseup = function (event, cancel) {
 
             var target;
-
-            if (cursor_list) //恢复锁定的指针
-            {
-                for (var i = 0, _ = cursor_list.length; i < _; i++)
-                {
-                    cursor_list[i].__cursor__ = undefined;
-                    cursor_list[i++].cursor = cursor_list[i];
-                }
-
-                cursor_list = null;
-            }
 
             if (capture_dom)
             {
@@ -13101,8 +13040,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
         this.__fn_init_window = function (dom) {
 
-            //默认设置为初始化状态,在渲染窗口后终止
-            flyingon.__initializing = true;
 
             //标记所属窗口为自身及绑定dom对象
             this.__ownerWindow = dom.flyingon = this;
@@ -13164,16 +13101,16 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         //设置当前窗口为活动窗口
         this.active = function () {
 
-            var root = this.get_mainWindow(),
+            var first = this.get_mainWindow(),
                 target;
 
-            if ((target = root.__activeWindow) !== this)
+            if ((target = first.__activeWindow) !== this)
             {
                 if (target)
                 {
-                    if (target !== root)
+                    if (target !== first)
                     {
-                        target.dom.style.zIndex = 9990;
+                        target.dom.style.zIndex = 0;
                     }
 
                     target.dispatchEvent("deactivate");
@@ -13182,12 +13119,11 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
                 this.dispatchEvent("activate");
 
-                root.__activeWindow = this;
-                host.flyingon = this;
+                first.__activeWindow = this;
 
-                if (this !== root)
+                if (this !== first)
                 {
-                    this.dom.style.zIndex = 9991;
+                    this.dom.style.zIndex = 1;
                 }
 
                 this.__fn_to_active(true);
@@ -13222,6 +13158,9 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         var _this = this,
             dom = this.dom_window = document.createElement("div");
 
+        //默认设置为初始化状态,在渲染窗口后终止
+        flyingon.__initializing = true;
+
         //绑定对象
         document.documentElement.flyingon = this;
 
@@ -13249,7 +13188,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         });
 
         //设为活动窗口
-        this.__activeWindow = this;
+        this.__activeWindow = this.__mainWindow = this;
 
         //子控件集合
         this.__children = new flyingon.ControlCollection(this);
@@ -13371,24 +13310,6 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
 
 ﻿
-//弹出窗口标题栏
-flyingon.defineClass("DialogHead", flyingon.Control, function (base) {
-
-
-
-    Class.create_mode = "merge";
-
-
-
-    //扩展子控件接口
-    flyingon.extend(this, flyingon.IChildren, base);
-
-
-});
-
-
-
-
 
 //弹出窗口
 flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
@@ -13400,10 +13321,13 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        this.initialize_head(this.head = new flyingon.DialogHead());
-        this.head.__parent = this;
+        //默认设置为初始化状态,在渲染窗口后终止
+        flyingon.__initializing = true;
 
-        (this.dom_head = this.dom.children[0]).appendChild(this.head.dom);
+        this.initialize_header(this.__header = new flyingon.Panel());
+        this.__header.__parent = this;
+
+        (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
 
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
 
@@ -13442,24 +13366,59 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //是否显示标题栏
-    this.defineProperty("head_visible", true, "layout");
+    this.defineProperty("header", true, "layout");
 
 
-    //窗口关闭前事件
-    this.defineEvent("closing");
+    //窗口图标
+    this.defineProperty("icon", "", {
+
+        end_code: "this.__header_icon.set_icon(value);"
+    });
 
 
-    //窗口关闭后事件
-    this.defineEvent("closed");
+    //窗口标题
+    this.defineProperty("text", "", {
+
+        end_code: "this.__header_text.set_text(value);"
+    });
+
+
+    //窗口关闭事件(可返回false阻止关闭窗口)
+    this.defineEvent("close");
 
 
 
 
 
     //初始化窗口标题栏
-    this.initialize_head = function (head) {
+    this.initialize_header = function (header) {
 
-        head.appendChild(new flyingon.HtmlControl().set_text("dddddddd"))
+        var target;
+
+        target = this.__header_icon = new flyingon.Icon()
+            .set_layoutSplit("before")
+            .set_icon("dialog")
+            .__fn_className("flyingon-Dialog-icon");
+
+        target = this.__header_text = new flyingon.Label()
+            .set_layoutSplit("center")
+            .__fn_className("flyingon-Dialog-text");
+
+        target = this.__header_close = new flyingon.Icon()
+            .set_layoutSplit("after")
+            .set_icon("close")
+            .__fn_className("flyingon-Dialog-close")
+
+            .on("click", function (event) {
+
+                target.close();
+            });
+
+        header.set_layoutType("split")
+            .__fn_className("flyingon-Dialog-header")
+            .appendChild(this.__header_icon, this.__header_text, target);
+
+        target = this;
     };
 
 
@@ -13467,7 +13426,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
     this.__event_capture_mousedown = function (event) {
 
-        if (this.__dialog_move__ = event.which === 1 && event.in_dom(this.dom_head)) //按标题栏拖动
+        if (this.__dialog_move__ = event.which === 1 && event.in_dom(this.dom_header)) //按标题栏拖动
         {
             return false;
         }
@@ -13482,8 +13441,6 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
             this.set_left(start.x + event.distanceX + "px");
             this.set_top(start.y + event.distanceY + "px");
-
-            event.stopPropagation(false);
         }
     };
 
@@ -13511,14 +13468,12 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
             var mask = this.dom_mask = document.createElement("div");
 
             mask.flyingon = this;
-            mask.style.cssText = "position:absolute;z-index:9990;width:100%;height:100%;overflow:auto;-moz-user-select:none;-webkit-user-select:none;outline:none;cursor:default;background-color:silver;opacity:0.1;";
-            host.appendChild(this.dom_mask);
+            mask.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background-color:silver;filter:alpha(opacity=60);-moz-opacity:0.6;-khtml-opacity:0.6;opacity:0.6;";
+
+            host.appendChild(mask);
         }
 
         host.appendChild(this.dom);
-
-        //设为活动窗口
-        this.__activeWindow = this;
 
         //初始化状态
         this.__states = { active: true };
@@ -13536,37 +13491,26 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-    this.close = function (dispose) {
+    this.close = function () {
 
         var parent = this.__parentWindow;
 
-        if (parent && this.dispatchEvent("closing") !== false)
+        if (parent && this.dispatchEvent("close") !== false)
         {
-            var root = this.__mainWindow;
+            this.__parentWindow = this.__mainWindow = null;
+            this.dispose();
 
-            if (this.dom.parentNode)
-            {
-                this.dom.parentNode.removeChild(this.dom);
-            }
+            flyingon.dom_dispose(this.dom);
+            this.dom.innerHTML = "";
 
             if (this.dom_mask)
             {
-                this.dom_mask.innerHTML = "";
+                flyingon.dom_dispose(this.dom_mask);
             }
 
-            flyingon.__all_windows.removeAt(this);
+            flyingon.__all_windows.remove(this);
 
-            this.dispatchEvent("closed");
-
-            this.__parentWindow = this.__mainWindow = root.__activeWindow = null;
             parent.active();
-
-            if (dispose)
-            {
-                this.dispose();
-            }
-
-            this.dom.innerHTML = "";
         }
     };
 
@@ -13575,19 +13519,21 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
     this.__fn_measure_client = function (box, dom_body) {
 
-        var head = this.head,
-            style1 = this.dom_head.style,
+        var header = this.__header,
+            style1 = this.dom_header.style,
             style2 = dom_body.style,
             y = 0;
 
-        if (this.get_head_visible())
+        if (this.get_header())
         {
             style1.display = "";
 
-            head.measure(this.offsetWidth, 25, true, true);
-            head.render();
+            header.__update_dirty = 1;
+            header.__arrange_dirty = true;
+            header.measure(this.offsetWidth - box.border_width, 25, true, true);
+            header.render();
 
-            style1.height = (y = head.offsetHeight) + "px";
+            style1.height = (y = header.offsetHeight) + "px";
         }
         else
         {

@@ -9,8 +9,8 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        (this.head = new flyingon.TabHead()).__parent = this;
-        (this.dom_head = this.dom.children[0]).appendChild(this.head.dom);
+        (this.header = new flyingon.TabHead()).__parent = this;
+        (this.dom_header = this.dom.children[0]).appendChild(this.header.dom);
 
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
     };
@@ -24,13 +24,13 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
     //是否显示页头
-    this.defineProperty("head_visible", false, "layout");
+    this.defineProperty("header_visible", false, "layout");
 
 
     //标题
     this.defineProperty("title", "", {
 
-        end_code: "this.head.title = value;"
+        end_code: "this.header.title = value;"
     });
 
 
@@ -86,7 +86,7 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
     //展开或收拢面板
     this.__fn_collapse = function (collapse) {
 
-        var style1 = this.dom_head.style,
+        var style1 = this.dom_header.style,
             style2 = this.dom_title.style;
 
         if (collapse)
