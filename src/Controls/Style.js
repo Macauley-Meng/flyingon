@@ -35,6 +35,7 @@
 
         selector_rule_type = {      //支持的选择器规则类型
 
+            "": true, //并列选择器
             " ": true,
             ",": true,
             ">": true,
@@ -1426,6 +1427,13 @@
                     }
                     break;
 
+                case "": //dom
+                    if (target.dom.tagName !== node.name)
+                    {
+                        return false;
+                    }
+                    break;
+
                 case "::": //伪元素
                     if ((target = (pseudo_fn[node.name] || empty_fn)(node, target)) === undefined)
                     {
@@ -1450,6 +1458,10 @@
         };
 
 
+        type_fn[""] = function (selector, index, target) {
+
+            return check_node(selector, index, target);
+        };
 
         type_fn[" "] = function (selector, index, target) {
 
@@ -1862,10 +1874,10 @@
     };
 
 
-    //IE6只支持" "及","
-    if (flyingon.browser_MSIE && !window.XMLHttpRequest)
+    //IE6或怪异模式只支持" "及","及并列选择器, 但是不支持两个class并列
+    if (flyingon.browser_MSIE && (!window.XMLHttpRequest || (document.documentMode && document.documentMode < 7)))
     {
-        selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
+        selector_rule_type[""] = selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
     }
 
 
@@ -1876,21 +1888,16 @@
             type,
             result;
 
-        if (item.token === "::" || item.token === "#" || item.length > 1)
-        {
-            return null;
-        }
-
-        if ((type = item.type) && !selector_rule_type[type])
+        if (item.token === "::" || item.length > 1 || !selector_rule_type[item.type])
         {
             return null;
         }
 
         result = [];
 
-        if (type)
+        if (item.type)
         {
-            result.push(type);
+            result.push(item.type);
         }
 
         result.push(item.token === "@" ? "." : item.token);
@@ -1899,8 +1906,15 @@
         //单个伪类
         if (item.length > 0)
         {
-            selector.prefix = ".flyingon "; //添加前缀使权重等于伪类
-            result.push("--" + item[0].name);
+            if (item.token === "#")
+            {
+                result.push(".flyingon--" + item[0].name);
+            }
+            else
+            {
+                selector.prefix = ".flyingon "; //添加前缀使权重等于伪类
+                result.push("--" + item[0].name);
+            }
         }
 
         return result.join("");

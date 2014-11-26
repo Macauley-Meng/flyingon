@@ -276,16 +276,16 @@ flyingon.defineClass("Control", function () {
 
             var keys = [], cache;
 
-            //添加控件
+            //all
             keys.push("flyingon-Control");
 
-            //添加类型class
+            //type
             if (target.css_className !== "flyingon-Control")
             {
                 keys.push(target.css_className);
             }
 
-            //class 后置优先
+            //class
             if (cache = target.__class_list)
             {
                 for (var name in cache)
@@ -310,27 +310,32 @@ flyingon.defineClass("Control", function () {
             if (states.disabled)
             {
                 className = " " + keys.join("--disabled ");
+                className += "flyingon--disabled "
             }
             else
             {
                 if (states.checked)
                 {
                     className += " " + keys.join("--checked ");
+                    className += "flyingon--checked "
                 }
 
                 if (states.focus)
                 {
                     className += " " + keys.join("--focus ");
+                    className += "flyingon--focus "
                 }
 
                 if (states.hover)
                 {
                     className += " " + keys.join("--hover ");
+                    className += "flyingon--hover "
                 }
 
                 if (states.active)
                 {
                     className += " " + keys.join("--active ");
+                    className += "flyingon--active "
                 }
             }
 

@@ -1609,7 +1609,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             if (nodes.type !== "," || nodes.length === 0) //非组合直接添加到当前节点集合
             {
-                this.type = nodes.type || " ";
+                this.type = nodes.type; 
                 nodes.push(this);
             }
             else if ((last = nodes[nodes.length - 1]) instanceof element_nodes)
@@ -1637,7 +1637,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                     break;
             }
 
-            nodes.type = null;
+            nodes.type = ""; //默认为并列选择器
         };
 
 
@@ -1805,9 +1805,6 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-    var split_regex = /"[^"]*"|'[^']*'|[\w-]+|[@.#* ,>+:=~|^$()\[\]]/g; //选择器拆分正则表达式
-
-
     //[name?="value"]属性选择器
     function parse_property(values, length, index) {
 
@@ -1869,21 +1866,22 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-    //预解析 按从左至右的顺序解析
+
+    var split_regex = /"[^"]*"|'[^']*'|[\w-]+|[@.#* ,>+:=~|^$()\[\]]/g; //选择器拆分正则表达式
+
+    //注1: 按从左至右的顺序解析
+    //注2: 两个之间没有任何符号表示并列选器, 但是IE6或怪异模式不支持两个class并列
     flyingon.parse_selector = function (selector) {
 
         var nodes = [], //节点数组
             node,       //当前节点
-
             tokens = selector.match(split_regex), //标记集合
             token,      //当前标记
-
             i = 0,
             length = tokens.length,
-
             cache;
 
-        //设置默认类型
+        //设置默认类型(默认为并列选择器)
         nodes.type = "";
 
         while (i < length)
@@ -1901,9 +1899,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                     node = new element_node(nodes, "*", "");
                     break;
 
-                case " ":  //后代选择器标记 不处理 注: "> "应解析为">"
-                    break;
-
+                case " ":  //后代选择器标记
                 case ">":  //子元素选择器标记
                 case "+":  //毗邻元素选择器标记
                 case "~":  //之后同级元素选择器标记
@@ -4376,6 +4372,7 @@ flyingon.defineClass("Component", function () {
 
         selector_rule_type = {      //支持的选择器规则类型
 
+            "": true, //并列选择器
             " ": true,
             ",": true,
             ">": true,
@@ -5767,6 +5764,13 @@ flyingon.defineClass("Component", function () {
                     }
                     break;
 
+                case "": //dom
+                    if (target.dom.tagName !== node.name)
+                    {
+                        return false;
+                    }
+                    break;
+
                 case "::": //伪元素
                     if ((target = (pseudo_fn[node.name] || empty_fn)(node, target)) === undefined)
                     {
@@ -5791,6 +5795,10 @@ flyingon.defineClass("Component", function () {
         };
 
 
+        type_fn[""] = function (selector, index, target) {
+
+            return check_node(selector, index, target);
+        };
 
         type_fn[" "] = function (selector, index, target) {
 
@@ -6203,10 +6211,10 @@ flyingon.defineClass("Component", function () {
     };
 
 
-    //IE6只支持" "及","
-    if (flyingon.browser_MSIE && !window.XMLHttpRequest)
+    //IE6或怪异模式只支持" "及","及并列选择器, 但是不支持两个class并列
+    if (flyingon.browser_MSIE && (!window.XMLHttpRequest || (document.documentMode && document.documentMode < 7)))
     {
-        selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
+        selector_rule_type[""] = selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
     }
 
 
@@ -6217,21 +6225,16 @@ flyingon.defineClass("Component", function () {
             type,
             result;
 
-        if (item.token === "::" || item.token === "#" || item.length > 1)
-        {
-            return null;
-        }
-
-        if ((type = item.type) && !selector_rule_type[type])
+        if (item.token === "::" || item.length > 1 || !selector_rule_type[item.type])
         {
             return null;
         }
 
         result = [];
 
-        if (type)
+        if (item.type)
         {
-            result.push(type);
+            result.push(item.type);
         }
 
         result.push(item.token === "@" ? "." : item.token);
@@ -6240,8 +6243,15 @@ flyingon.defineClass("Component", function () {
         //单个伪类
         if (item.length > 0)
         {
-            selector.prefix = ".flyingon "; //添加前缀使权重等于伪类
-            result.push("--" + item[0].name);
+            if (item.token === "#")
+            {
+                result.push(".flyingon--" + item[0].name);
+            }
+            else
+            {
+                selector.prefix = ".flyingon "; //添加前缀使权重等于伪类
+                result.push("--" + item[0].name);
+            }
         }
 
         return result.join("");
@@ -6454,6 +6464,13 @@ flyingon.defineClass("Query", function () {
                     }
                     break;
 
+                case "": //dom
+                    if (target.dom.tagName !== node.name)
+                    {
+                        return;
+                    }
+                    break;
+
                 case "::": //伪元素
                     (pseudo_fn[node.name] || pseudo_unkown)(node, target, exports);
                     return;
@@ -6548,6 +6565,17 @@ flyingon.defineClass("Query", function () {
                         exports.push.apply(exports, values);
                     }
                 }
+            }
+        };
+
+        //并列选择器
+        this[""] = function (node, items, exports) {
+
+            var children;
+
+            for (var i = 0, _ = items.length; i < _; i++)
+            {
+                check_node(node, items[i], exports);
             }
         };
 
@@ -7384,16 +7412,16 @@ flyingon.defineClass("Control", function () {
 
             var keys = [], cache;
 
-            //添加控件
+            //all
             keys.push("flyingon-Control");
 
-            //添加类型class
+            //type
             if (target.css_className !== "flyingon-Control")
             {
                 keys.push(target.css_className);
             }
 
-            //class 后置优先
+            //class
             if (cache = target.__class_list)
             {
                 for (var name in cache)
@@ -7418,27 +7446,32 @@ flyingon.defineClass("Control", function () {
             if (states.disabled)
             {
                 className = " " + keys.join("--disabled ");
+                className += "flyingon--disabled "
             }
             else
             {
                 if (states.checked)
                 {
                     className += " " + keys.join("--checked ");
+                    className += "flyingon--checked "
                 }
 
                 if (states.focus)
                 {
                     className += " " + keys.join("--focus ");
+                    className += "flyingon--focus "
                 }
 
                 if (states.hover)
                 {
                     className += " " + keys.join("--hover ");
+                    className += "flyingon--hover "
                 }
 
                 if (states.active)
                 {
                     className += " " + keys.join("--active ");
+                    className += "flyingon--active "
                 }
             }
 

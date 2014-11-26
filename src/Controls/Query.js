@@ -79,6 +79,13 @@ flyingon.defineClass("Query", function () {
                     }
                     break;
 
+                case "": //dom
+                    if (target.dom.tagName !== node.name)
+                    {
+                        return;
+                    }
+                    break;
+
                 case "::": //伪元素
                     (pseudo_fn[node.name] || pseudo_unkown)(node, target, exports);
                     return;
@@ -173,6 +180,17 @@ flyingon.defineClass("Query", function () {
                         exports.push.apply(exports, values);
                     }
                 }
+            }
+        };
+
+        //并列选择器
+        this[""] = function (node, items, exports) {
+
+            var children;
+
+            for (var i = 0, _ = items.length; i < _; i++)
+            {
+                check_node(node, items[i], exports);
             }
         };
 

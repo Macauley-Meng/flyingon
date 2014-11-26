@@ -80,7 +80,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             if (nodes.type !== "," || nodes.length === 0) //非组合直接添加到当前节点集合
             {
-                this.type = nodes.type || " ";
+                this.type = nodes.type; 
                 nodes.push(this);
             }
             else if ((last = nodes[nodes.length - 1]) instanceof element_nodes)
@@ -108,7 +108,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                     break;
             }
 
-            nodes.type = null;
+            nodes.type = ""; //默认为并列选择器
         };
 
 
@@ -276,9 +276,6 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-    var split_regex = /"[^"]*"|'[^']*'|[\w-]+|[@.#* ,>+:=~|^$()\[\]]/g; //选择器拆分正则表达式
-
-
     //[name?="value"]属性选择器
     function parse_property(values, length, index) {
 
@@ -340,21 +337,22 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-    //预解析 按从左至右的顺序解析
+
+    var split_regex = /"[^"]*"|'[^']*'|[\w-]+|[@.#* ,>+:=~|^$()\[\]]/g; //选择器拆分正则表达式
+
+    //注1: 按从左至右的顺序解析
+    //注2: 两个之间没有任何符号表示并列选器, 但是IE6或怪异模式不支持两个class并列
     flyingon.parse_selector = function (selector) {
 
         var nodes = [], //节点数组
             node,       //当前节点
-
             tokens = selector.match(split_regex), //标记集合
             token,      //当前标记
-
             i = 0,
             length = tokens.length,
-
             cache;
 
-        //设置默认类型
+        //设置默认类型(默认为并列选择器)
         nodes.type = "";
 
         while (i < length)
@@ -372,9 +370,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                     node = new element_node(nodes, "*", "");
                     break;
 
-                case " ":  //后代选择器标记 不处理 注: "> "应解析为">"
-                    break;
-
+                case " ":  //后代选择器标记
                 case ">":  //子元素选择器标记
                 case "+":  //毗邻元素选择器标记
                 case "~":  //之后同级元素选择器标记
