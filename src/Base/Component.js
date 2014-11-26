@@ -33,18 +33,12 @@ flyingon.IComponent = function () {
 
 
 
-    this.__define_getter = function (name, attributes) {
-
-        return new Function("return this.__fields." + name + ";");
-    };
-
-
-    this.__define_setter = function (name, data_type, attributes) {
+    this.__fn_define_setter = function (name, data_type, attributes) {
 
         var body = ["\n"], cache;
 
         //定义变量
-        body.push("var fields = this.__" + (attributes.style ? "styles || (this.__styles = {})" : "fields") + ", name = \"" + name + "\", oldValue, cache;\n\n");
+        body.push("var fields = this.__" + (attributes.style ? "styles || (this.__styles = {})" : "fields") + ", name = \"" + name + "\", oldValue, cache;");
 
         //基本类型转换(根据默认值的类型自动转换)
         if (data_type !== "object")
@@ -59,19 +53,19 @@ flyingon.IComponent = function () {
             switch (data_type)
             {
                 case "boolean":
-                    cache += "!!value;";
+                    cache += "\n\n!!value;";
                     break;
 
                 case "int":
-                    cache += "(+value | 0);\n";
+                    cache += "\n\n(+value | 0);";
                     break;
 
                 case "number":
-                    cache += "(+value || 0);\n";
+                    cache += "\n\n(+value || 0);";
                     break;
 
                 case "string":
-                    cache += "\"\" + value;\n";
+                    cache += "\n\n\"\" + value;";
                     break;
             }
 
@@ -81,23 +75,40 @@ flyingon.IComponent = function () {
         //最小值限定(小于指定值则自动转为指定值)
         if ((cache = attributes.minValue) != null)
         {
-            body.push("\n");
+            body.push("\n\n");
             body.push("if (value < " + cache + ") value = " + cache + ";");
         }
 
         //最大值限定(大于指定值则自动转为指定值)
         if ((cache = attributes.maxValue) != null)
         {
-            body.push("\n");
+            body.push("\n\n");
             body.push("if (value > " + cache + ") value = " + cache + ";");
         }
 
         //自定义值检测代码
         if (cache = attributes.check_code)
         {
-            body.push("\n");
+            body.push("\n\n");
             body.push(cache);
         }
+
+        ////包装属性从被包装对象获取值
+        //if (cache = attributes.wrapper)
+        //{
+        //    body.push("\n\n");
+
+        //    if (cache.constructor === Array)
+        //    {
+        //        body.push(cache[0] + ".set_" + cache[1] + "(value);\n");
+        //        body.push("value = " + cache[0] + ".get_" + cache[1] + "();");
+        //    }
+        //    else
+        //    {
+        //        body.push(cache[0] + "." + cache[1] + " = value;\n");
+        //        body.push("value = " + cache[0] + "." + cache[1] + ";");
+        //    }
+        //}
 
         //初始化代码
         body.push("\n\n"
@@ -111,7 +122,6 @@ flyingon.IComponent = function () {
 
                 + "return this;\n"
             + "}\n\n\n\n");
-
 
         //对比新旧值
         body.push("if ((oldValue = fields[name]) !== value)\n");
@@ -182,7 +192,8 @@ flyingon.IComponent = function () {
     var previous_attributes = null,
         regex_name = /\W/;
 
-    this.__define_attributes = function (attributes) {
+    //解析属性
+    this.__fn_parse_attributes = function (attributes) {
 
         if (!attributes)
         {
@@ -204,7 +215,6 @@ flyingon.IComponent = function () {
         else if (attributes.attributes)
         {
             values = attributes.attributes.split("|");
-            delete attributes.attributes;
         }
 
         if (values)
@@ -233,9 +243,9 @@ flyingon.IComponent = function () {
         }
         else
         {
-            attributes = this.__define_attributes(attributes);
+            attributes = this.__fn_parse_attributes(attributes);
 
-            var getter = attributes.getter || this.__define_getter(name, attributes),
+            var getter = attributes.getter || new Function("return this.__fields." + name + ";"),
                 setter,
                 data_type;
 
@@ -253,7 +263,7 @@ flyingon.IComponent = function () {
                     data_type = "int";
                 }
 
-                setter = this.__define_setter(name, data_type, attributes);
+                setter = this.__fn_define_setter(name, data_type, attributes);
             }
 
             //创建属性

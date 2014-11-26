@@ -258,7 +258,7 @@
             original_names[key] = name;
 
             //解析属性
-            attributes = _this.__define_attributes(attributes);
+            attributes = _this.__fn_parse_attributes(attributes);
             attributes.style = true;
 
             if (attributes.no)
@@ -301,7 +301,7 @@
                         "this.__parent ? this.__parent.get_" + key + "() : this.__defaults[name];" :
                         "this.__css_values[name] = this.__defaults[name];\n")),
 
-                setter = _this.__define_setter(key, style_data_types[key], attributes);
+                setter = _this.__fn_define_setter(key, style_data_types[key], attributes);
 
             //定义属性
             flyingon.defineProperty(_this, key, getter, setter);
@@ -1122,7 +1122,7 @@
             flyingon.__fn_dom_event(target);
         }
 
-        if ((target.__css_types || get_css_types(target)).use_css) //是否使用css
+        if ((target.__css_types || get_css_types(target)).css) //是否使用css
         {
             if (target.__css_names)
             {
@@ -1133,7 +1133,7 @@
         else
         {
             var style = target.__styles,
-                names = target.__css_keys || get_css_keys(target),
+                names = target.__css_keys || get_css_keys(target.__css_types),
                 name,
                 css_names,
                 value;
@@ -1179,65 +1179,86 @@
     //从指定的样式集合查找指定样式类型的样式值
     flyingon.__fn_css_value = function (target, name) {
 
-        var css_list = registry_names[name];
+        var css_list = registry_names[name],
+            css_types,
+            cache,
+            value;
 
         if (css_list)
         {
-            var types = target.__css_types || get_css_types(target),
-                weights,
-                cache;
+            css_types = target.__css_types || get_css_types(target);
 
-            //按顺序获取权重值集合
-            for (var i = types.length - 1; i >= 0; i--)
+            //先查询id
+            if (css_types.id && (value = css_list[css_types.id]) && (value = css_value(target, value)))
             {
-                if (cache = css_list[types[i]])
+                return value[1];
+            }
+
+            //再查询自定义class(与class书写顺序无关,与样式定义顺序有关)
+            if (css_types.length > 0)
+            {
+                for (var i = css_types.length - 1; i >= 0; i--)
                 {
-                    for (var j = 0, _ = cache.length; j < _; j++)
+                    if ((value = css_list[css_types[i]]) && (value = css_value(target, value)))
                     {
-                        (weights || (weights = {}))[cache[j]] = true;
+                        if (!cache || cache[2] < value[2]) //找出最大权重值
+                        {
+                            cache = value;
+                        }
                     }
+                }
+
+                if (cache)
+                {
+                    return cache[1];
                 }
             }
 
-            //按权重顺序查找样式值
-            if (weights)
+            //再查询当前类型
+            if (css_types.type && (value = css_list[css_types.type]) && (value = css_value(target, value)))
             {
-                for (var name in weights)
-                {
-                    if ((cache = +name) >= 0)
-                    {
-                        var item = target,
-                            values = css_list[cache],
-                            selector = values[0],
-                            end = selector.length - 1,
-                            node = selector[end];
-
-                        //处理伪元素
-                        if (node.token === ":" && (item = (style_pseudo_fn[node.name] || empty_fn)(node, item)) === undefined)
-                        {
-                            continue;
-                        }
-
-                        //检测属性
-                        if (node.length > 0 && check_property(node, item) === false)
-                        {
-                            continue;
-                        }
-
-                        //继续处理上一节点
-                        if (end > 0 && style_type_fn[node.type](selector, end - 1, item) === false)
-                        {
-                            continue;
-                        }
-
-                        return values[1];
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
+                return value[1];
             }
+
+            //再查询@flyingon-Control
+            if (css_types.all && (value = css_list[css_types.all]) && (value = css_value(target, value)))
+            {
+                return value[1];
+            }
+        }
+    };
+
+
+    function css_value(target, css_values) {
+
+        var keys = css_values.__weight_keys || (css_values.__weight_keys = Object.keys(css_values));
+
+        for (var i = keys.length - 1; i >= 0; i--)
+        {
+            var values = css_values[keys[i]],
+                selector = values[0],
+                end = selector.length - 1,
+                node = selector[end];
+
+            //处理伪元素
+            if (node.token === ":" && (target = (style_pseudo_fn[node.name] || empty_fn)(node, target)) === undefined)
+            {
+                continue;
+            }
+
+            //检测属性
+            if (node.length > 0 && check_property(node, target) === false)
+            {
+                continue;
+            }
+
+            //继续处理上一节点
+            if (end > 0 && style_type_fn[node.type](selector, end - 1, target) === false)
+            {
+                continue;
+            }
+
+            return values;
         }
     };
 
@@ -1283,7 +1304,7 @@
         //所有控件
         if (cache = types["@flyingon-Control"])
         {
-            result.push("@flyingon-Control");
+            result.all = "@flyingon-Control";
             css = cache[0];
         }
         else
@@ -1294,12 +1315,8 @@
         //添加类型class
         if (cache = types[name = "@" + target.css_className])
         {
-            result.push(name);
-
-            if (css)
-            {
-                css = cache[0];
-            }
+            result.type = name;
+            css = css || cache[0];
         }
 
         //class
@@ -1310,28 +1327,20 @@
                 if (cache = types[name = "." + name])
                 {
                     result.push(name);
-
-                    if (css)
-                    {
-                        css = cache[0];
-                    }
+                    css = css || cache[0];
                 }
             }
         }
 
         //id
-        if ((name = target.__fields.id) && types[name = "#" + name])
+        if ((name = target.__fields.id) && (cache = types[name = "#" + name]))
         {
-            result.push(name);
-
-            if (css)
-            {
-                css = cache[0];
-            }
+            result.id = name;
+            css = css || cache[0];
         }
 
         //是否按样式表的方式处理
-        result.use_css = css;
+        result.css = css;
 
         //清空相关缓存
         target.__css_keys = target.__class_keys = null;
@@ -1341,35 +1350,43 @@
     };
 
 
-    //获取控件相关的样式名
-    function get_css_keys(target) {
+    //获取控件需要同步的样式名
+    function get_css_keys(css_types) {
 
-        var types = target.__css_types || get_css_types(target),
-            length = types.length;
+        var result = [],
+            keys = [],
+            types = registry_types;
 
-        switch (length)
+        if (css_types.all)
         {
-            case 0:
-                return {};
-
-            case 1:
-                return registry_types[types[0]][1];
-
-            default:
-                var result = Object.create(null);
-
-                for (var i = 0; i < length; i++)
-                {
-                    var names = registry_types[types[i]];
-
-                    for (var name in names)
-                    {
-                        result[name] = true;
-                    }
-                }
-
-                return result;
+            keys.push.call(keys, types[css_types.all][1]);
         }
+
+        if (css_types.type)
+        {
+            keys.push.call(keys, types[css_types.all][1]);
+        }
+
+        for (var i = 0, _ = css_types.length; i < _; i++)
+        {
+            keys.push.call(keys, types[css_types[i]][1]);
+        }
+
+        if (css_types.id)
+        {
+            keys.push.call(keys, types[css_types.id][1]);
+        }
+
+        for (var i = 0, _ = keys.length; i < _; i++)
+        {
+            if (!keys[name])
+            {
+                keys[name] = true;
+                result.push(name);
+            }
+        }
+
+        return result;
     };
 
 
@@ -1915,20 +1932,18 @@
 
             switch (node.token)
             {
-                case "#":
-                    result += 100;
-                    break;
-
-                case ".":
-                    result += 10;
-                    break;
-
+                case "@":
                 case "":
                     result += 1;
                     break;
 
+                case ".":
                 case ":": //伪元素
                     result += 10;
+                    break;
+
+                case "#":
+                    result += 100;
                     break;
             }
 
@@ -1953,7 +1968,7 @@
         {
             var style = selector.style,
                 type = selector.type,
-                types = registry_types[type] || (registry_types[type] = [true, Object.create(null)]), //注册类型
+                types = registry_types[type] || (registry_types[type] = [true, []]), //注册类型
                 no_names = style_no_names,
                 weight,
                 cache_name,
@@ -1976,30 +1991,36 @@
             {
                 weight = selector.weight; //当前权重
 
-                //注册类型
+                //类型相关的样式名称集合
                 if (!(name in no_names || name in types[1]))
                 {
+                    types[1].push(name);
                     types[1][name] = true;
                 }
 
                 //注册属性
                 if (cache_name = registry_names[name]) //已有属性
                 {
-                    if (cache = cache_name[weight]) //如果已存在权重则往后累加
+                    if (weight in cache_name) //如果已存在权重值则往后叠加
                     {
-                        cache[2] = weight = (cache[2] || weight) + 1;
+                        weight = ++cache_name[weight];
+                    }
+                    else
+                    {
+                        cache_name[weight] = weight;
                     }
 
-                    cache_type = cache_name[type] || (cache_name[type] = []);
+                    cache_type = cache_name[type] || (cache_name[type] = {});
                 }
                 else
                 {
                     cache_name = registry_names[name] = {};
-                    cache_type = cache_name[type] = [];
+                    cache_name[weight] = weight;
+
+                    cache_type = cache_name[type] = {};
                 }
 
-                cache_name[weight] = [selector, style[name]];
-                cache_type.push(weight);
+                cache_type[weight] = [selector, style[name], weight];
             }
         }
     };

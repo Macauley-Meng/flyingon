@@ -61,7 +61,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
     //窗口图标
     this.defineProperty("icon", "", {
 
-        end_code: "this.__header_icon.set_icon(value);"
+        wrapper: "this.__header_icon.set_icon(value);"
     });
 
 
@@ -157,7 +157,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
             var mask = this.dom_mask = document.createElement("div");
 
             mask.flyingon = this;
-            mask.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background-color:silver;filter:alpha(opacity=60);-moz-opacity:0.6;-khtml-opacity:0.6;opacity:0.6;";
+            mask.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background-color:silver;filter:alpha(opacity=10);-moz-opacity:0.1;-khtml-opacity:0.1;opacity:0.1;";
 
             host.appendChild(mask);
         }

@@ -195,12 +195,12 @@
         //移动代理dom
         if (__draggable !== "vertical")
         {
-            __dom_proxy.style.left = dom.scrollLeft + event.clientX - pressdown.clientX + "px";
+            __dom_proxy.style.left = event.clientX - pressdown.clientX - dom.offsetLeft + dom.scrollLeft + "px";
         }
 
         if (__draggable !== "horizontal")
         {
-            __dom_proxy.style.top = dom.scrollTop + event.clientY - pressdown.clientY + "px";
+            __dom_proxy.style.top = event.clientY - pressdown.clientY - dom.offsetTop + dom.scrollTop + "px";
         }
 
         //往上找出可放置拖放的对象(复制模式时不能放置在目标控件上)

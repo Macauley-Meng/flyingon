@@ -101,6 +101,7 @@ flyingon.defineStyle({
     //控件默认样式
     "@flyingon-Control": {
 
+        fontSize: "12px"
     },
 
 
@@ -182,7 +183,6 @@ flyingon.defineStyle({
     //弹出窗口标题栏文字样式
     ".flyingon-Dialog-text": {
 
-        fontSize: "12px"
     }
 
 });
