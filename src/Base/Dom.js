@@ -50,7 +50,7 @@
 
             if (flyingon.browser_MSIE)
             {
-                document.write("<" + "script id=\"__flyingon_ready__\" src=\"//:\" defer=\"defer\"></" + "script>");
+                document.write("<" + "script id='__flyingon_ready__' src='//:' defer='defer'></" + "script>");
                 document.getElementById("__flyingon_ready__").onreadystatechange = function () {
 
                     if (this.readyState === "complete")
@@ -111,7 +111,7 @@
 
         return function (url) {
 
-            dom.innerHTML = "<a href=\"" + url.replace(regex, "%22") + "\"/>";
+            dom.innerHTML = "<a href='" + url.replace(regex, "%22") + "'/>";
             return dom.firstChild.href;
         };
 

@@ -15,7 +15,7 @@ flyingon.defineClass("Label", flyingon.Control, function (base) {
 
 
     //创建dom元素模板
-    this.create_dom_template("div", null, "<span style=\"position:relative;margin:0;border:0;padding:0;\"></span>");
+    this.create_dom_template("div", null, "<span style='position:relative;margin:0;border:0;padding:0;'></span>");
 
 
 

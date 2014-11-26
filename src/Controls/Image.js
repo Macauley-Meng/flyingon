@@ -37,7 +37,7 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
     //@language     当前语言目录
     this.defineProperty("src", "", {
 
-        end_code: "this.dom.src = value ? value.replace(\"@theme\", flyingon.current_theme).replace(\"@language\", flyingon.current_language) : \"\";"
+        end_code: "this.dom.src = value ? value.replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language) : '';"
     });
 
 

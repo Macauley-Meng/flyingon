@@ -29,7 +29,7 @@
             var dom = document.createElement("div");
 
             dom.style.cssText = "overflow:scroll;width:100px;height:100px;border:0;padding:0;";
-            dom.innerHTML = "<div style=\"width:200px;height:200px;\"></div>";
+            dom.innerHTML = "<div style='width:200px;height:200px;'></div>";
 
             body.appendChild(dom);
 

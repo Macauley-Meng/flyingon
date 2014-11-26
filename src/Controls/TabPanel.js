@@ -5,11 +5,18 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
 
+
     Class.create_mode = "merge";
 
     Class.create = function () {
 
-        (this.header = new flyingon.TabHead()).__parent = this;
+        (this.__header = new flyingon.Panel()
+            .__fn_className("flyingon-TabPanel-header")
+            .appendChild(this.__header_text = new flyingon.Label()
+                .set_layoutSplit("center")
+                .__fn_className("flyingon-TabPanel-text")
+        )).__parent = this;
+
         (this.dom_header = this.dom.children[0]).appendChild(this.header.dom);
 
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
@@ -19,18 +26,53 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
     //创建模板
-    this.create_dom_template("div", "overflow:hidden;", "<div style='position:absolute;top:0;width:100%;overflow:hidden;'></div><div style='position:absolute;width:100%;bottom:0;'><div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div></div>");
+    this.create_dom_template("div", "overflow:hidden;", "<div style='position:absolute;top:0;width:100%;overflow:hidden;'></div><div style='position:absolute;width:100%;bottom:0;'><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div></div>");
 
 
 
-    //是否显示页头
-    this.defineProperty("header_visible", false, "layout");
+
+    //创建标题栏图标
+    this.__fn_create_icon = function (before, className) {
+
+        var target = new flyingon.Icon().set_layoutSplit(before ? "before" : "after");
+
+        if (className)
+        {
+            target.__fn_className(className)
+        }
+
+        this.__header.appendChild(target);
+
+        return target;
+    };
 
 
-    //标题
-    this.defineProperty("title", "", {
 
-        end_code: "this.header.title = value;"
+    //窗口图标
+    this.defineProperty("icon", "", {
+
+        wrapper: "(this.__header_icon || (this.__header_icon = this.__fn_create_icon('before', 'flyingon-TabPanel-icon'))).set_icon(value);"
+    });
+
+
+    //窗口标题
+    this.defineProperty("text", "", {
+
+        end_code: "this.__header_text.set_text(value);"
+    });
+
+
+    //是否允许关闭
+    this.defineProperty("allow_close", false, {
+
+        end_code: "this.__header_text.set_text(value);"
+    });
+
+
+    //是否允许收拢
+    this.defineProperty("allow_collapse", false, {
+
+        end_code: "this.__header_text.set_text(value);"
     });
 
 
@@ -40,10 +82,6 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
         attributes: "layout",
         end_code: "this.__fn_collapse(value);"
     });
-
-
-    //收拢大小(0表示不收拢)
-    this.defineProperty("collapse_size", 20);
 
 
 

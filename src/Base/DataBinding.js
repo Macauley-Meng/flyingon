@@ -73,7 +73,7 @@ flyingon.defineClass("DataBinding", function () {
                     names1[x1] = true;
                 }
 
-                return source.get ? "source.get(\"" + x1 + "\")" : x;
+                return source.get ? "source.get('" + x1 + "')" : x;
             }
 
             if (y1)
@@ -83,13 +83,13 @@ flyingon.defineClass("DataBinding", function () {
                     names2[y1] = true;
                 }
 
-                return "target.get(\"" + y1 + "\")";
+                return "target.get('" + y1 + "')";
             }
 
             return _;
         });
 
-        return new Function("source", "target", "target.set(\"" + this.name + "\", " + value + ");");
+        return new Function("source", "target", "target.set('" + this.name + "', " + value + ");");
     };
 
 
@@ -122,12 +122,12 @@ flyingon.defineClass("DataBinding", function () {
 
                 if (setter === undefined)
                 {
-                    setter = "target.get(\"" + this.name + "\")";
-                    setter = source.set ? "source.set(\"" + expression + "\", " + setter + ");" : "source[\"" + expression + "\"] = " + setter + ";";
+                    setter = "target.get('" + this.name + "')";
+                    setter = source.set ? "source.set('" + expression + "', " + setter + ");" : "source['" + expression + "'] = " + setter + ";";
                 }
 
-                expression = source.get ? "source.get(\"" + expression + "\")" : "source[\"" + expression + "\"]";
-                this.__fn_getter = fn = new Function("source", "target", "target.set(\"" + this.name + "\", " + expression + ");");
+                expression = source.get ? "source.get('" + expression + "')" : "source['" + expression + "']";
+                this.__fn_getter = fn = new Function("source", "target", "target.set('" + this.name + "', " + expression + ");");
             }
 
             //记录函数参数值

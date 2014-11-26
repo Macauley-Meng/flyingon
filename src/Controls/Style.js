@@ -221,7 +221,7 @@
                     names[i] = "this.get_" + convert_name(template.replace("?", getter[i])) + "()";
                 }
 
-                getter = new Function("return [" + names.join(",") + "].join(\" \");");
+                getter = new Function("return [" + names.join(",") + "].join(' ');");
             }
 
             style_split[name = convert_name(name)] = split_fn;
@@ -267,7 +267,7 @@
             }
             else if (!attributes.end_code)
             {
-                attributes.end_code = "this.dom.style[name] = value !== undefined ? value : \"\";";
+                attributes.end_code = "this.dom.style[name] = value !== undefined ? value : '';";
             }
 
             //注册默认值
@@ -280,7 +280,7 @@
             }
 
             //生成getter,setter方法
-            var getter = new Function("var name = \"" + key + "\", value = this.__styles && this.__styles[name];\n\n"
+            var getter = new Function("var name = '" + key + "', value = this.__styles && this.__styles[name];\n\n"
 
                     + "if (value !== undefined)\n"
                     + "{\n\t"
@@ -307,7 +307,7 @@
             flyingon.defineProperty(_this, key, getter, setter);
 
             //扩展至选择器
-            flyingon.query[key] = new Function("value", "return this.value(\"" + key + "\", value);");
+            flyingon.query[key] = new Function("value", "return this.value('" + key + "', value);");
         };
 
 
@@ -772,7 +772,7 @@
 
                 if (flyingon.browser_MSIE)
                 {
-                    return "filter = \"alpha(opacity=\" + (value * 100) + \")\";";
+                    return "filter = 'alpha(opacity=' + (value * 100) + ')';";
                 }
 
                 return style_prefix1 + "Opacity = value;"
@@ -873,7 +873,7 @@
         //url('URL')	指向图像的路径
         style("background-image", "", {
 
-            end_code: "this.dom.style.backgroundImage = value !== undefined ? value.replace(\"@theme\", flyingon.current_theme).replace(\"@language\", flyingon.current_language) : \"\";"
+            end_code: "this.dom.style.backgroundImage = value !== undefined ? value.replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language) : '';"
         });
 
         //控件背景重复方式

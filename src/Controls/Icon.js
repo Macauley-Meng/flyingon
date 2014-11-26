@@ -20,7 +20,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
     //字库名
     this.defineProperty("fontFamily", "", {
 
-        end_code: "this.__fn_fontFamily(value || \"flyingon\");"
+        end_code: "this.__fn_fontFamily(value || 'flyingon');"
     });
 
 

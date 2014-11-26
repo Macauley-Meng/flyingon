@@ -877,7 +877,7 @@ flyingon.defineClass("Fieldset", flyingon.Panel, function (base) {
 
 
     //创建dom元素模板
-    this.create_dom_template("fieldset", null, "<legend style=\"\"></legend><div style=\"position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;\"></div>");
+    this.create_dom_template("fieldset", null, "<legend></legend><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div>");
 
 
 
@@ -1148,7 +1148,7 @@ flyingon.defineClass("TextButton", flyingon.Control, function (base) {
 
 
         //创建dom元素模板
-        this.create_dom_template("div", null, "<label style=\"position:relative;padding:2px 0;\"><input type=\"" + type + "\" /><span></span></label>");
+        this.create_dom_template("div", null, "<label style='position:relative;padding:2px 0;'><input type='" + type + "'/><span></span></label>");
 
 
 

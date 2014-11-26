@@ -42,6 +42,24 @@ flyingon.defineClass("ControlCollection", function (base) {
 
 
 
+    //修改子项索引
+    this.change_index = function (old_index, new_index) {
+
+        var item;
+
+        if (old_index !== new_index && (item = this[old_index]))
+        {
+            splice.call(this, old_index, 1);
+
+            if (new_index > this.length)
+            {
+                new_index = this.length;
+            }
+
+            splice.call(this, new_index, 0, item);
+        }
+    };
+
 
     //添加子项
     this.append = function (item) {

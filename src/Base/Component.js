@@ -38,7 +38,7 @@ flyingon.IComponent = function () {
         var body = ["\n"], cache;
 
         //定义变量
-        body.push("var fields = this.__" + (attributes.style ? "styles || (this.__styles = {})" : "fields") + ", name = \"" + name + "\", oldValue, cache;");
+        body.push("var fields = this.__" + (attributes.style ? "styles || (this.__styles = {})" : "fields") + ", name = '" + name + "', oldValue, cache;");
 
         //基本类型转换(根据默认值的类型自动转换)
         if (data_type !== "object")
@@ -47,7 +47,7 @@ flyingon.IComponent = function () {
 
             if (attributes.style)
             {
-                cache += "value == null || value === \"\" ? undefined : ";
+                cache += "value == null || value === '' ? undefined : ";
             }
 
             switch (data_type)
@@ -65,7 +65,7 @@ flyingon.IComponent = function () {
                     break;
 
                 case "string":
-                    cache += "\n\n\"\" + value;";
+                    cache += "\n\n'' + value;";
                     break;
             }
 
@@ -128,7 +128,7 @@ flyingon.IComponent = function () {
         body.push("{\n\n\t");
 
         //变更事件代码
-        body.push("if ((cache = this.__events_data) && (cache = cache[\"propertychange\"]) && cache.length > 0)\n\t"
+        body.push("if ((cache = this.__events_data) && (cache = cache['propertychange']) && cache.length > 0)\n\t"
             + "{\n\t\t"
                 + "var event = new flyingon.PropertyChangeEvent(name, value, oldValue);\n\n\t\t"
                 + "if (this.dispatchEvent(event) === false)\n\t\t"

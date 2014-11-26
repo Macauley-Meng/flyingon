@@ -79,11 +79,27 @@ flyingon.defineClass("Control", function () {
     };
 
 
-    //获取父控件中的索引位置
-    this.childIndex = function () {
+    //获取或修改父控件中的索引位置
+    this.childIndex = function (index) {
 
-        var cache = this.__arrange_index; //排列过则直接取索引
-        return cache >= 0 ? cache : (cache = this.__parent) && parent.__children.indexOf(this) || -1;
+        var value = this.__arrange_index; //排列过则直接取索引
+
+        if (value == null)
+        {
+            value = (value = this.__parent) && parent.__children.indexOf(this) || -1;
+        }
+
+        if (index === undefined)
+        {
+            return value;
+        }
+
+        if (value >= 0 && index !== value)
+        {
+            this.__parent.change_index(value, index);
+        }
+
+        return this;
     };
 
 
