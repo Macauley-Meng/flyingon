@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+
+    <script type="text/javascript">
+
+
+        //定义样式
+        flyingon.defineStyle({
+
+            ".test-control": {
+
+                overflow: "hidden",
+                border: "1px solid black",
+                paddingTop: "2px",
+                backgroundColor: "white",
+                cursor: "pointer",
+                textAlign: "center"
+            }
+
+        });
+
+
+        var w = new flyingon.Window().sets({
+
+            layoutType: "flow",
+            border: "4px solid blue",
+            padding: "10px",
+            spacingWidth: "10px",
+            spacingHeight: "10px",
+            droppable: true
+        });
+
+
+        for (var i = 0; i < 8; i++)
+        {
+
+            var panel = new flyingon.TabPanel().sets({
+
+                draggable: "both",
+                border: "1px solid red",
+                padding: "10px",
+                layoutType: "flow",
+                spacingWidth: "10px",
+                spacingHeight: "10px",
+                show_close: true,
+                show_collapse: true,
+                icon: "download",
+                text: "Panel " + i
+            });
+
+
+            for (var j = 0; j < 100; j++)
+            {
+                var ctrl = new flyingon.Label().sets({
+
+                    className: "test-control",
+                    text: "text " + j
+                });
+
+                panel.appendChild(ctrl);
+            }
+
+
+            w.appendChild(panel);
+        }
+
+
+        w.show();
+
+
+    </script>
+
+</head>
+<body>
+
+
+</body>
+</html>

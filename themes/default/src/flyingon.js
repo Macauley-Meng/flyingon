@@ -130,6 +130,46 @@ flyingon.defineStyle({
     },
 
 
+    //标签面板标题栏样式
+    ".flyingon-TabPanel": {
+
+        backgroundColor: "white"
+    },
+
+    //标签面板标题栏样式
+    ".flyingon-TabPanel-header": {
+
+        paddingLeft: "2px",
+        paddingRight: "2px",
+        height: "25px",
+        verticalAlign: "middle",
+        backgroundColor: "silver",
+        cursor: "default"
+    },
+
+
+    //标签面板标题栏图标样式
+    ".flyingon-TabPanel-icon": {
+
+        color: "blue"
+    },
+
+    //标签面板标题栏文字样式
+    ".flyingon-TabPanel-text": {
+
+    },
+
+    //标签面板标题栏文字样式
+    ".flyingon-TabPanel-collapse": {
+
+    },
+
+    //标签面板标题栏文字样式
+    ".flyingon-TabPanel-close": {
+
+    },
+
+
     //按钮控件样式
     "@flyingon-Button": {
 

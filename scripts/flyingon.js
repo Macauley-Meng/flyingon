@@ -1612,7 +1612,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             var last;
 
-            if (nodes.type !== "," || nodes.length === 0) //非组合直接添加到当前节点集合
+            if (nodes.type !== "or" || nodes.length === 0) //非组合直接添加到当前节点集合
             {
                 this.type = nodes.type;
                 nodes.push(this);
@@ -1716,7 +1716,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //元素类型
-        this.type = ",";
+        this.type = "or";
 
         //子项数
         this.length = 2;
@@ -6629,16 +6629,14 @@ flyingon.defineClass("Query", function () {
         //并列选择器
         this.and = function (node, items, exports) {
 
-            var children;
-
             for (var i = 0, _ = items.length; i < _; i++)
             {
                 check_node(node, items[i], exports);
             }
         };
 
-        //所有后代元素
-        this.descendant = function (node, items, exports) {
+        //所有后代元素(默认为所有后代元素)
+        this.descendant = this[""] = function (node, items, exports) {
 
             var children;
 
@@ -8173,11 +8171,7 @@ flyingon.defineClass("Control", function () {
                 }
             }
 
-            if (resize)
-            {
-                event.stopPropagation(false);
-                return resize;
-            }
+            return resize;
         };
 
 
@@ -11920,6 +11914,118 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
 ﻿
+//可折叠控件接口
+flyingon.ICollapse = function (base) {
+
+
+
+    //创建模板
+    this.create_dom_template("div", "overflow:hidden;", "<div style='position:absolute;top:0;width:100%;overflow:hidden;'></div><div style='position:absolute;width:100%;bottom:0;'><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div></div>");
+
+
+
+
+    //创建标题栏图标
+    this.__fn_create_icon = function (split, className) {
+
+        var target = new flyingon.Icon().set_layoutSplit(split);
+
+        if (className)
+        {
+            target.__fn_className(className)
+        }
+
+        this.__header.appendChild(target);
+
+        return target;
+    };
+
+
+    //获取创建图标代码
+    this.__fn_icon_code = function (name, split, icon) {
+
+        var key = "this.__header_" + name,
+            code = [];
+
+        code.push("if (value)\n");
+        code.push("{\n\t");
+        code.push("(" + key + " || (" + key + " = this.__fn_create_icon('" + split + "', 'flyingon-TabPanel-" + name + "'))).set_icon(" + icon + ");\n");
+        code.push("}\n");
+        code.push("else if (cache = " + key + ")\n");
+        code.push("{\n\t");
+        code.push("cache.set_visibility('collapse');\n");
+        code.push("}");
+
+        return code.join("");
+    };
+
+
+
+
+    //是否显示标题栏
+    this.defineProperty("header", true, "layout");
+
+
+    //是否允许关闭
+    this.defineProperty("show_close", false, {
+
+        end_code: this.__fn_icon_code("close", "after", "'close'")
+    });
+
+
+    //是否允许收拢
+    this.defineProperty("show_collapse", false, {
+
+        end_code: this.__fn_icon_code("collapse", "after", "'collapse'")
+    });
+
+
+    //是否收拢
+    this.defineProperty("collapse", false, {
+
+        attributes: "layout",
+        end_code: "this.__fn_collapse(value);"
+    });
+
+
+
+
+
+    this.__fn_measure_client = function (box, dom_body) {
+
+        var header = this.__header,
+            style1 = this.dom_header.style,
+            style2 = dom_body.style,
+            y = 0;
+
+        if (this.get_header())
+        {
+            style1.display = "";
+
+            header.__update_dirty = 1;
+            header.__arrange_dirty = true;
+            header.measure(this.offsetWidth - box.border_width, 25, true, true);
+            header.render();
+
+            style1.height = (y = header.offsetHeight) + "px";
+        }
+        else
+        {
+            style1.display = "none";
+        }
+
+        style2.top = y + "px";
+        style2.height = this.offsetHeight - box.border_width - y + "px";
+
+        base.__fn_measure_client.call(this, box, dom_body);
+    };
+
+
+
+
+};
+
+
 
 //页签面板控件
 flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
@@ -11936,6 +12042,7 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
             .__fn_className("flyingon-TabPanel-text");
 
         (this.__header = new flyingon.Panel())
+            .set_layoutType("split")
             .__fn_className("flyingon-TabPanel-header")
             .appendChild(this.__header_text).__parent = this;
 
@@ -11947,33 +12054,16 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
 
-    //创建模板
-    this.create_dom_template("div", "overflow:hidden;", "<div style='position:absolute;top:0;width:100%;overflow:hidden;'></div><div style='position:absolute;width:100%;bottom:0;'><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div></div>");
+    //扩展可折叠控件接口
+    flyingon.ICollapse.call(this, base);
 
-
-
-
-    //创建标题栏图标
-    this.__fn_create_icon = function (before, className) {
-
-        var target = new flyingon.Icon().set_layoutSplit(before ? "before" : "after");
-
-        if (className)
-        {
-            target.__fn_className(className)
-        }
-
-        this.__header.appendChild(target);
-
-        return target;
-    };
 
 
 
     //窗口图标
     this.defineProperty("icon", "", {
 
-        wrapper: "(this.__header_icon || (this.__header_icon = this.__fn_create_icon('before', 'flyingon-TabPanel-icon'))).set_icon(value);"
+        end_code: this.__fn_icon_code("icon", "before", "value")
     });
 
 
@@ -11981,28 +12071,6 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
     this.defineProperty("text", "", {
 
         end_code: "this.__header_text.set_text(value);"
-    });
-
-
-    //是否允许关闭
-    this.defineProperty("allow_close", false, {
-
-        end_code: "this.__header_text.set_text(value);"
-    });
-
-
-    //是否允许收拢
-    this.defineProperty("allow_collapse", false, {
-
-        end_code: "this.__header_text.set_text(value);"
-    });
-
-
-    //是否收拢
-    this.defineProperty("collapse", false, {
-
-        attributes: "layout",
-        end_code: "this.__fn_collapse(value);"
     });
 
 
@@ -12074,6 +12142,8 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
 });
+
+
 
 
 
@@ -12600,12 +12670,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
     //绑定事件方法
-    var binding_event;
-
-
-
-    //注册的事件列表
-    (function () {
+    var binding_event = (function () {
 
 
 
@@ -12640,16 +12705,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-        //初始化绑定事件方法
-        binding_event = function (dom) {
-
-            for (var name in events)
-            {
-                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
-            }
-        };
-
-
 
         flyingon.ready(function () {
 
@@ -12674,16 +12729,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             }
 
             return host.flyingon;
-        };
-
-
-        //设置光标
-        function set_cursor(target, cursor) {
-
-            if (target)
-            {
-                (target.__ownerWindow || target.get_ownerWindow()).__mainWindow.dom_window.style.cursor = cursor || (target.get_draggable() !== "none" ? "move" : target.get_cursor());
-            }
         };
 
 
@@ -12895,11 +12940,9 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             }
             else if (target = dom_target(event))
             {
-                if ((cache = target.get_resizable()) !== "none" && (resizable = target.__fn_resize_side(cache, event))) //调整大小状态不触发相关事件
-                {
-                    set_cursor(target, resizable.cursor);
-                }
-                else
+                resizable = null;
+
+                if ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event))) //调整大小状态不触发相关事件
                 {
                     if (target !== (cache = hover_control))
                     {
@@ -12916,8 +12959,9 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                     }
 
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
-                    set_cursor(target);
                 }
+
+                (target.__ownerWindow || target.get_ownerWindow()).__fn_set_cursor(target, resizable && resizable.cursor);
             }
         };
 
@@ -13114,6 +13158,16 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
+        //初始化绑定事件方法
+        return function (dom) {
+
+            for (var name in events)
+            {
+                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
+            }
+        };
+
+
     })();
 
 
@@ -13275,6 +13329,27 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 }
 
                 this.__fn_to_active(true);
+            }
+        };
+
+
+
+
+        var style;
+
+        //设置光标
+        this.__fn_set_cursor = function (target, cursor) {
+
+            if (style) //清除原有样式
+            {
+                style.cursor = "";
+            }
+
+            //同时设置目标控件及主窗口dom_window的光标
+            if (target)
+            {
+                style = target.dom.style;
+                style.cursor = this.__mainWindow.dom_window.style.cursor = cursor || (target.get_draggable() !== "none" ? "move" : target.get_cursor());
             }
         };
 

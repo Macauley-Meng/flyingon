@@ -979,11 +979,7 @@ flyingon.defineClass("Control", function () {
                 }
             }
 
-            if (resize)
-            {
-                event.stopPropagation(false);
-                return resize;
-            }
+            return resize;
         };
 
 

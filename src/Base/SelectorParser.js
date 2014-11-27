@@ -78,7 +78,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             var last;
 
-            if (nodes.type !== "," || nodes.length === 0) //非组合直接添加到当前节点集合
+            if (nodes.type !== "or" || nodes.length === 0) //非组合直接添加到当前节点集合
             {
                 this.type = nodes.type;
                 nodes.push(this);
@@ -182,7 +182,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //元素类型
-        this.type = ",";
+        this.type = "or";
 
         //子项数
         this.length = 2;

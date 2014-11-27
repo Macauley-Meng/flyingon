@@ -186,16 +186,14 @@ flyingon.defineClass("Query", function () {
         //并列选择器
         this.and = function (node, items, exports) {
 
-            var children;
-
             for (var i = 0, _ = items.length; i < _; i++)
             {
                 check_node(node, items[i], exports);
             }
         };
 
-        //所有后代元素
-        this.descendant = function (node, items, exports) {
+        //所有后代元素(默认为所有后代元素)
+        this.descendant = this[""] = function (node, items, exports) {
 
             var children;
 

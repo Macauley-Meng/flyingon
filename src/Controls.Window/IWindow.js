@@ -6,12 +6,7 @@
 
 
     //绑定事件方法
-    var binding_event;
-
-
-
-    //注册的事件列表
-    (function () {
+    var binding_event = (function () {
 
 
 
@@ -46,16 +41,6 @@
 
 
 
-        //初始化绑定事件方法
-        binding_event = function (dom) {
-
-            for (var name in events)
-            {
-                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
-            }
-        };
-
-
 
         flyingon.ready(function () {
 
@@ -80,16 +65,6 @@
             }
 
             return host.flyingon;
-        };
-
-
-        //设置光标
-        function set_cursor(target, cursor) {
-
-            if (target)
-            {
-                (target.__ownerWindow || target.get_ownerWindow()).__mainWindow.dom_window.style.cursor = cursor || (target.get_draggable() !== "none" ? "move" : target.get_cursor());
-            }
         };
 
 
@@ -301,11 +276,9 @@
             }
             else if (target = dom_target(event))
             {
-                if ((cache = target.get_resizable()) !== "none" && (resizable = target.__fn_resize_side(cache, event))) //调整大小状态不触发相关事件
-                {
-                    set_cursor(target, resizable.cursor);
-                }
-                else
+                resizable = null;
+
+                if ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event))) //调整大小状态不触发相关事件
                 {
                     if (target !== (cache = hover_control))
                     {
@@ -322,8 +295,9 @@
                     }
 
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
-                    set_cursor(target);
                 }
+
+                (target.__ownerWindow || target.get_ownerWindow()).__fn_set_cursor(target, resizable && resizable.cursor);
             }
         };
 
@@ -520,6 +494,16 @@
 
 
 
+        //初始化绑定事件方法
+        return function (dom) {
+
+            for (var name in events)
+            {
+                dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
+            }
+        };
+
+
     })();
 
 
@@ -681,6 +665,27 @@
                 }
 
                 this.__fn_to_active(true);
+            }
+        };
+
+
+
+
+        var style;
+
+        //设置光标
+        this.__fn_set_cursor = function (target, cursor) {
+
+            if (style) //清除原有样式
+            {
+                style.cursor = "";
+            }
+
+            //同时设置目标控件及主窗口dom_window的光标
+            if (target)
+            {
+                style = target.dom.style;
+                style.cursor = this.__mainWindow.dom_window.style.cursor = cursor || (target.get_draggable() !== "none" ? "move" : target.get_cursor());
             }
         };
 
