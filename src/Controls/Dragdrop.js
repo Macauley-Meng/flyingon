@@ -22,6 +22,8 @@
 
         __execute,      //是否已执行拖动
 
+        __dom_body,     //容器dom
+
         __dom_proxy = document.createElement("div"); //代理dom
 
 
@@ -32,26 +34,21 @@
 
         //分发拖拉事件
         var target,
-            dom,
+            offset1 = flyingon.dom_offset(__dom_body = __ownerWindow.dom_children.parentNode),
             length = __dragTargets.length,
-            x = 0,
-            y = 0;
-
-        //减去窗口边框
-        if (__ownerWindow && (target = __ownerWindow.__boxModel))
-        {
-            x = target.borderLeft;
-            y = target.borderTop
-        }
+            x = __dom_body.clientLeft,
+            y = __dom_body.clientTop;
 
         //创建代理dom
         for (var i = 0; i < length; i++)
         {
             if ((target = __dragTargets[i]) && target.dom)
             {
-                dom = target.dom.cloneNode(true);
+                var dom = target.dom.cloneNode(true),
+                    offset2 = flyingon.dom_offset(target.dom);
 
-                offset_fn(target, dom.style, x, y);
+                dom.style.left = offset2.left - offset1.left - x + "px";
+                dom.style.top = offset2.top - offset1.top - y + "px";
 
                 __dom_proxy.appendChild(dom);
             }
@@ -89,25 +86,8 @@
         }
 
         __dom_proxy.style.cssText = "position:absolute;left:0;top:0;";
-        __ownerWindow.dom.appendChild(__dom_proxy);
+        __dom_body.appendChild(__dom_proxy);
         __execute = true;
-    };
-
-
-    //获取相对window客户区的可视偏移
-    function offset_fn(target, style, offsetX, offsetY) {
-
-        var x = target.offsetLeft,
-            y = target.offsetTop;
-
-        while (target = target.__parent)
-        {
-            x += target.clientLeft + target.offsetLeft - target.__scrollLeft;
-            y += target.clientTop + target.offsetTop - target.__scrollTop;
-        }
-
-        style.left = x - offsetX + "px";
-        style.top = y - offsetY + "px";
     };
 
 
@@ -144,7 +124,7 @@
     //开始拖动
     this.start = function (target, draggable, event) {
 
-        var offset = target.offset(event.clientX, event.clientY);
+        var offset = flyingon.dom_offset(target.dom, event.clientX, event.clientY);
 
         //拖动目标
         event = new flyingon.DragEvent("dragstart", event);
@@ -188,19 +168,18 @@
             start(event.shiftKey);
         }
 
-        var offset = __ownerWindow.offset(event.clientX, event.clientY),
-            target = __ownerWindow.findAt(offset.x, offset.y),
-            dom = __ownerWindow.dom;
+        var offset = flyingon.dom_offset(__ownerWindow.dom, event.clientX, event.clientY),
+            target = __ownerWindow.findAt(offset.x, offset.y);
 
         //移动代理dom
         if (__draggable !== "vertical")
         {
-            __dom_proxy.style.left = event.clientX - pressdown.clientX - dom.offsetLeft + dom.scrollLeft + "px";
+            __dom_proxy.style.left = event.clientX - pressdown.clientX + __dom_body.scrollLeft + "px";
         }
 
         if (__draggable !== "horizontal")
         {
-            __dom_proxy.style.top = event.clientY - pressdown.clientY - dom.offsetTop + dom.scrollTop + "px";
+            __dom_proxy.style.top = event.clientY - pressdown.clientY + __dom_body.scrollTop + "px";
         }
 
         //往上找出可放置拖放的对象(复制模式时不能放置在目标控件上)
@@ -267,13 +246,13 @@
             }
 
             //清空代理dom
-            __ownerWindow.dom.removeChild(__dom_proxy);
+            __dom_body.removeChild(__dom_proxy);
             __dom_proxy.innerHTML = "";
             __execute = false;
         }
 
         //清空缓存对象
-        __ownerWindow = __dragTarget = __dragTargets = __dropTarget = null;
+        __ownerWindow = __dragTarget = __dragTargets = __dropTarget = __dom_body = null;
 
         //返回是否拖动过
         return result;

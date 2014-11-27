@@ -339,6 +339,11 @@ window.flyingon = (function () {
     //    body.appendChild(div);
     //}
 
+    //当前是否IE怪异模式
+    if (flyingon.browser_MSIE)
+    {
+        flyingon.quirks_mode = document.compatMode === "BackCompat";
+    }
 
 
 })(flyingon);
@@ -1609,7 +1614,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             if (nodes.type !== "," || nodes.length === 0) //非组合直接添加到当前节点集合
             {
-                this.type = nodes.type; 
+                this.type = nodes.type;
                 nodes.push(this);
             }
             else if ((last = nodes[nodes.length - 1]) instanceof element_nodes)
@@ -1637,7 +1642,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                     break;
             }
 
-            nodes.type = ""; //默认为并列选择器
+            nodes.type = "and"; //默认为并列选择器
         };
 
 
@@ -1881,7 +1886,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             length = tokens.length,
             cache;
 
-        //设置默认类型(默认为并列选择器)
+        //设置默认类型
         nodes.type = "";
 
         while (i < length)
@@ -1900,11 +1905,23 @@ A~B                    匹配任何在A控件之后的同级B控件
                     break;
 
                 case " ":  //后代选择器标记
+                    nodes.type = "descendant";
+                    break;
+
                 case ">":  //子元素选择器标记
+                    nodes.type = "son";
+                    break;
+
                 case "+":  //毗邻元素选择器标记
+                    nodes.type = "next";
+                    break;
+
                 case "~":  //之后同级元素选择器标记
+                    nodes.type = "after";
+                    break;
+
                 case ",":  //组合选择器标记
-                    nodes.type = token;
+                    nodes.type = "or";
                     continue;
 
                 case "[": //属性 [name[?="value"]]
@@ -2919,6 +2936,36 @@ flyingon.defineClass("XmlSerializeWriter", flyingon.SerializeWriter, function (b
 
 
 
+    //转换url为绝对路径
+    flyingon.absolute_url = (function () {
+
+        var dom = document.createElement("a"),
+            regex;
+
+        function fn(url) {
+
+            dom.href = url;
+            return dom.href;
+        };
+
+        if (fn(""))
+        {
+            return fn;
+        }
+
+        dom = document.createElement("div");
+        regex = /"/g;
+
+        return function (url) {
+
+            dom.innerHTML = "<a href='" + url.replace(regex, "%22") + "'/>";
+            return dom.firstChild.href;
+        };
+
+    })();
+
+
+
     //文档树创建完毕
     flyingon.ready = (function () {
 
@@ -3004,33 +3051,64 @@ flyingon.defineClass("XmlSerializeWriter", flyingon.SerializeWriter, function (b
     })();
 
 
-    //转换url为绝对路径
-    flyingon.absolute_url = (function () {
 
-        var dom = document.createElement("a"),
-            regex;
+    //获取视口坐标偏移
+    //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
+    //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
+    //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
+    flyingon.ready(function () {
 
-        function fn(url) {
+        var fn = !document.body.getBoundingClientRect && function (dom) {
 
-            dom.href = url;
-            return dom.href;
+            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
+            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
+            //问题2: 在table或iframe中offsetParent取值可能不准确
+            var x = 0,
+                y = 0,
+                width = dom.offsetWidth,
+                height = dom.offsetHeight;
+
+            while (dom)
+            {
+                x += dom.offsetLeft;
+                y += dom.offsetTop;
+
+                if (dom = dom.offsetParent)
+                {
+                    x += dom.clientLeft;
+                    y += dom.clientTop;
+                }
+            }
+
+            dom = flyingon.dom_view;
+
+            x -= dom.scrollLeft;
+            y -= dom.scrollTop;
+
+            return {
+
+                left: x,
+                top: y,
+                right: x + width,
+                bottom: y + height
+            };
         };
 
-        if (fn(""))
-        {
-            return fn;
-        }
 
-        dom = document.createElement("div");
-        regex = /"/g;
+        //获取指定dom相对指定视口坐标的偏移
+        flyingon.dom_offset = function (dom, x, y) {
 
-        return function (url) {
+            var offset = fn ? fn.call(dom) : dom.getBoundingClientRect(); //IE6不能使用offset_fn.call的方式调用
 
-            dom.innerHTML = "<a href='" + url.replace(regex, "%22") + "'/>";
-            return dom.firstChild.href;
+            return x === undefined ? offset : {
+
+                x: x - offset.left,
+                y: y - offset.top
+            };
         };
 
-    })();
+    });
+
 
 
     //打印指定dom
@@ -4071,6 +4149,8 @@ flyingon.defineClass("Component", function () {
 
         __execute,      //是否已执行拖动
 
+        __dom_body,     //容器dom
+
         __dom_proxy = document.createElement("div"); //代理dom
 
 
@@ -4081,26 +4161,21 @@ flyingon.defineClass("Component", function () {
 
         //分发拖拉事件
         var target,
-            dom,
+            offset1 = flyingon.dom_offset(__dom_body = __ownerWindow.dom_children.parentNode),
             length = __dragTargets.length,
-            x = 0,
-            y = 0;
-
-        //减去窗口边框
-        if (__ownerWindow && (target = __ownerWindow.__boxModel))
-        {
-            x = target.borderLeft;
-            y = target.borderTop
-        }
+            x = __dom_body.clientLeft,
+            y = __dom_body.clientTop;
 
         //创建代理dom
         for (var i = 0; i < length; i++)
         {
             if ((target = __dragTargets[i]) && target.dom)
             {
-                dom = target.dom.cloneNode(true);
+                var dom = target.dom.cloneNode(true),
+                    offset2 = flyingon.dom_offset(target.dom);
 
-                offset_fn(target, dom.style, x, y);
+                dom.style.left = offset2.left - offset1.left - x + "px";
+                dom.style.top = offset2.top - offset1.top - y + "px";
 
                 __dom_proxy.appendChild(dom);
             }
@@ -4138,25 +4213,8 @@ flyingon.defineClass("Component", function () {
         }
 
         __dom_proxy.style.cssText = "position:absolute;left:0;top:0;";
-        __ownerWindow.dom.appendChild(__dom_proxy);
+        __dom_body.appendChild(__dom_proxy);
         __execute = true;
-    };
-
-
-    //获取相对window客户区的可视偏移
-    function offset_fn(target, style, offsetX, offsetY) {
-
-        var x = target.offsetLeft,
-            y = target.offsetTop;
-
-        while (target = target.__parent)
-        {
-            x += target.clientLeft + target.offsetLeft - target.__scrollLeft;
-            y += target.clientTop + target.offsetTop - target.__scrollTop;
-        }
-
-        style.left = x - offsetX + "px";
-        style.top = y - offsetY + "px";
     };
 
 
@@ -4193,7 +4251,7 @@ flyingon.defineClass("Component", function () {
     //开始拖动
     this.start = function (target, draggable, event) {
 
-        var offset = target.offset(event.clientX, event.clientY);
+        var offset = flyingon.dom_offset(target.dom, event.clientX, event.clientY);
 
         //拖动目标
         event = new flyingon.DragEvent("dragstart", event);
@@ -4237,19 +4295,18 @@ flyingon.defineClass("Component", function () {
             start(event.shiftKey);
         }
 
-        var offset = __ownerWindow.offset(event.clientX, event.clientY),
-            target = __ownerWindow.findAt(offset.x, offset.y),
-            dom = __ownerWindow.dom;
+        var offset = flyingon.dom_offset(__ownerWindow.dom, event.clientX, event.clientY),
+            target = __ownerWindow.findAt(offset.x, offset.y);
 
         //移动代理dom
         if (__draggable !== "vertical")
         {
-            __dom_proxy.style.left = event.clientX - pressdown.clientX - dom.offsetLeft + dom.scrollLeft + "px";
+            __dom_proxy.style.left = event.clientX - pressdown.clientX + __dom_body.scrollLeft + "px";
         }
 
         if (__draggable !== "horizontal")
         {
-            __dom_proxy.style.top = event.clientY - pressdown.clientY - dom.offsetTop + dom.scrollTop + "px";
+            __dom_proxy.style.top = event.clientY - pressdown.clientY + __dom_body.scrollTop + "px";
         }
 
         //往上找出可放置拖放的对象(复制模式时不能放置在目标控件上)
@@ -4316,13 +4373,13 @@ flyingon.defineClass("Component", function () {
             }
 
             //清空代理dom
-            __ownerWindow.dom.removeChild(__dom_proxy);
+            __dom_body.removeChild(__dom_proxy);
             __dom_proxy.innerHTML = "";
             __execute = false;
         }
 
         //清空缓存对象
-        __ownerWindow = __dragTarget = __dragTargets = __dropTarget = null;
+        __ownerWindow = __dragTarget = __dragTargets = __dropTarget = __dom_body = null;
 
         //返回是否拖动过
         return result;
@@ -4372,12 +4429,11 @@ flyingon.defineClass("Component", function () {
 
         selector_rule_type = {      //支持的选择器规则类型
 
-            "": true, //并列选择器
-            " ": true,
-            ",": true,
-            ">": true,
-            "+": true,
-            "~": true
+            and: true,          //并列选择器
+            descendant: true,   //后代选择器
+            son: true,          //子元素选择器
+            next: true,         //毗邻元素选择器
+            after: true         //之后同级元素选择器
         };
 
 
@@ -5118,7 +5174,7 @@ flyingon.defineClass("Component", function () {
             })()
         });
 
-        //控件鼠标样式
+        //控件光标样式
         //url	    需使用的自定义光标的 URL     注释：请在此列表的末端始终定义一种普通的光标, 以防没有由 URL 定义的可用光标 
         //default	默认光标(通常是一个箭头)
         //auto	    默认 浏览器设置的光标 
@@ -5136,7 +5192,7 @@ flyingon.defineClass("Component", function () {
         //text	    此光标指示文本 
         //wait	    此光标指示程序正忙(通常是一只表或沙漏) 
         //help	    此光标指示可用的帮助(通常是一个问号或一个气球) 
-        style("cursor", "auto", "inherit");
+        style("cursor", "auto", "inherit|no");
 
 
 
@@ -5471,7 +5527,7 @@ flyingon.defineClass("Component", function () {
         else
         {
             var style = target.__styles,
-                names = target.__css_keys || get_css_keys(target.__css_types),
+                names = target.__css_keys || get_css_keys(target),
                 name,
                 css_names,
                 value;
@@ -5689,42 +5745,44 @@ flyingon.defineClass("Component", function () {
 
 
     //获取控件需要同步的样式名
-    function get_css_keys(css_types) {
+    function get_css_keys(target) {
 
         var result = [],
             keys = [],
-            types = registry_types;
+            css_types = target.__css_types,
+            types = registry_types,
+            name;
 
         if (css_types.all)
         {
-            keys.push.call(keys, types[css_types.all][1]);
+            keys.push.apply(keys, types[css_types.all][1]);
         }
 
         if (css_types.type)
         {
-            keys.push.call(keys, types[css_types.all][1]);
+            keys.push.apply(keys, types[css_types.all][1]);
         }
 
         for (var i = 0, _ = css_types.length; i < _; i++)
         {
-            keys.push.call(keys, types[css_types[i]][1]);
+            keys.push.apply(keys, types[css_types[i]][1]);
         }
 
         if (css_types.id)
         {
-            keys.push.call(keys, types[css_types.id][1]);
+            keys.push.apply(keys, types[css_types.id][1]);
         }
 
         for (var i = 0, _ = keys.length; i < _; i++)
         {
-            if (!keys[name])
+            if (!keys[name = keys[i]])
             {
                 keys[name] = true;
                 result.push(name);
             }
         }
 
-        return result;
+        return target.__css_keys = result;
     };
 
 
@@ -5795,12 +5853,12 @@ flyingon.defineClass("Component", function () {
         };
 
 
-        type_fn[""] = function (selector, index, target) {
+        type_fn.and = function (selector, index, target) {
 
             return check_node(selector, index, target);
         };
 
-        type_fn[" "] = function (selector, index, target) {
+        type_fn.descendant = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -5817,13 +5875,13 @@ flyingon.defineClass("Component", function () {
             return false;
         };
 
-        type_fn[">"] = function (selector, index, target) {
+        type_fn.son = function (selector, index, target) {
 
             var parent = target.__parent;
             return parent ? check_node(selector, index, parent) : false;
         };
 
-        type_fn["+"] = function (selector, index, target) {
+        type_fn.next = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -5841,7 +5899,7 @@ flyingon.defineClass("Component", function () {
             return false;
         };
 
-        type_fn["~"] = function (selector, index, target) {
+        type_fn.after = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -5864,12 +5922,12 @@ flyingon.defineClass("Component", function () {
 
 
 
-        pseudo_fn["empty"] = function (node, target) {
+        pseudo_fn.empty = function (node, target) {
 
             return target.__children && target.__children.length > 0 ? undefined : target;
         };
 
-        pseudo_fn["before"] = function (node, target) {
+        pseudo_fn.before = function (node, target) {
 
             var items, index;
 
@@ -5879,7 +5937,7 @@ flyingon.defineClass("Component", function () {
             }
         };
 
-        pseudo_fn["after"] = function (node, target) {
+        pseudo_fn.after = function (node, target) {
 
             var items, index;
 
@@ -6211,10 +6269,10 @@ flyingon.defineClass("Component", function () {
     };
 
 
-    //IE6或怪异模式只支持" "及","及并列选择器, 但是不支持两个class并列
-    if (flyingon.browser_MSIE && (!window.XMLHttpRequest || (document.documentMode && document.documentMode < 7)))
+    //IE6或怪异模式只支持" "及","及并列选择器, 但是并列选择器不支持两个class并列
+    if (flyingon.browser_MSIE && (flyingon.quirks_mode || !window.XMLHttpRequest))
     {
-        selector_rule_type[""] = selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
+        selector_rule_type.and = selector_rule_type.son = selector_rule_type.next = selector_rule_type.after = false;
     }
 
 
@@ -6225,7 +6283,7 @@ flyingon.defineClass("Component", function () {
             type,
             result;
 
-        if (item.token === "::" || item.length > 1 || !selector_rule_type[item.type])
+        if (item.token === "::" || item.length > 1 || (item.type && !selector_rule_type[item.type]))
         {
             return null;
         }
@@ -6283,17 +6341,17 @@ flyingon.defineClass("Component", function () {
 
             switch (node.token)
             {
-                case "@":
-                case "":
+                case "": //dom标签
                     result += 1;
                     break;
 
-                case ".":
+                case "@": //自定义控件按10权重计, 等同于class
+                case ".": //class
                 case ":": //伪元素
                     result += 10;
                     break;
 
-                case "#":
+                case "#": //id
                     result += 100;
                     break;
             }
@@ -6548,7 +6606,7 @@ flyingon.defineClass("Query", function () {
 
 
         //合并元素集
-        this[","] = function (node, items, exports) {
+        this.or = function (node, items, exports) {
 
             var item, fn, values;
 
@@ -6569,7 +6627,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //并列选择器
-        this[""] = function (node, items, exports) {
+        this.and = function (node, items, exports) {
 
             var children;
 
@@ -6580,7 +6638,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //所有后代元素
-        this[" "] = function (node, items, exports) {
+        this.descendant = function (node, items, exports) {
 
             var children;
 
@@ -6609,7 +6667,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //子元素
-        this[">"] = function (node, items, exports) {
+        this.son = function (node, items, exports) {
 
             var children;
 
@@ -6626,7 +6684,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //后一个元素 元素伪类:after也会转换成此节点类型
-        this["+"] = function (node, items, exports) {
+        this.next = function (node, items, exports) {
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
@@ -6646,7 +6704,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //所有后续兄弟元素
-        this["~"] = function (node, items, exports) {
+        this.after = function (node, items, exports) {
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
@@ -6675,7 +6733,7 @@ flyingon.defineClass("Query", function () {
 
 
 
-        pseudo_fn["empty"] = function (node, target, exports) {
+        pseudo_fn.empty = function (node, target, exports) {
 
             if (!target.__children || target.__children.length === 0)
             {
@@ -6683,7 +6741,7 @@ flyingon.defineClass("Query", function () {
             }
         };
 
-        pseudo_fn["before"] = function (node, target, exports) {
+        pseudo_fn.before = function (node, target, exports) {
 
             var items, item, index;
 
@@ -6695,7 +6753,7 @@ flyingon.defineClass("Query", function () {
             }
         };
 
-        pseudo_fn["after"] = function (node, target, exports) {
+        pseudo_fn.after = function (node, target, exports) {
 
             var items, item, index;
 
@@ -8066,83 +8124,24 @@ flyingon.defineClass("Control", function () {
 
 
 
-
-        //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
-        //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
-        //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
-        var offset_fn;
-
-        document.createElement("div").getBoundingClientRect || flyingon.ready(function (body) {
-
-            var dom = document.compatMode == "BackCompat" ? body : document.documentElement;
-
-            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
-            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
-            //问题2: 在table或iframe中offsetParent取值可能不准确
-            offset_fn = function () {
-
-                var dom = this,
-                    x = 0,
-                    y = 0;
-
-                while (dom)
-                {
-                    x += dom.offsetLeft;
-                    y += dom.offsetTop;
-
-                    if (dom = dom.offsetParent)
-                    {
-                        x += dom.clientLeft;
-                        y += dom.clientTop;
-                    }
-                }
-
-                x -= dom.scrollLeft;
-                y -= dom.scrollTop;
-
-                return { left: x, top: y };
-            };
-
-        });
-
-
-        //获取控件相对浏览器视口坐标的偏移
-        this.offset = function (clientX, clientY) {
-
-            var dom = this.dom,
-                offset = dom.getBoundingClientRect ? dom.getBoundingClientRect() : offset_fn.call(dom); //IE6不能使用offset_fn.call的方式调用
-
-            return {
-
-                x: clientX - offset.left,
-                y: clientY - offset.top
-            };
-        };
-
-
-
-
         //获取可调整大小边
         this.__fn_resize_side = function (resizable, event) {
 
-            var offset = this.offset(event.clientX, event.clientY),
+            var offset = flyingon.dom_offset(this.dom, event.clientX, event.clientY),
                 style = this.dom.style,
                 width = this.offsetWidth,
                 height = this.offsetHeight,
-                resize,
-                cursor;
+                resize;
 
             if (resizable !== "vertical")
             {
                 if (offset.x >= 0 && offset.x < 4)
                 {
-                    cursor = "w-resize";
-                    resize = { left: true };
+                    resize = { left: true, cursor: "w-resize" };
                 }
                 else if (offset.x <= width && offset.x > width - 4)
                 {
-                    cursor = "e-resize";
-                    resize = { right: true };
+                    resize = { right: true, cursor: "e-resize" };
                 }
             }
 
@@ -8152,39 +8151,33 @@ flyingon.defineClass("Control", function () {
                 {
                     if (resize)
                     {
-                        cursor = resize.left ? "nw-resize" : "ne-resize";
+                        resize.cursor = resize.left ? "nw-resize" : "ne-resize";
                         resize.top = true;
                     }
                     else
                     {
-                        cursor = "n-resize";
-                        resize = { top: true };
+                        resize = { top: true, cursor: "n-resize" };
                     }
                 }
                 else if (offset.y <= height && offset.y > height - 4)
                 {
                     if (resize)
                     {
-                        cursor = resize.left ? "sw-resize" : "se-resize";
+                        resize.cursor = resize.left ? "sw-resize" : "se-resize";
                         resize.bottom = true;
                     }
                     else
                     {
-                        cursor = "s-resize";
-                        resize = { bottom: true };
+                        resize = { bottom: true, cursor: "s-resize" };
                     }
                 }
             }
 
             if (resize)
             {
-                style.cursor = cursor;
                 event.stopPropagation(false);
-
                 return resize;
             }
-
-            style.cursor = this.__styles && this.__styles.cursor || "";
         };
 
 
@@ -9069,8 +9062,7 @@ flyingon.defineClass("ControlCollection", function (base) {
 
             var styles = splitter.__styles || (splitter.__styles = {});
 
-            splitter.dom.style.cursor = vertical ? "n-resize" : "w-resize";
-
+            styles.cursor = vertical ? "n-resize" : "w-resize";
             styles.width = vertical ? width : (styles.width = undefined, splitter.get_width());
             styles.height = vertical ? (styles.height = undefined, splitter.get_height()) : height;
         };
@@ -11029,7 +11021,7 @@ flyingon.defineClass("ControlCollection", function (base) {
             start.item.value = (change += start.value) > 0 ? change : 1;
 
             layout_cache = false;
-            target.__parent.set_layoutTable(document.title = this.table.serialize());
+            target.__parent.set_layoutTable(this.table.serialize());
         };
 
 
@@ -11342,6 +11334,8 @@ flyingon.IChildren = function (base) {
 
         var children = this.__children || this.get_children();
         children.append.apply(children, arguments);
+
+        return this;
     };
 
 
@@ -11350,6 +11344,8 @@ flyingon.IChildren = function (base) {
 
         var children = this.__children || this.get_children();
         children.insert.apply(children, arguments);
+
+        return this;
     };
 
 
@@ -11362,6 +11358,8 @@ flyingon.IChildren = function (base) {
         {
             children.remove.apply(children, arguments);
         }
+
+        return this;
     };
 
 
@@ -11374,6 +11372,8 @@ flyingon.IChildren = function (base) {
         {
             children.removeAt.apply(children, index, length);
         }
+
+        return this;
     };
 
 
@@ -11642,7 +11642,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
     var layouts = flyingon.layouts,         //缓存布局服务
         layout_unkown = layouts["flow"];    //默认布局类型
 
-    
+
 
 
     Class.create_mode = "merge";
@@ -11808,8 +11808,9 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
         this.__event_bubble_dragover = function (event) {
 
             var items = this.__children,
-                offset = this.offset(event.clientX, event.clientY),
-                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft, offset.y - event.offsetTop) : 0,
+                dom_body = this.dom_children.parentNode,
+                offset = flyingon.dom_offset(this.dom, event.clientX, event.clientY),
+                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft + dom_body.scrollLeft, offset.y - event.offsetTop + dom_body.scrollTop) : 0,
                 cache = event.dragTarget;
 
             if (index >= 0 && insert_index !== index && cache)
@@ -11864,7 +11865,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
                     {
                         if (!offset)
                         {
-                            offset = this.offset(event.clientX, event.clientY);
+                            offset = flyingon.dom_offset(this.dom, event.clientX, event.clientY);
                             offset.x -= event.offsetLeft + this.clientLeft;
                             offset.y -= event.offsetTop + this.clientTop;
                         }
@@ -11930,14 +11931,15 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        (this.__header = new flyingon.Panel()
-            .__fn_className("flyingon-TabPanel-header")
-            .appendChild(this.__header_text = new flyingon.Label()
-                .set_layoutSplit("center")
-                .__fn_className("flyingon-TabPanel-text")
-        )).__parent = this;
+        (this.__header_text = new flyingon.Label())
+            .set_layoutSplit("center")
+            .__fn_className("flyingon-TabPanel-text");
 
-        (this.dom_header = this.dom.children[0]).appendChild(this.header.dom);
+        (this.__header = new flyingon.Panel())
+            .__fn_className("flyingon-TabPanel-header")
+            .appendChild(this.__header_text).__parent = this;
+
+        (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
 
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
     };
@@ -12013,30 +12015,30 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
 
-    this.__fn_measure_client = function (box, dom_body) {
+    //this.__fn_measure_client = function (box, dom_body) {
 
-        var size = this.get_collapse_size();
+    //    var size = this.get_collapse_size();
 
-        if (size > 0)
-        {
-            if (this.offsetWidth <= size)
-            {
-                this.offsetWidth = size;
-                this.dom.style.width = size + "px";
+    //    if (size > 0)
+    //    {
+    //        if (this.offsetWidth <= size)
+    //        {
+    //            this.offsetWidth = size;
+    //            this.dom.style.width = size + "px";
 
-                if (!this.get_collapse())
-                {
-                    this.__fn_collapse(true);
-                }
-            }
-            else if (this.get_collapse())
-            {
-                this.__fn_collapse(false);
-            }
-        }
+    //            if (!this.get_collapse())
+    //            {
+    //                this.__fn_collapse(true);
+    //            }
+    //        }
+    //        else if (this.get_collapse())
+    //        {
+    //            this.__fn_collapse(false);
+    //        }
+    //    }
 
-        base.__fn_measure_client.call(this, box, dom_body);
-    };
+    //    base.__fn_measure_client.call(this, box, dom_body);
+    //};
 
 
 
@@ -12675,6 +12677,16 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         };
 
 
+        //设置光标
+        function set_cursor(target, cursor) {
+
+            if (target)
+            {
+                (target.__ownerWindow || target.get_ownerWindow()).__mainWindow.dom_window.style.cursor = cursor || (target.get_draggable() !== "none" ? "move" : target.get_cursor());
+            }
+        };
+
+
 
         //捕获或释放鼠标
         if (document.createElement("div").setCapture)
@@ -12816,7 +12828,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 dom: event.target, //按下时触发事件的dom
                 capture: target,
                 which: event.which,
-                cursor: target.dom.style.cursor || "default",
                 clientX: event.clientX,
                 clientY: event.clientY
             };
@@ -12882,23 +12893,31 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
                 //window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty(); //清除选区
             }
-            else if ((target = dom_target(event)) && ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event)))) //调整大小状态不触发相关事件
+            else if (target = dom_target(event))
             {
-                if (target !== (cache = hover_control))
+                if ((cache = target.get_resizable()) !== "none" && (resizable = target.__fn_resize_side(cache, event))) //调整大小状态不触发相关事件
                 {
-                    if (cache)
+                    set_cursor(target, resizable.cursor);
+                }
+                else
+                {
+                    if (target !== (cache = hover_control))
                     {
-                        cache.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
-                        cache.__fn_to_hover(false);
+                        if (cache)
+                        {
+                            cache.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
+                            cache.__fn_to_hover(false);
+                        }
+
+                        hover_control = target;
+
+                        target.dispatchEvent(new MouseEvent("mouseover", event, pressdown));
+                        target.__fn_to_hover(true);
                     }
 
-                    hover_control = target;
-
-                    target.dispatchEvent(new MouseEvent("mouseover", event, pressdown));
-                    target.__fn_to_hover(true);
+                    target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
+                    set_cursor(target);
                 }
-
-                target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
             }
         };
 
@@ -12929,16 +12948,16 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 if (dragdrop.stop(event, pressdown, cancel)) //如果拖动过则取消相关鼠标事件
                 {
                     flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
-                    pressdown = null;
                 }
             }
 
-            if (pressdown && (target || (target = pressdown.capture)))
+            if (pressdown && (target = pressdown.capture))
             {
                 target.dispatchEvent(new MouseEvent("mouseup", event, pressdown));
                 target.__fn_to_active(false); //取消活动状态
-                pressdown = null;
             }
+
+            pressdown = null;
         };
 
 
@@ -13386,13 +13405,11 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
     //渲染
     this.render = (function (render) {
 
-
         return function () {
 
-            var host = document.documentElement,
-                body = document.body,
-                dom = this.dom_window,
+            var dom = this.dom_window,
                 style = dom.style,
+                view = flyingon.quirks_mode ? document.body : document.documentElement, //获取视口对象(怪异模式的浏览器视口对象为document.body)
                 width,
                 height;
 
@@ -13408,7 +13425,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                 {
                     if ((height = dom.clientHeight) <= 0)
                     {
-                        if ((height = (window.innerHeight || host.clientHeight || body.offsetHeight) - dom.offsetTop - 8) <= 0)
+                        if ((height = (window.innerHeight || view.clientHeight) - dom.offsetTop - 8) <= 0)
                         {
                             height = 600;
                         }
@@ -13416,7 +13433,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                         style.height = height + "px";
                     }
 
-                    this.measure(dom.clientWidth || body.clientWidth, height, true, true);
+                    this.measure(dom.clientWidth || view.clientWidth, height, true, true);
                     this.locate(0, 0);
                 }
 

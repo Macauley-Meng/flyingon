@@ -4,6 +4,36 @@
 
 
 
+    //转换url为绝对路径
+    flyingon.absolute_url = (function () {
+
+        var dom = document.createElement("a"),
+            regex;
+
+        function fn(url) {
+
+            dom.href = url;
+            return dom.href;
+        };
+
+        if (fn(""))
+        {
+            return fn;
+        }
+
+        dom = document.createElement("div");
+        regex = /"/g;
+
+        return function (url) {
+
+            dom.innerHTML = "<a href='" + url.replace(regex, "%22") + "'/>";
+            return dom.firstChild.href;
+        };
+
+    })();
+
+
+
     //文档树创建完毕
     flyingon.ready = (function () {
 
@@ -89,33 +119,64 @@
     })();
 
 
-    //转换url为绝对路径
-    flyingon.absolute_url = (function () {
 
-        var dom = document.createElement("a"),
-            regex;
+    //获取视口坐标偏移
+    //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
+    //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
+    //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
+    flyingon.ready(function () {
 
-        function fn(url) {
+        var fn = !document.body.getBoundingClientRect && function (dom) {
 
-            dom.href = url;
-            return dom.href;
+            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
+            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
+            //问题2: 在table或iframe中offsetParent取值可能不准确
+            var x = 0,
+                y = 0,
+                width = dom.offsetWidth,
+                height = dom.offsetHeight;
+
+            while (dom)
+            {
+                x += dom.offsetLeft;
+                y += dom.offsetTop;
+
+                if (dom = dom.offsetParent)
+                {
+                    x += dom.clientLeft;
+                    y += dom.clientTop;
+                }
+            }
+
+            dom = flyingon.dom_view;
+
+            x -= dom.scrollLeft;
+            y -= dom.scrollTop;
+
+            return {
+
+                left: x,
+                top: y,
+                right: x + width,
+                bottom: y + height
+            };
         };
 
-        if (fn(""))
-        {
-            return fn;
-        }
 
-        dom = document.createElement("div");
-        regex = /"/g;
+        //获取指定dom相对指定视口坐标的偏移
+        flyingon.dom_offset = function (dom, x, y) {
 
-        return function (url) {
+            var offset = fn ? fn.call(dom) : dom.getBoundingClientRect(); //IE6不能使用offset_fn.call的方式调用
 
-            dom.innerHTML = "<a href='" + url.replace(regex, "%22") + "'/>";
-            return dom.firstChild.href;
+            return x === undefined ? offset : {
+
+                x: x - offset.left,
+                y: y - offset.top
+            };
         };
 
-    })();
+    });
+
 
 
     //打印指定dom

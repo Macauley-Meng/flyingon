@@ -339,6 +339,11 @@ window.flyingon = (function () {
     //    body.appendChild(div);
     //}
 
+    //当前是否IE怪异模式
+    if (flyingon.browser_MSIE)
+    {
+        flyingon.quirks_mode = document.compatMode === "BackCompat";
+    }
 
 
 })(flyingon);

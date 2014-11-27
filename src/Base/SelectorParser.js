@@ -80,7 +80,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             if (nodes.type !== "," || nodes.length === 0) //非组合直接添加到当前节点集合
             {
-                this.type = nodes.type; 
+                this.type = nodes.type;
                 nodes.push(this);
             }
             else if ((last = nodes[nodes.length - 1]) instanceof element_nodes)
@@ -108,7 +108,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                     break;
             }
 
-            nodes.type = ""; //默认为并列选择器
+            nodes.type = "and"; //默认为并列选择器
         };
 
 
@@ -352,7 +352,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             length = tokens.length,
             cache;
 
-        //设置默认类型(默认为并列选择器)
+        //设置默认类型
         nodes.type = "";
 
         while (i < length)
@@ -371,11 +371,23 @@ A~B                    匹配任何在A控件之后的同级B控件
                     break;
 
                 case " ":  //后代选择器标记
+                    nodes.type = "descendant";
+                    break;
+
                 case ">":  //子元素选择器标记
+                    nodes.type = "son";
+                    break;
+
                 case "+":  //毗邻元素选择器标记
+                    nodes.type = "next";
+                    break;
+
                 case "~":  //之后同级元素选择器标记
+                    nodes.type = "after";
+                    break;
+
                 case ",":  //组合选择器标记
-                    nodes.type = token;
+                    nodes.type = "or";
                     continue;
 
                 case "[": //属性 [name[?="value"]]

@@ -46,6 +46,8 @@ flyingon.IChildren = function (base) {
 
         var children = this.__children || this.get_children();
         children.append.apply(children, arguments);
+
+        return this;
     };
 
 
@@ -54,6 +56,8 @@ flyingon.IChildren = function (base) {
 
         var children = this.__children || this.get_children();
         children.insert.apply(children, arguments);
+
+        return this;
     };
 
 
@@ -66,6 +70,8 @@ flyingon.IChildren = function (base) {
         {
             children.remove.apply(children, arguments);
         }
+
+        return this;
     };
 
 
@@ -78,6 +84,8 @@ flyingon.IChildren = function (base) {
         {
             children.removeAt.apply(children, index, length);
         }
+
+        return this;
     };
 
 

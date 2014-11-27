@@ -112,13 +112,11 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
     //渲染
     this.render = (function (render) {
 
-
         return function () {
 
-            var host = document.documentElement,
-                body = document.body,
-                dom = this.dom_window,
+            var dom = this.dom_window,
                 style = dom.style,
+                view = flyingon.quirks_mode ? document.body : document.documentElement, //获取视口对象(怪异模式的浏览器视口对象为document.body)
                 width,
                 height;
 
@@ -134,7 +132,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                 {
                     if ((height = dom.clientHeight) <= 0)
                     {
-                        if ((height = (window.innerHeight || host.clientHeight || body.offsetHeight) - dom.offsetTop - 8) <= 0)
+                        if ((height = (window.innerHeight || view.clientHeight) - dom.offsetTop - 8) <= 0)
                         {
                             height = 600;
                         }
@@ -142,7 +140,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                         style.height = height + "px";
                     }
 
-                    this.measure(dom.clientWidth || body.clientWidth, height, true, true);
+                    this.measure(dom.clientWidth || view.clientWidth, height, true, true);
                     this.locate(0, 0);
                 }
 

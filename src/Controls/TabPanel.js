@@ -10,14 +10,15 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        (this.__header = new flyingon.Panel()
-            .__fn_className("flyingon-TabPanel-header")
-            .appendChild(this.__header_text = new flyingon.Label()
-                .set_layoutSplit("center")
-                .__fn_className("flyingon-TabPanel-text")
-        )).__parent = this;
+        (this.__header_text = new flyingon.Label())
+            .set_layoutSplit("center")
+            .__fn_className("flyingon-TabPanel-text");
 
-        (this.dom_header = this.dom.children[0]).appendChild(this.header.dom);
+        (this.__header = new flyingon.Panel())
+            .__fn_className("flyingon-TabPanel-header")
+            .appendChild(this.__header_text).__parent = this;
+
+        (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
 
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
     };
@@ -93,30 +94,30 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
 
-    this.__fn_measure_client = function (box, dom_body) {
+    //this.__fn_measure_client = function (box, dom_body) {
 
-        var size = this.get_collapse_size();
+    //    var size = this.get_collapse_size();
 
-        if (size > 0)
-        {
-            if (this.offsetWidth <= size)
-            {
-                this.offsetWidth = size;
-                this.dom.style.width = size + "px";
+    //    if (size > 0)
+    //    {
+    //        if (this.offsetWidth <= size)
+    //        {
+    //            this.offsetWidth = size;
+    //            this.dom.style.width = size + "px";
 
-                if (!this.get_collapse())
-                {
-                    this.__fn_collapse(true);
-                }
-            }
-            else if (this.get_collapse())
-            {
-                this.__fn_collapse(false);
-            }
-        }
+    //            if (!this.get_collapse())
+    //            {
+    //                this.__fn_collapse(true);
+    //            }
+    //        }
+    //        else if (this.get_collapse())
+    //        {
+    //            this.__fn_collapse(false);
+    //        }
+    //    }
 
-        base.__fn_measure_client.call(this, box, dom_body);
-    };
+    //    base.__fn_measure_client.call(this, box, dom_body);
+    //};
 
 
 

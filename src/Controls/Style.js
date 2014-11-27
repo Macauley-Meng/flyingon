@@ -35,12 +35,11 @@
 
         selector_rule_type = {      //支持的选择器规则类型
 
-            "": true, //并列选择器
-            " ": true,
-            ",": true,
-            ">": true,
-            "+": true,
-            "~": true
+            and: true,          //并列选择器
+            descendant: true,   //后代选择器
+            son: true,          //子元素选择器
+            next: true,         //毗邻元素选择器
+            after: true         //之后同级元素选择器
         };
 
 
@@ -781,7 +780,7 @@
             })()
         });
 
-        //控件鼠标样式
+        //控件光标样式
         //url	    需使用的自定义光标的 URL     注释：请在此列表的末端始终定义一种普通的光标, 以防没有由 URL 定义的可用光标 
         //default	默认光标(通常是一个箭头)
         //auto	    默认 浏览器设置的光标 
@@ -799,7 +798,7 @@
         //text	    此光标指示文本 
         //wait	    此光标指示程序正忙(通常是一只表或沙漏) 
         //help	    此光标指示可用的帮助(通常是一个问号或一个气球) 
-        style("cursor", "auto", "inherit");
+        style("cursor", "auto", "inherit|no");
 
 
 
@@ -1134,7 +1133,7 @@
         else
         {
             var style = target.__styles,
-                names = target.__css_keys || get_css_keys(target.__css_types),
+                names = target.__css_keys || get_css_keys(target),
                 name,
                 css_names,
                 value;
@@ -1352,42 +1351,44 @@
 
 
     //获取控件需要同步的样式名
-    function get_css_keys(css_types) {
+    function get_css_keys(target) {
 
         var result = [],
             keys = [],
-            types = registry_types;
+            css_types = target.__css_types,
+            types = registry_types,
+            name;
 
         if (css_types.all)
         {
-            keys.push.call(keys, types[css_types.all][1]);
+            keys.push.apply(keys, types[css_types.all][1]);
         }
 
         if (css_types.type)
         {
-            keys.push.call(keys, types[css_types.all][1]);
+            keys.push.apply(keys, types[css_types.all][1]);
         }
 
         for (var i = 0, _ = css_types.length; i < _; i++)
         {
-            keys.push.call(keys, types[css_types[i]][1]);
+            keys.push.apply(keys, types[css_types[i]][1]);
         }
 
         if (css_types.id)
         {
-            keys.push.call(keys, types[css_types.id][1]);
+            keys.push.apply(keys, types[css_types.id][1]);
         }
 
         for (var i = 0, _ = keys.length; i < _; i++)
         {
-            if (!keys[name])
+            if (!keys[name = keys[i]])
             {
                 keys[name] = true;
                 result.push(name);
             }
         }
 
-        return result;
+        return target.__css_keys = result;
     };
 
 
@@ -1458,12 +1459,12 @@
         };
 
 
-        type_fn[""] = function (selector, index, target) {
+        type_fn.and = function (selector, index, target) {
 
             return check_node(selector, index, target);
         };
 
-        type_fn[" "] = function (selector, index, target) {
+        type_fn.descendant = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -1480,13 +1481,13 @@
             return false;
         };
 
-        type_fn[">"] = function (selector, index, target) {
+        type_fn.son = function (selector, index, target) {
 
             var parent = target.__parent;
             return parent ? check_node(selector, index, parent) : false;
         };
 
-        type_fn["+"] = function (selector, index, target) {
+        type_fn.next = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -1504,7 +1505,7 @@
             return false;
         };
 
-        type_fn["~"] = function (selector, index, target) {
+        type_fn.after = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -1527,12 +1528,12 @@
 
 
 
-        pseudo_fn["empty"] = function (node, target) {
+        pseudo_fn.empty = function (node, target) {
 
             return target.__children && target.__children.length > 0 ? undefined : target;
         };
 
-        pseudo_fn["before"] = function (node, target) {
+        pseudo_fn.before = function (node, target) {
 
             var items, index;
 
@@ -1542,7 +1543,7 @@
             }
         };
 
-        pseudo_fn["after"] = function (node, target) {
+        pseudo_fn.after = function (node, target) {
 
             var items, index;
 
@@ -1874,10 +1875,10 @@
     };
 
 
-    //IE6或怪异模式只支持" "及","及并列选择器, 但是不支持两个class并列
-    if (flyingon.browser_MSIE && (!window.XMLHttpRequest || (document.documentMode && document.documentMode < 7)))
+    //IE6或怪异模式只支持" "及","及并列选择器, 但是并列选择器不支持两个class并列
+    if (flyingon.browser_MSIE && (flyingon.quirks_mode || !window.XMLHttpRequest))
     {
-        selector_rule_type[""] = selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
+        selector_rule_type.and = selector_rule_type.son = selector_rule_type.next = selector_rule_type.after = false;
     }
 
 
@@ -1888,7 +1889,7 @@
             type,
             result;
 
-        if (item.token === "::" || item.length > 1 || !selector_rule_type[item.type])
+        if (item.token === "::" || item.length > 1 || (item.type && !selector_rule_type[item.type]))
         {
             return null;
         }
@@ -1946,17 +1947,17 @@
 
             switch (node.token)
             {
-                case "@":
-                case "":
+                case "": //dom标签
                     result += 1;
                     break;
 
-                case ".":
+                case "@": //自定义控件按10权重计, 等同于class
+                case ".": //class
                 case ":": //伪元素
                     result += 10;
                     break;
 
-                case "#":
+                case "#": //id
                     result += 100;
                     break;
             }

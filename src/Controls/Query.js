@@ -163,7 +163,7 @@ flyingon.defineClass("Query", function () {
 
 
         //合并元素集
-        this[","] = function (node, items, exports) {
+        this.or = function (node, items, exports) {
 
             var item, fn, values;
 
@@ -184,7 +184,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //并列选择器
-        this[""] = function (node, items, exports) {
+        this.and = function (node, items, exports) {
 
             var children;
 
@@ -195,7 +195,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //所有后代元素
-        this[" "] = function (node, items, exports) {
+        this.descendant = function (node, items, exports) {
 
             var children;
 
@@ -224,7 +224,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //子元素
-        this[">"] = function (node, items, exports) {
+        this.son = function (node, items, exports) {
 
             var children;
 
@@ -241,7 +241,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //后一个元素 元素伪类:after也会转换成此节点类型
-        this["+"] = function (node, items, exports) {
+        this.next = function (node, items, exports) {
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
@@ -261,7 +261,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //所有后续兄弟元素
-        this["~"] = function (node, items, exports) {
+        this.after = function (node, items, exports) {
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
@@ -290,7 +290,7 @@ flyingon.defineClass("Query", function () {
 
 
 
-        pseudo_fn["empty"] = function (node, target, exports) {
+        pseudo_fn.empty = function (node, target, exports) {
 
             if (!target.__children || target.__children.length === 0)
             {
@@ -298,7 +298,7 @@ flyingon.defineClass("Query", function () {
             }
         };
 
-        pseudo_fn["before"] = function (node, target, exports) {
+        pseudo_fn.before = function (node, target, exports) {
 
             var items, item, index;
 
@@ -310,7 +310,7 @@ flyingon.defineClass("Query", function () {
             }
         };
 
-        pseudo_fn["after"] = function (node, target, exports) {
+        pseudo_fn.after = function (node, target, exports) {
 
             var items, item, index;
 

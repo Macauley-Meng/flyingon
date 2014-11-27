@@ -930,83 +930,24 @@ flyingon.defineClass("Control", function () {
 
 
 
-
-        //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
-        //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
-        //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
-        var offset_fn;
-
-        document.createElement("div").getBoundingClientRect || flyingon.ready(function (body) {
-
-            var dom = document.compatMode == "BackCompat" ? body : document.documentElement;
-
-            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
-            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
-            //问题2: 在table或iframe中offsetParent取值可能不准确
-            offset_fn = function () {
-
-                var dom = this,
-                    x = 0,
-                    y = 0;
-
-                while (dom)
-                {
-                    x += dom.offsetLeft;
-                    y += dom.offsetTop;
-
-                    if (dom = dom.offsetParent)
-                    {
-                        x += dom.clientLeft;
-                        y += dom.clientTop;
-                    }
-                }
-
-                x -= dom.scrollLeft;
-                y -= dom.scrollTop;
-
-                return { left: x, top: y };
-            };
-
-        });
-
-
-        //获取控件相对浏览器视口坐标的偏移
-        this.offset = function (clientX, clientY) {
-
-            var dom = this.dom,
-                offset = dom.getBoundingClientRect ? dom.getBoundingClientRect() : offset_fn.call(dom); //IE6不能使用offset_fn.call的方式调用
-
-            return {
-
-                x: clientX - offset.left,
-                y: clientY - offset.top
-            };
-        };
-
-
-
-
         //获取可调整大小边
         this.__fn_resize_side = function (resizable, event) {
 
-            var offset = this.offset(event.clientX, event.clientY),
+            var offset = flyingon.dom_offset(this.dom, event.clientX, event.clientY),
                 style = this.dom.style,
                 width = this.offsetWidth,
                 height = this.offsetHeight,
-                resize,
-                cursor;
+                resize;
 
             if (resizable !== "vertical")
             {
                 if (offset.x >= 0 && offset.x < 4)
                 {
-                    cursor = "w-resize";
-                    resize = { left: true };
+                    resize = { left: true, cursor: "w-resize" };
                 }
                 else if (offset.x <= width && offset.x > width - 4)
                 {
-                    cursor = "e-resize";
-                    resize = { right: true };
+                    resize = { right: true, cursor: "e-resize" };
                 }
             }
 
@@ -1016,39 +957,33 @@ flyingon.defineClass("Control", function () {
                 {
                     if (resize)
                     {
-                        cursor = resize.left ? "nw-resize" : "ne-resize";
+                        resize.cursor = resize.left ? "nw-resize" : "ne-resize";
                         resize.top = true;
                     }
                     else
                     {
-                        cursor = "n-resize";
-                        resize = { top: true };
+                        resize = { top: true, cursor: "n-resize" };
                     }
                 }
                 else if (offset.y <= height && offset.y > height - 4)
                 {
                     if (resize)
                     {
-                        cursor = resize.left ? "sw-resize" : "se-resize";
+                        resize.cursor = resize.left ? "sw-resize" : "se-resize";
                         resize.bottom = true;
                     }
                     else
                     {
-                        cursor = "s-resize";
-                        resize = { bottom: true };
+                        resize = { bottom: true, cursor: "s-resize" };
                     }
                 }
             }
 
             if (resize)
             {
-                style.cursor = cursor;
                 event.stopPropagation(false);
-
                 return resize;
             }
-
-            style.cursor = this.__styles && this.__styles.cursor || "";
         };
 
 

@@ -8,7 +8,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
     var layouts = flyingon.layouts,         //缓存布局服务
         layout_unkown = layouts["flow"];    //默认布局类型
 
-    
+
 
 
     Class.create_mode = "merge";
@@ -174,8 +174,9 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
         this.__event_bubble_dragover = function (event) {
 
             var items = this.__children,
-                offset = this.offset(event.clientX, event.clientY),
-                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft, offset.y - event.offsetTop) : 0,
+                dom_body = this.dom_children.parentNode,
+                offset = flyingon.dom_offset(this.dom, event.clientX, event.clientY),
+                index = items.length > 0 ? this.__layout.__fn_index(this, offset.x - event.offsetLeft + dom_body.scrollLeft, offset.y - event.offsetTop + dom_body.scrollTop) : 0,
                 cache = event.dragTarget;
 
             if (index >= 0 && insert_index !== index && cache)
@@ -230,7 +231,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
                     {
                         if (!offset)
                         {
-                            offset = this.offset(event.clientX, event.clientY);
+                            offset = flyingon.dom_offset(this.dom, event.clientX, event.clientY);
                             offset.x -= event.offsetLeft + this.clientLeft;
                             offset.y -= event.offsetTop + this.clientTop;
                         }

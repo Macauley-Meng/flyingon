@@ -47,7 +47,7 @@ flyingon.defineClass("DesignPanel", flyingon.Panel, function (base) {
     this.__event_bubble_mousedown = function (event) {
 
         var box = this.__boxModel,
-            offset = this.offset(event.clientX - box.borderLeft, event.clientY - box.borderTop),
+            offset = flyingon.dom_offset(this.dom, event.clientX - box.borderLeft, event.clientY - box.borderTop),
             style = dom_selected.style;
 
         style.left = (selected_x = offset.x + this.__scrollLeft) + "px";

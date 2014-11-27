@@ -83,6 +83,16 @@
         };
 
 
+        //设置光标
+        function set_cursor(target, cursor) {
+
+            if (target)
+            {
+                (target.__ownerWindow || target.get_ownerWindow()).__mainWindow.dom_window.style.cursor = cursor || (target.get_draggable() !== "none" ? "move" : target.get_cursor());
+            }
+        };
+
+
 
         //捕获或释放鼠标
         if (document.createElement("div").setCapture)
@@ -224,7 +234,6 @@
                 dom: event.target, //按下时触发事件的dom
                 capture: target,
                 which: event.which,
-                cursor: target.dom.style.cursor || "default",
                 clientX: event.clientX,
                 clientY: event.clientY
             };
@@ -290,23 +299,31 @@
 
                 //window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty(); //清除选区
             }
-            else if ((target = dom_target(event)) && ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event)))) //调整大小状态不触发相关事件
+            else if (target = dom_target(event))
             {
-                if (target !== (cache = hover_control))
+                if ((cache = target.get_resizable()) !== "none" && (resizable = target.__fn_resize_side(cache, event))) //调整大小状态不触发相关事件
                 {
-                    if (cache)
+                    set_cursor(target, resizable.cursor);
+                }
+                else
+                {
+                    if (target !== (cache = hover_control))
                     {
-                        cache.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
-                        cache.__fn_to_hover(false);
+                        if (cache)
+                        {
+                            cache.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
+                            cache.__fn_to_hover(false);
+                        }
+
+                        hover_control = target;
+
+                        target.dispatchEvent(new MouseEvent("mouseover", event, pressdown));
+                        target.__fn_to_hover(true);
                     }
 
-                    hover_control = target;
-
-                    target.dispatchEvent(new MouseEvent("mouseover", event, pressdown));
-                    target.__fn_to_hover(true);
+                    target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
+                    set_cursor(target);
                 }
-
-                target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
             }
         };
 
@@ -337,16 +354,16 @@
                 if (dragdrop.stop(event, pressdown, cancel)) //如果拖动过则取消相关鼠标事件
                 {
                     flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
-                    pressdown = null;
                 }
             }
 
-            if (pressdown && (target || (target = pressdown.capture)))
+            if (pressdown && (target = pressdown.capture))
             {
                 target.dispatchEvent(new MouseEvent("mouseup", event, pressdown));
                 target.__fn_to_active(false); //取消活动状态
-                pressdown = null;
             }
+
+            pressdown = null;
         };
 
 

@@ -161,8 +161,7 @@
 
             var styles = splitter.__styles || (splitter.__styles = {});
 
-            splitter.dom.style.cursor = vertical ? "n-resize" : "w-resize";
-
+            styles.cursor = vertical ? "n-resize" : "w-resize";
             styles.width = vertical ? width : (styles.width = undefined, splitter.get_width());
             styles.height = vertical ? (styles.height = undefined, splitter.get_height()) : height;
         };
@@ -2121,7 +2120,7 @@
             start.item.value = (change += start.value) > 0 ? change : 1;
 
             layout_cache = false;
-            target.__parent.set_layoutTable(document.title = this.table.serialize());
+            target.__parent.set_layoutTable(this.table.serialize());
         };
 
 
