@@ -38,7 +38,7 @@
         });
 
 
-        for (var i = 0; i < 8; i++)
+        for (var i = 0; i < 2; i++)
         {
 
             var panel = new flyingon.TabPanel().sets({
@@ -51,12 +51,14 @@
                 spacingHeight: "10px",
                 show_close: true,
                 show_collapse: true,
-                icon: "download",
+                icon: "dialog",
+                //header: "left",
+                //collapse: true,
                 text: "Panel " + i
             });
 
 
-            for (var j = 0; j < 100; j++)
+            for (var j = 0; j < 50; j++)
             {
                 var ctrl = new flyingon.Label().sets({
 

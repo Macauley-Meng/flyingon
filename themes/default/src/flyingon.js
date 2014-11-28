@@ -133,20 +133,27 @@ flyingon.defineStyle({
     //标签面板标题栏样式
     ".flyingon-TabPanel": {
 
+        border: "1px solid blue",
         backgroundColor: "white"
     },
 
     //标签面板标题栏样式
     ".flyingon-TabPanel-header": {
 
-        paddingLeft: "2px",
-        paddingRight: "2px",
-        height: "25px",
-        verticalAlign: "middle",
         backgroundColor: "silver",
         cursor: "default"
     },
 
+    //标签面板左右标题栏样式
+    ".flyingon-TabPanel-left,.flyingon-TabPanel-right": {
+
+        vertical: true
+    },
+
+    ////标签面板上下标题栏样式
+    //".flyingon-TabPanel-top,.flyingon-TabPanel-bottom": {
+
+    //},
 
     //标签面板标题栏图标样式
     ".flyingon-TabPanel-icon": {
@@ -154,20 +161,34 @@ flyingon.defineStyle({
         color: "blue"
     },
 
-    //标签面板标题栏文字样式
-    ".flyingon-TabPanel-text": {
+    ////标签面板标题栏文字样式
+    //".flyingon-TabPanel-text": {
 
+    //},
+
+    //标签面板左右标题栏文字样式
+    ".flyingon-TabPanel-top,.flyingon-TabPanel-bottom .flyingon-TabPanel-text": {
+
+        textAlign: "left",
+        verticalAlign: "middle"
     },
 
-    //标签面板标题栏文字样式
-    ".flyingon-TabPanel-collapse": {
+    //标签面板左右标题栏文字样式
+    ".flyingon-TabPanel-left,.flyingon-TabPanel-right .flyingon-TabPanel-text": {
 
+        textAlign: "center",
+        verticalAlign: "top"
     },
 
-    //标签面板标题栏文字样式
-    ".flyingon-TabPanel-close": {
+    ////标签面板标题栏收拢图标样式
+    //".flyingon-TabPanel-collapse": {
 
-    },
+    //},
+
+    ////标签面板标题栏关闭图标样式
+    //".flyingon-TabPanel-close": {
+
+    //},
 
 
     //按钮控件样式
@@ -218,12 +239,8 @@ flyingon.defineStyle({
     ".flyingon-Dialog-icon": {
 
         color: "blue"
-    },
-
-    //弹出窗口标题栏文字样式
-    ".flyingon-Dialog-text": {
-
     }
+
 
 });
 

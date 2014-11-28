@@ -161,7 +161,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
         var target = new flyingon.Control(), //拖动控件
             source, //原始控件
-            properties = ["newline", "layoutSplit", "dock", "columnIndex", "spacingCells"], //要复制的属性
+            properties = ["newline", "column3", "dock", "columnIndex", "spacingCells"], //要复制的属性
             insert_index = -1,
             last_index = -1;
 

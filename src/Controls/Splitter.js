@@ -14,7 +14,11 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         if (dom)
         {
-            this.__fn_from_dom(dom);
+            dom.style.position = "absolute";
+            dom.style[this.__style_box_sizing] = "border-box";
+            dom.className = this.__className0;
+
+            (this.dom = dom).flyingon = this;
         }
         else
         {

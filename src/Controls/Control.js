@@ -104,13 +104,17 @@ flyingon.defineClass("Control", function () {
 
 
     //从父控件中移除自身
-    this.remove = function () {
+    this.remove = function (update_now) {
 
         var parent = this.__parent;
 
-        if (parent && (parent = parent.__children))
+        if (update_now)
         {
-            parent.remove(this);
+        }
+
+        if (parent && parent.__children)
+        {
+            parent.__children.remove(this);
         }
 
         return this;
@@ -124,15 +128,13 @@ flyingon.defineClass("Control", function () {
     (function (flyingon) {
 
 
-        var regex_className = /\S+/g;
-
 
         //id
         this.defineProperty("id", "", {
 
             attributes: "layout",
-            change_code: "this.__css_types = null;",   //重置样式
-            end_code: "this.dom.id = value;"
+            set_code: "this.dom.id = value;",
+            change_code: "this.__css_types = null;"   //重置样式
         });
 
 
@@ -141,7 +143,7 @@ flyingon.defineClass("Control", function () {
         this.defineProperty("className", "", {
 
             attributes: "layout|query",
-            end_code: "this.__fn_className(value);"
+            set_code: "this.__fn_className(value);"
         });
 
 
@@ -156,45 +158,69 @@ flyingon.defineClass("Control", function () {
         this.__className2 = "";
 
 
+
+        var regex = /[\w-]+/g;
+
+
+        function reset_class(target, names) {
+
+            var list = target.__class_list = [],
+                name;
+
+            for (var i = 0, _ = names.length; i < _; i++)
+            {
+                if (name = names[i])
+                {
+                    list[name] = true;
+                    list.push(name);
+                }
+            }
+
+            change_class(target, list.join(" "));
+        };
+
+
+        function change_class(target, name) {
+
+            target.__className1 = target.__fields.className = name;
+
+            if (target.dom.className !== (name = target.__className0 + name + target.__className2))
+            {
+                target.dom.className = name;
+            }
+
+            if (target.__css_types)
+            {
+                //标记更新
+                target.__update_dirty = 1;
+
+                //重置样式
+                target.__css_types = null;
+
+                //class变更可能需要重新布局
+                target.update();
+            }
+        };
+
+
         //处理className
         this.__fn_className = function (value) {
 
-            var fields = this.__fields,
-                values;
+            var names = value && value.match(regex);
 
-            if (value && (values = value.match(regex_className)))
+            if (names && names.length > 0)
             {
-                var cache = this.__class_list = {};
-
-                for (var i = 0, _ = values.length; i < _; i++)
-                {
-                    cache[values[i]] = true;
-                }
-
-                this.__className1 = (fields.className = Object.keys(cache).join(" "));
+                reset_class(this, names);
             }
             else
             {
                 this.__class_list = null;
-                this.__className1 = fields.className = "";
-            }
-
-            if (this.dom.className !== (value = this.__className0 + this.__className1 + this.__className2))
-            {
-                this.dom.className = value;
-            }
-
-            if (this.__css_types)
-            {
-                //重置样式
-                this.__css_types = null;
-
-                //class变更可能需要重新布局
-                this.update();
+                change_class(this, "");
             }
 
             return this;
         };
+
 
         //是否包含指定class
         this.hasClass = function (className) {
@@ -202,48 +228,102 @@ flyingon.defineClass("Control", function () {
             return this.__class_list && this.__class_list[className];
         };
 
+
         //添加class
         this.addClass = function (className) {
 
-            if (className)
+            var length = arguments.length,
+                list,
+                name;
+
+            if (length > 0)
             {
-                this.__fn_className(this.className + " " + className);
+                if (list = this.__class_list)
+                {
+                    for (var i = 0; i < length; i++)
+                    {
+                        if (name = arguments[i])
+                        {
+                            if (!list[name])
+                            {
+                                list[name] = true;
+                                list.push(name);
+                            }
+                        }
+                    }
+
+                    change_class(this, list.join(" "));
+                }
+                else
+                {
+                    reset_class(this, arguments);
+                }
             }
 
             return this;
         };
+
 
         //移除class
         this.removeClass = function (className) {
 
-            var names;
+            var list = this.__class_list,
+                name,
+                length;
 
-            if (className && (names = this.__class_list) && names[className])
+            if (list && (length = arguments.length) > 0)
             {
-                this.__fn_className(Object.keys(names).join(" "));
+                for (var i = 0; i < length; i++)
+                {
+                    if (name = arguments[i])
+                    {
+                        if (list[name])
+                        {
+                            list[name] = false;
+                            list.splice(list.indexOf(name), 1);
+                        }
+                    }
+                }
+
+                change_class(this, list.join(" "));
             }
 
             return this;
         };
 
+
         //切换class 有则移除无则添加
         this.toggleClass = function (className) {
 
-            var names = this.__class_list;
+            var length = arguments.length,
+                list,
+                name;
 
-            if (names && className)
+            if (length > 0)
             {
-                if (names[className])
+                if (list = this.__class_list)
                 {
-                    delete names[className];
-                    className = Object.keys(names).join(" ");
+                    for (var i = 0; i < length; i++)
+                    {
+                        if (name = arguments[i])
+                        {
+                            if (list[name] = !list[name])
+                            {
+                                list.push(name);
+                            }
+                            else
+                            {
+                                list.splice(list.indexOf(name), 1);
+                            }
+                        }
+                    }
+
+                    change_class(this, list.join(" "));
                 }
                 else
                 {
-                    className = this.className + " " + className;
+                    reset_class(this, arguments);
                 }
-
-                this.__fn_className(className);
             }
 
             return this;
@@ -388,7 +468,7 @@ flyingon.defineClass("Control", function () {
 
                     if (ownerWindow = this.__ownerWindow || this.get_ownerWindow())
                     {
-                        ownerWindow.__fn_registry_update(this, update);
+                        ownerWindow.__fn_registry_update(this, false, update);
                     }
                 }
             };
@@ -476,7 +556,7 @@ flyingon.defineClass("Control", function () {
         //鼠标提示信息
         this.defineProperty("title", "", {
 
-            end_code: "this.dom.title = value;"
+            set_code: "this.dom.title = value;"
         });
 
 
@@ -739,8 +819,11 @@ flyingon.defineClass("Control", function () {
             style.height = height + "px";
 
 
-            //计算客户区大小
-            this.__fn_measure_client(box, dom);
+            //测量前处理
+            if (this.before_measure)
+            {
+                this.before_measure(box);
+            }
 
 
             //处理自动大小
@@ -767,7 +850,6 @@ flyingon.defineClass("Control", function () {
 
                     //重设置宽度
                     style.width = width + value.width + "px";
-                    this.clientHeight += value.width;
                 }
 
                 //计算高度
@@ -788,8 +870,29 @@ flyingon.defineClass("Control", function () {
 
                     //重设置高度
                     style.height = height + value.height + "px";
-                    this.clientHeight += value.height;
                 }
+            }
+
+
+            //计算客户区大小
+            this.clientLeft = box.borderLeft + box.paddingLeft;
+            this.clientTop = box.borderTop + box.paddingTop;
+            this.clientWidth = dom.clientWidth - box.padding_width;
+            this.clientHeight = dom.clientHeight - box.padding_height;
+
+            while (dom !== this.dom)
+            {
+                this.clientLeft += dom.offsetLeft + dom.clientLeft;
+                this.clientTop += dom.offsetTop + dom.clientTop;
+
+                dom = dom.parentNode;
+            }
+
+
+            //测量后处理
+            if (this.after_measure)
+            {
+                this.after_measure(box);
             }
 
 
@@ -799,24 +902,6 @@ flyingon.defineClass("Control", function () {
                 width: this.offsetWidth + box.margin_width,
                 height: this.offsetHeight + box.margin_height
             };
-        };
-
-
-        //测量客户区大小
-        this.__fn_measure_client = function (box, dom_body) {
-
-            this.clientLeft = box.borderLeft + box.paddingLeft;
-            this.clientTop = box.borderTop + box.paddingTop;
-            this.clientWidth = dom_body.clientWidth - box.padding_width;
-            this.clientHeight = dom_body.clientHeight - box.padding_height;
-
-            while (dom_body !== this.dom)
-            {
-                this.clientLeft += dom_body.offsetLeft + dom_body.clientLeft;
-                this.clientTop += dom_body.offsetTop + dom_body.clientTop;
-
-                dom_body = dom_body.parentNode;
-            }
         };
 
 
@@ -895,7 +980,7 @@ flyingon.defineClass("Control", function () {
 
 
         //刷新控件
-        this.update = function (arrange) {
+        this.update = function (arrange, update_now) {
 
             if (this.__boxModel && this.__update_dirty !== 1)
             {
@@ -913,10 +998,9 @@ flyingon.defineClass("Control", function () {
                     this.__arrange_dirty = true;
                 }
 
-                (this.__ownerWindow || this.get_ownerWindow()).__fn_registry_update(this);
+                (this.__ownerWindow || this.get_ownerWindow()).__fn_registry_update(this, update_now);
             }
         };
-
 
 
         //渲染控件
@@ -987,27 +1071,28 @@ flyingon.defineClass("Control", function () {
         //调整大小
         this.__fn_resize = function (side, event, pressdown) {
 
-            var x = event.clientX - pressdown.clientX,
+            var layout = this.__parent && this.__parent.__layout,
+                x = event.clientX - pressdown.clientX,
                 y = event.clientY - pressdown.clientY;
 
-            if (side.left)
+            if (side.left && layout && !layout.absolute)
             {
-                resize_value(this, pressdown, "left", x);
-                resize_value(this, pressdown, "width", -x);
+                this.__fn_resize_value(pressdown, "left", x);
+                this.__fn_resize_value(pressdown, "width", -x);
             }
             else if (side.right)
             {
-                resize_value(this, pressdown, "width", x);
+                this.__fn_resize_value(pressdown, "width", x);
             }
 
-            if (side.top)
+            if (side.top && layout && !layout.absolute)
             {
-                resize_value(this, pressdown, "top", y);
-                resize_value(this, pressdown, "height", -y);
+                this.__fn_resize_value(pressdown, "top", y);
+                this.__fn_resize_value(pressdown, "height", -y);
             }
             else if (side.bottom)
             {
-                resize_value(this, pressdown, "height", y)
+                this.__fn_resize_value(pressdown, "height", y)
             }
 
             event.stopPropagation(false);
@@ -1030,14 +1115,14 @@ flyingon.defineClass("Control", function () {
 
 
         //调整大小
-        function resize_value(target, start, name, change) {
+        this.__fn_resize_value = function (start, name, change) {
 
             var cache = start[name];
 
             if (!cache)
             {
-                start = start[name] = target.__fn_unit_scale(target["get_" + name](), target[resize_names[name]]);
-                start.reverse = target.__parent && target.__arrange_mirror !== "none";
+                start = start[name] = this.__fn_unit_scale(this["get_" + name](), this[resize_names[name]]);
+                start.reverse = this.__parent && this.__arrange_mirror !== "none";
             }
             else
             {
@@ -1045,7 +1130,7 @@ flyingon.defineClass("Control", function () {
             }
 
             cache = start.value + (start.scale === 1 ? change : (change * start.scale * 100 | 0) / 100);
-            target["set_" + name]((cache > 0 ? cache : 0) + start.unit);
+            this["set_" + name]((cache > 0 ? cache : 0) + start.unit);
         };
 
 
@@ -1303,6 +1388,7 @@ flyingon.defineClass("Control", function () {
 
 
 
+
         var box_sizing = flyingon.__fn_css_prefix("box-sizing"), //box-sizing样式名
             style_template = "position:absolute;" + (box_sizing ? box_sizing + ":border-box;" : "");     //样式模板值
 
@@ -1385,34 +1471,12 @@ flyingon.defineClass("Control", function () {
 
 
 
-        //box-sizing样式名, 为空则表示不支持box-sizing
-        box_sizing = flyingon.__fn_style_prefix("box-sizing");
-
-        //从dom节点复制控件dom
-        this.__fn_from_dom = function (dom) {
-
-            dom.style.position = "absolute";
-
-            if (box_sizing)
-            {
-                dom.style[box_sizing] = "border-box";
-            }
-
-            if (dom.className)
-            {
-                this.__fn_className(dom.className);
-            }
-            else
-            {
-                dom.className = this.__className0;
-            }
-
-            (this.dom = dom).flyingon = this;
-        };
-
-
         //dom文本内容属性名
         this.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+
+
+        //box-sizing样式名, 为空则表示不支持box-sizing
+        this.__style_box_sizing = flyingon.__fn_style_prefix("box-sizing") || "box-sizing";
 
 
 

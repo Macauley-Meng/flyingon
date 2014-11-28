@@ -35,7 +35,7 @@ flyingon.defineClass("Fieldset", flyingon.Panel, function (base) {
     //标题
     this.defineProperty("legend", "", {
 
-        end_code: "this.dom_legend.innerHTML = value;"
+        set_code: "this.dom_legend.innerHTML = value;"
     });
 
 

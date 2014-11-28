@@ -14,21 +14,21 @@ flyingon.IEditor = function (base) {
     //名称
     this.defineProperty("name", "", {
 
-        end_code: "this.dom_input.name = value;"
+        set_code: "this.dom_input.name = value;"
     });
 
 
     //值
     this.defineProperty("value", "", {
 
-        end_code: "this.dom_input.value = value;"
+        set_code: "this.dom_input.value = value;"
     });
 
 
     //是否只读
     this.defineProperty("readOnly", false, {
 
-        end_code: "this.dom_input.readOnly = value;"
+        set_code: "this.dom_input.readOnly = value;"
     });
 
 

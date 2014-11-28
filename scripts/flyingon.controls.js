@@ -888,7 +888,7 @@ flyingon.defineClass("Fieldset", flyingon.Panel, function (base) {
     //标题
     this.defineProperty("legend", "", {
 
-        end_code: "this.dom_legend.innerHTML = value;"
+        set_code: "this.dom_legend.innerHTML = value;"
     });
 
 
@@ -915,21 +915,21 @@ flyingon.IEditor = function (base) {
     //名称
     this.defineProperty("name", "", {
 
-        end_code: "this.dom_input.name = value;"
+        set_code: "this.dom_input.name = value;"
     });
 
 
     //值
     this.defineProperty("value", "", {
 
-        end_code: "this.dom_input.value = value;"
+        set_code: "this.dom_input.value = value;"
     });
 
 
     //是否只读
     this.defineProperty("readOnly", false, {
 
-        end_code: "this.dom_input.readOnly = value;"
+        set_code: "this.dom_input.readOnly = value;"
     });
 
 
@@ -1165,14 +1165,14 @@ flyingon.defineClass("TextButton", flyingon.Control, function (base) {
         //是否选中
         this.defineProperty("checked", false, {
 
-            end_code: "this.dom_input.checked = value;"
+            set_code: "this.dom_input.checked = value;"
         });
 
 
         //文字
         this.defineProperty("text", "", {
 
-            end_code: "this.dom_text.innerHTML = value;"
+            set_code: "this.dom_text.innerHTML = value;"
         });
 
 

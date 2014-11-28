@@ -14,8 +14,8 @@
 
     //布局容器相关的attribute
 
-    layout-control          //布局控件 splitter|tab-panel|tab
-    layout-type             //布局类型 flow|line|split|dock|cascade|grid|table|absolute
+    layout-control          //布局控件 Panel|Splitter|TabPanel|TabControl
+    layout-type             //布局类型 flow|line|column3|dock|cascade|grid|table|absolute
     layout-vertical         //是否竖排 true|false
     layout-mirror           //镜向 x|y|center
     layout-spacing-width    //控件横向间隔
@@ -33,7 +33,7 @@
     layout-align-x          //横向对齐方式 left|center|right
     layout-align-y          //纵向对齐方式 top|middle|bottom
     layout-newline          //流式布局时是否强制换行 true|false
-    layout-split            //拆分布局方式 before|center|after
+    layout-column3          //3栏布局类型 before|center|after
     layout-dock             //停靠布局方式 left|top|right|bottom|fill
     layout-row-span         //网格布局跨行数 整数
     layout-column-span      //网格布局跨列数 整数
@@ -73,24 +73,24 @@
 
     <div layout-type="dock">
 
-        <div layout-dock="top" style="height:50px;border:1px solid blue;margin-bottom:2px;">top</div>
-        <div layout-dock="bottom" style="height:50px;border:1px solid blue;margin-top:2px;">bottom</div>
-        <div layout-dock="left" layout-type="line" layout-vertical="1" style="width:200px;border:1px solid blue;">
+        <div layout-dock="top" style="height:50px;border:1px solid blue;margin-bottom:2px;background-color:silver;">top</div>
+        <div layout-dock="bottom" style="height: 50px; border: 1px solid blue; margin-top: 2px; background-color: silver;">bottom</div>
+        <div layout-dock="left" layout-control="TabPanel" layout-type="line" layout-vertical="1" tab-icon="dialog" tab-text="功能树" tab-show-collapse="1" tab-show-close="1" tab-collapse="1" style="width:200px;border:1px solid blue;">
             <div>left 1</div>
             <div>left 2</div>
             <div>left 3</div>
             <div>left 4</div>
         </div>
-        <div layout-control="splitter"></div>
+        <div layout-control="Splitter"></div>
 
-        <div layout-dock="right" layout-type="line" layout-vertical="1" style="width:200px;border:1px solid blue;">
+        <div layout-dock="right" layout-control="TabPanel" layout-type="line" layout-vertical="1" tab-icon="dialog" tab-text="操作指引" tab-show-collapse="1" style="width:200px;border:1px solid blue;">
             <div>right 1</div>
             <div>right 2</div>
             <div>right 3</div>
             <div>right 4</div>
         </div>
 
-        <div layout-control="splitter" layout-dock="right"></div>
+        <div layout-control="Splitter" layout-dock="right"></div>
         <div layout-dock="fill" style="border: 1px solid blue;">fill</div>
 
     </div>

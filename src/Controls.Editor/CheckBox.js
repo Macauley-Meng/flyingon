@@ -39,14 +39,14 @@
         //是否选中
         this.defineProperty("checked", false, {
 
-            end_code: "this.dom_input.checked = value;"
+            set_code: "this.dom_input.checked = value;"
         });
 
 
         //文字
         this.defineProperty("text", "", {
 
-            end_code: "this.dom_text.innerHTML = value;"
+            set_code: "this.dom_text.innerHTML = value;"
         });
 
 

@@ -93,27 +93,27 @@
                 {
                     case 0:
                         ctrl.set_dock("left");
-                        ctrl.set_layoutSplit("before");
+                        ctrl.set_column3("before");
                         break;
 
                     case 1:
                         ctrl.set_dock("top");
-                        ctrl.set_layoutSplit("after");
+                        ctrl.set_column3("after");
                         break;
 
                     case 2:
                         ctrl.set_dock("right");
-                        ctrl.set_layoutSplit("before");
+                        ctrl.set_column3("before");
                         break;
 
                     case 3:
                         ctrl.set_dock("bottom");
-                        ctrl.set_layoutSplit("after");
+                        ctrl.set_column3("after");
                         break;
 
                     case 4:
                         ctrl.set_dock("fill");
-                        ctrl.set_layoutSplit("center");
+                        ctrl.set_column3("center");
                         break;
                 }
 
@@ -367,7 +367,7 @@
 
                 <input type="button" value="flow" onclick="layout('flow')" />
                 <input type="button" value="line" onclick="layout('line')" />
-                <input type="button" value="split" onclick="layout('split')" />
+                <input type="button" value="column3" onclick="layout('column3')" />
                 <input type="button" value="dock" onclick="layout('dock')" />
                 <input type="button" value="cascade" onclick="layout('cascade')" />
                 <input type="button" value="grid" onclick="layout('grid')" />
@@ -444,7 +444,7 @@
 
                             <span tag="flow">newline<input type="text" style="width:50px;" value="false" onchange="to_control()" /></span>
 
-                            <span style="display: none;" tag="split">layoutSplit<input type="text" style="width: 50px; " value="before" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="column3">column3<input type="text" style="width: 50px; " value="before" onchange="to_control()" /></span>
 
                             <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="to_control()" /></span>
 

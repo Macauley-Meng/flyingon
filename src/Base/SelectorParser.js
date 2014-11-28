@@ -70,17 +70,18 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
+
     //元素节点
     var element_node = flyingon.defineClass(function () {
 
 
-        Class.create = function (nodes, token, name) {
+        Class.create = function (nodes, type, token, name) {
 
             var last;
 
-            if (nodes.type !== "or" || nodes.length === 0) //非组合直接添加到当前节点集合
+            if (type !== "," || nodes.length === 0) //非组合直接添加到当前节点集合
             {
-                this.type = nodes.type;
+                this.type = type;
                 nodes.push(this);
             }
             else if ((last = nodes[nodes.length - 1]) instanceof element_nodes)
@@ -107,8 +108,6 @@ A~B                    匹配任何在A控件之后的同级B控件
                     this.name = name;
                     break;
             }
-
-            nodes.type = "and"; //默认为并列选择器
         };
 
 
@@ -340,6 +339,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
     var split_regex = /"[^"]*"|'[^']*'|[\w-]+|[@.#* ,>+:=~|^$()\[\]]/g; //选择器拆分正则表达式
 
+
     //注1: 按从左至右的顺序解析
     //注2: 两个之间没有任何符号表示并列选器, 但是IE6或怪异模式不支持两个class并列
     flyingon.parse_selector = function (selector) {
@@ -348,12 +348,10 @@ A~B                    匹配任何在A控件之后的同级B控件
             node,       //当前节点
             tokens = selector.match(split_regex), //标记集合
             token,      //当前标记
+            type = "",  //当前类型
             i = 0,
             length = tokens.length,
             cache;
-
-        //设置默认类型
-        nodes.type = "";
 
         while (i < length)
         {
@@ -363,32 +361,28 @@ A~B                    匹配任何在A控件之后的同级B控件
                 case "@":   //自定义类型选择器
                 case "#":   //id选择器标记
                 case ".":   //class选择器标记
-                    node = new element_node(nodes, token, tokens[i++]);
+                    node = new element_node(nodes, type, token, tokens[i++]);
+                    type = "";
                     break;
 
                 case "*":  //全部元素选择器标记
-                    node = new element_node(nodes, "*", "");
+                    node = new element_node(nodes, type, "*", "");
+                    type = "";
                     break;
 
                 case " ":  //后代选择器标记
-                    nodes.type = "descendant";
+                    if (!type) //忽略其它类型后的空格
+                    {
+                        type = token;
+                    }
                     break;
 
                 case ">":  //子元素选择器标记
-                    nodes.type = "son";
-                    break;
-
                 case "+":  //毗邻元素选择器标记
-                    nodes.type = "next";
-                    break;
-
                 case "~":  //之后同级元素选择器标记
-                    nodes.type = "after";
-                    break;
-
                 case ",":  //组合选择器标记
-                    nodes.type = "or";
-                    continue;
+                    type = token;
+                    break;
 
                 case "[": //属性 [name[?="value"]]
                     cache = parse_property(tokens, length, i);
@@ -396,7 +390,13 @@ A~B                    匹配任何在A控件之后的同级B控件
 
                     if (cache = cache.result)
                     {
-                        (node || (new element_node(type, "*", ""))).push(cache);  //未指定节点则默认添加*节点
+                        if (!node) //未指定节点则默认添加*节点
+                        {
+                            node = new element_node(nodes, type, "*", "");
+                            type = "";
+                        }
+
+                        node.push(cache);
                     }
                     break;
 
@@ -404,7 +404,8 @@ A~B                    匹配任何在A控件之后的同级B控件
 
                     if ((token = tokens[i++]) === ":") //伪元素
                     {
-                        node = new element_node(nodes, "::", token);
+                        node = new element_node(nodes, type, "::", token);
+                        type = "";
 
                         //处理参数(存储至节点的parameters属性中)
                         if (i < length && tokens[i] === "(")
@@ -430,7 +431,13 @@ A~B                    匹配任何在A控件之后的同级B控件
                     }
                     else //伪类
                     {
-                        (node || new element_node(nodes, "*", "")).push(new pseudo_class(token));  //未指定节点则默认添加*节点
+                        if (!node) //未指定节点则默认添加*节点
+                        {
+                            node = new element_node(nodes, type, "*", "");
+                            type = "";
+                        }
+
+                        node.push(new pseudo_class(token));
                     }
                     break;
 
@@ -445,7 +452,8 @@ A~B                    匹配任何在A控件之后的同级B控件
                     continue;
 
                 default: //类名 token = ""
-                    node = new element_node(nodes, "", token);
+                    node = new element_node(nodes, type, "", token);
+                    type = "";
                     break;
             }
         }

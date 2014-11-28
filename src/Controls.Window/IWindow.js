@@ -535,7 +535,7 @@
 
 
         //注册控件更新
-        ownerWindow.__fn_registry_update = function (control, callback) {
+        ownerWindow.__fn_registry_update = function (control, update_now, callback) {
 
             if (timer)
             {
@@ -559,9 +559,16 @@
                 target = control;
             }
 
-            timer = setTimeout(update, 20);
+            if (update_now)
+            {
+                update();
+                timer = 0;
+            }
+            else
+            {
+                timer = setTimeout(update, 20);
+            }
         };
-
 
     };
 
@@ -620,7 +627,7 @@
 
             minValue: 0,
             maxValue: 1,
-            end_code: "this.dom.style.opacity = value;"
+            set_code: "this.dom.style.opacity = value;"
         });
 
 

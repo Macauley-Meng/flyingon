@@ -110,16 +110,19 @@ flyingon.IChildren = function (base) {
     //渲染子控件
     function render_children() {
 
-        var dom = this.dom_children.parentNode,
-            box = this.__boxModel,
-            items = this.__children,
-            cache;
+        var items = this.__children;
 
         if (items && items.length > 0)
         {
+            var width = this.clientWidth,
+                height = this.clientHeight;
+
             //重排
-            if (this.__arrange_dirty)
+            if (this.__arrange_dirty || this.__arrange_width !== width || this.__arrange_height !== height)
             {
+                var box = this.__boxModel,
+                    cache;
+
                 //处理子dom
                 if (this.__dom_dirty)
                 {
@@ -143,8 +146,10 @@ flyingon.IChildren = function (base) {
                 cache.left = box.paddingLeft + "px";
                 cache.top = box.paddingTop + "px";
 
-                this.arrange(this.clientWidth, this.clientHeight);
+                this.arrange(width, height);
 
+                this.__arrange_width = width;
+                this.__arrange_height = height;
                 this.__arrange_dirty = false;
             }
 
@@ -175,7 +180,7 @@ flyingon.IChildren = function (base) {
 
 
     //当前布局类型
-    this.__layout = flyingon.layouts["split"];
+    this.__layout = flyingon.layouts["column3"];
 
 
     //测量自动大小

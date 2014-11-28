@@ -13,8 +13,11 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
         //默认设置为初始化状态,在渲染窗口后终止
         flyingon.__initializing = true;
 
+        this.__header.addClass("flyingon-Dialog-header")
+            .set_layoutType("column3")
+            .__parent = this;
+
         this.initialize_header(this.__header = new flyingon.Panel());
-        this.__header.__parent = this;
 
         (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
 
@@ -68,7 +71,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
     //窗口标题
     this.defineProperty("text", "", {
 
-        end_code: "this.__header_text.set_text(value);"
+        set_code: "this.__header_text.set_text(value);"
     });
 
 
@@ -85,27 +88,25 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
         var target;
 
         target = this.__header_icon = new flyingon.Icon()
-            .set_layoutSplit("before")
+            .set_column3("before")
             .set_icon("dialog")
-            .__fn_className("flyingon-Dialog-icon");
+            .addClass("flyingon-Dialog-icon");
 
         target = this.__header_text = new flyingon.Label()
-            .set_layoutSplit("center")
-            .__fn_className("flyingon-Dialog-text");
+            .set_column3("center")
+            .addClass("flyingon-Dialog-text");
 
         target = this.__header_close = new flyingon.Icon()
-            .set_layoutSplit("after")
+            .set_column3("after")
             .set_icon("close")
-            .__fn_className("flyingon-Dialog-close")
+            .addClass("flyingon-Dialog-close")
 
             .on("click", function (event) {
 
                 target.close();
             });
 
-        header.set_layoutType("split")
-            .__fn_className("flyingon-Dialog-header")
-            .appendChild(this.__header_icon, this.__header_text, target);
+        header.appendChild(this.__header_icon, this.__header_text, target);
 
         target = this;
     };
@@ -206,11 +207,11 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-    this.__fn_measure_client = function (box, dom_body) {
+    this.before_measure = function (box) {
 
         var header = this.__header,
             style1 = this.dom_header.style,
-            style2 = dom_body.style,
+            style2 = this.dom_body.style,
             y = 0;
 
         if (this.get_header())
@@ -231,8 +232,6 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         style2.top = y + "px";
         style2.height = this.offsetHeight - box.border_width - y + "px";
-
-        base.__fn_measure_client.call(this, box, dom_body);
     };
 
 

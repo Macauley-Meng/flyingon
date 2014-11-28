@@ -37,14 +37,14 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
     //@language     当前语言目录
     this.defineProperty("src", "", {
 
-        end_code: "this.dom.src = value ? value.replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language) : '';"
+        set_code: "this.dom.src = value ? value.replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language) : '';"
     });
 
 
     //未能正常加载图片时的提醒文字
     this.defineProperty("alt", "", {
 
-        end_code: "this.dom.alt = value;"
+        set_code: "this.dom.alt = value;"
     });
 
 

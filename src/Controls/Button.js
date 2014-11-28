@@ -17,7 +17,7 @@ flyingon.defineClass("Button", flyingon.Control, function (base) {
     //文字
     this.defineProperty("text", "", {
 
-        end_code: "this.dom.value = value;"
+        set_code: "this.dom.value = value;"
     });
 
 

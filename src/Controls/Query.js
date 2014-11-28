@@ -162,8 +162,17 @@ flyingon.defineClass("Query", function () {
 
 
 
+        //并列选择器
+        this[""] = function (node, items, exports) {
+
+            for (var i = 0, _ = items.length; i < _; i++)
+            {
+                check_node(node, items[i], exports);
+            }
+        };
+
         //合并元素集
-        this.or = function (node, items, exports) {
+        this[","] = function (node, items, exports) {
 
             var item, fn, values;
 
@@ -183,17 +192,8 @@ flyingon.defineClass("Query", function () {
             }
         };
 
-        //并列选择器
-        this.and = function (node, items, exports) {
-
-            for (var i = 0, _ = items.length; i < _; i++)
-            {
-                check_node(node, items[i], exports);
-            }
-        };
-
         //所有后代元素(默认为所有后代元素)
-        this.descendant = this[""] = function (node, items, exports) {
+        this[" "] = function (node, items, exports) {
 
             var children;
 
@@ -222,7 +222,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //子元素
-        this.son = function (node, items, exports) {
+        this[">"] = function (node, items, exports) {
 
             var children;
 
@@ -239,7 +239,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //后一个元素 元素伪类:after也会转换成此节点类型
-        this.next = function (node, items, exports) {
+        this["+"] = function (node, items, exports) {
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
@@ -259,7 +259,7 @@ flyingon.defineClass("Query", function () {
         };
 
         //所有后续兄弟元素
-        this.after = function (node, items, exports) {
+        this["~"] = function (node, items, exports) {
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
@@ -454,7 +454,7 @@ flyingon.defineClass("Query", function () {
         {
             node = selector[i];
 
-            this.__query_types[node.type](node, items, exports = []); //批量传入数组减少函数调用以提升性能
+            this.__query_types[node.type || " "](node, items, exports = []); //批量传入数组减少函数调用以提升性能
 
             if (exports.length == 0)
             {

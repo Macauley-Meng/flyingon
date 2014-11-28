@@ -15,7 +15,11 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         //根据dom模板创建关联的dom元素
         if (dom)
         {
-            this.__fn_from_dom(dom);
+            dom.style.position = "absolute";
+            dom.style[this.__style_box_sizing] = "border-box";
+            dom.className = this.__className0;
+
+            (this.dom = dom).flyingon = this;
         }
         else
         {
@@ -29,13 +33,13 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
     this.defineProperty("html", "", {
 
-        end_code: "this.dom.innerHTML = value;"
+        set_code: "this.dom.innerHTML = value;"
     });
 
 
     this.defineProperty("text", "", {
 
-        end_code: "this.dom." + this.__textContent_name + " = value;"
+        set_code: "this.dom." + this.__textContent_name + " = value;"
     });
 
 

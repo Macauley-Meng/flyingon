@@ -87,7 +87,7 @@
                     break;
 
                 case 2:
-                    panel.set_layoutType("split");
+                    panel.set_layoutType("column3");
                     create_html(3, 1);
                     break;
 
@@ -137,27 +137,27 @@
                 {
                     case 0:
                         ctrl.set_dock("top");
-                        ctrl.set_layoutSplit("before");
+                        ctrl.set_column3("before");
                         break;
 
                     case 1:
                         ctrl.set_dock("bottom");
-                        ctrl.set_layoutSplit("after");
+                        ctrl.set_column3("after");
                         break;
 
                     case 2:
                         ctrl.set_dock("left");
-                        ctrl.set_layoutSplit("center");
+                        ctrl.set_column3("center");
                         break;
 
                     case 3:
                         ctrl.set_dock("right");
-                        ctrl.set_layoutSplit("center");
+                        ctrl.set_column3("center");
                         break;
 
                     case 4:
                         ctrl.set_dock("fill");
-                        ctrl.set_layoutSplit("center");
+                        ctrl.set_column3("center");
                         break;
                 }
 
@@ -169,7 +169,7 @@
 
                         draggable: "both",
                         dock: ctrl.get_dock(),
-                        layoutSplit: ctrl.get_layoutSplit()
+                        column3: ctrl.get_column3()
                     }));
                 }
             }
@@ -469,7 +469,7 @@
 
                             <span tag="flow">newline<input type="text" style="width:50px;" value="false" onchange="to_control()" /></span>
 
-                            <span style="display: none;" tag="split">layoutSplit<input type="text" style="width: 50px; " value="before" onchange="to_control()" /></span>
+                            <span style="display: none;" tag="column3">column3<input type="text" style="width: 50px; " value="before" onchange="to_control()" /></span>
 
                             <span style="display: none;" tag="dock">dock<input type="text" style="width: 50px; " value="left" onchange="to_control()" /></span>
 

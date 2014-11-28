@@ -35,11 +35,11 @@
 
         selector_rule_type = {      //支持的选择器规则类型
 
-            and: true,          //并列选择器
-            descendant: true,   //后代选择器
-            son: true,          //子元素选择器
-            next: true,         //毗邻元素选择器
-            after: true         //之后同级元素选择器
+            "": true,           //并列选择器
+            " ": true,          //后代选择器
+            ">": true,          //子元素选择器
+            "+": true,          //毗邻元素选择器
+            "~": true           //之后同级元素选择器
         };
 
 
@@ -265,9 +265,9 @@
             {
                 style_no_names[key] = true;
             }
-            else if (!attributes.end_code)
+            else if (!attributes.set_code)
             {
-                attributes.end_code = "this.dom.style[name] = value !== undefined ? value : '';";
+                attributes.set_code = "this.dom.style[name] = value !== undefined ? value : '';";
             }
 
             //注册默认值
@@ -366,7 +366,7 @@
         //布局类型
         //flow:         流式布局(支持竖排)
         //line:         线性布局(支持竖排)
-        //split:        拆分布局(支持竖排)
+        //column3:      3栏布局(支持竖排)
         //dock:         停靠布局(不支持竖排)
         //cascade:      层叠布局(不支持竖排)
         //grid:         网格布局(支持竖排)
@@ -486,11 +486,11 @@
         //true
         style("newline", false, "last-value");
 
-        //拆分布局位置(此值仅对拆分布局(split)有效)
+        //拆分布局位置(此值仅对3栏布局(column3)有效)
         //before    前面位置
         //after     后面位置
         //center    中间位置
-        style("layout-split", "before", "last-value");
+        style("column3", "before", "last-value");
 
         //控件停靠方式(此值仅在当前布局类型为停靠布局(dock)时有效)
         //left:     左见枚举
@@ -763,7 +763,7 @@
         //number	0(完全透明)到1(完全不透明)之间数值
         style("opacity", 1, {
 
-            end_code: "this.dom.style." + (function () {
+            set_code: "this.dom.style." + (function () {
 
                 if ("opacity" in style_test)
                 {
@@ -873,7 +873,7 @@
         //url('URL')	指向图像的路径
         style("background-image", "", {
 
-            end_code: "this.dom.style.backgroundImage = value !== undefined ? value.replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language) : '';"
+            set_code: "this.dom.style.backgroundImage = value !== undefined ? value.replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language) : '';"
         });
 
         //控件背景重复方式
@@ -1322,9 +1322,9 @@
         //class
         if (target.__class_list)
         {
-            for (var name in target.__class_list)
+            for (var i = target.__class_list.length - 1; i >= 0; i--)
             {
-                if (cache = types[name = "." + name])
+                if (cache = types[name = "." + target.__class_list[i]])
                 {
                     result.push(name);
                     css = css || cache[0];
@@ -1415,7 +1415,7 @@
                     break;
 
                 case ".": //class
-                    if (!target.className || !target.className[node.name])
+                    if (!target.__class_list || !target.__class_list[node.name])
                     {
                         return false;
                     }
@@ -1459,12 +1459,12 @@
         };
 
 
-        type_fn.and = function (selector, index, target) {
+        type_fn[""] = function (selector, index, target) {
 
             return check_node(selector, index, target);
         };
 
-        type_fn.descendant = function (selector, index, target) {
+        type_fn[" "] = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -1481,13 +1481,13 @@
             return false;
         };
 
-        type_fn.son = function (selector, index, target) {
+        type_fn[">"] = function (selector, index, target) {
 
             var parent = target.__parent;
             return parent ? check_node(selector, index, parent) : false;
         };
 
-        type_fn.next = function (selector, index, target) {
+        type_fn["+"] = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -1505,7 +1505,7 @@
             return false;
         };
 
-        type_fn.after = function (selector, index, target) {
+        type_fn["~"] = function (selector, index, target) {
 
             var parent = target.__parent;
 
@@ -1878,7 +1878,7 @@
     //IE6或怪异模式只支持" "及","及并列选择器, 但是并列选择器不支持两个class并列
     if (flyingon.browser_MSIE && (flyingon.quirks_mode || !window.XMLHttpRequest))
     {
-        selector_rule_type.and = selector_rule_type.son = selector_rule_type.next = selector_rule_type.after = false;
+        selector_rule_type[""] = selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
     }
 
 

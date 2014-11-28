@@ -214,10 +214,10 @@
         };
 
 
-        //获取子控件收拢方向
-        this.__fn_collapse = function (target, item) {
+        //获取子控件是否竖直收拢
+        this.__fn_collapse_vertical = function (target, item) {
 
-            return this.vertical ? "top" : "left";
+            return !this.vertical;
         };
 
 
@@ -235,6 +235,7 @@
 
         if (name)
         {
+            layout.name = name;
             layouts[name] = layout;
         }
 
@@ -491,8 +492,8 @@
 
 
 
-    //拆分布局(支持竖排)
-    flyingon.defineLayout("split", function (base) {
+    //3栏布局(支持竖排)
+    flyingon.defineLayout("column3", function (base) {
 
 
         function arrange1(target, items, width, height) {
@@ -505,7 +506,7 @@
                 right = width,
                 list = [],
                 item,
-                split,
+                type,
                 offset,
                 cache;
 
@@ -515,7 +516,7 @@
 
                 if (item.__visible = size > 0)
                 {
-                    switch (item instanceof flyingon.Splitter ? split : (split = item.get_layoutSplit()))
+                    switch (item instanceof flyingon.Splitter ? type : (type = item.get_column3()))
                     {
                         case "before":
                             cache = item.measure(size, height, false, true).width;
@@ -579,7 +580,7 @@
                 bottom = height,
                 list = [],
                 item,
-                split,
+                type,
                 offset,
                 cache;
 
@@ -589,7 +590,7 @@
 
                 if (size > 0)
                 {
-                    switch (item instanceof flyingon.Splitter ? split : (split = item.get_layoutSplit()))
+                    switch (item instanceof flyingon.Splitter ? type : (type = item.get_column3()))
                     {
                         case "before":
                             cache = item.measure(width, size, true, false).height;
@@ -653,9 +654,9 @@
         this.__fn_resize_start = function (splitter, target, vertical) {
 
             var start = base.__fn_resize_start.apply(this, arguments),
-                split = target.get_layoutSplit();
+                type = target.get_column3();
 
-            start.reverse = this.mirror !== "none" ? split === "before" : split === "after";
+            start.reverse = this.mirror !== "none" ? type === "before" : type === "after";
 
             return start;
         };
@@ -805,6 +806,13 @@
         };
 
 
+        //获取子控件是否竖直收拢
+        this.__fn_collapse_vertical = function (target, item) {
+
+            var dock = target.get_dock();
+            return dock === "left" || dock === "right";
+        };
+
     });
 
 
@@ -839,6 +847,10 @@
     flyingon.defineLayout("absolute", function (base) {
 
 
+        //标记是否绝对定位
+        this.absolute = true;
+
+
         this.arrange = function (target, items, width, height) {
 
             var contentWidth = 0,
@@ -871,6 +883,14 @@
         //屏蔽不支持调整大小
         this.__fn_resize = function () {
 
+        };
+
+
+        //获取子控件是否竖直收拢
+        this.__fn_collapse_vertical = function (target, item) {
+
+            var header = item.get_header();
+            return header === "left" || header === "right";
         };
 
 
@@ -2164,7 +2184,7 @@
             "layout-spacing-height": 1,
             "layout-flow-width": 1,
             "layout-flow-height": 1,
-            "layout-split": 0,
+            "layout-column3": 0,
             "layout-rows": 0,
             "layout-columns": 0,
             "layout-table": 0,
@@ -2182,12 +2202,21 @@
             "layout-offset-y": 1
         },
 
+        tab_properties = {
+
+            "tab-icon": 1,
+            "tab-text": 1,
+            "tab-show-close": 1,
+            "tab-show-collapse": 1,
+            "tab-collapse": 1
+        },
+
         styles = { //需转换的样式名
 
-            left: 0,
-            top: 0,
-            width: 0,
-            height: 0,
+            left: 1,
+            top: 1,
+            width: 1,
+            height: 1,
             minWidth: 1,
             maxWidth: 1,
             minHeight: 1,
@@ -2218,44 +2247,48 @@
     }
 
 
+    for (var name in tab_properties)
+    {
+        tab_properties[name] = name.substring(4).replace(regex_name, function (_, x) {
+
+            return x.toUpperCase();
+        });
+    }
+
+
     function dom_wrapper(dom) {
 
-        var control, items, item, name;
+        var control, children, name, value, cache1, cache2;
 
         switch (dom.getAttribute("layout-control")) //指定布局控件
         {
-            case "splitter":
+            case "Splitter":
                 control = new flyingon.Splitter(dom);
                 break;
 
-            case "tab-panel":
+            case "TabPanel":
                 control = new flyingon.TabPanel();
+                children = true;
 
-                if ((items = children_wrapper(dom.children[1])).length > 0)
+                for (var i = 0, _ = (cache1 = dom.attributes).length; i < _; i++)
                 {
-                    control.appendChild.apply(control, items);
+                    if ((name = (cache2 = cache1[i]).name) in tab_properties)
+                    {
+                        control["set_" + tab_properties[name]](cache2.value);
+                    }
                 }
-
-                //control.__fn_from_dom(dom);
-                //dom.appendChild(control.dom_children);
                 break;
 
-            case "tab":
+            case "TabControl":
                 control = new flyingon.TabControl();
+                children = true;
                 break;
 
             default:
                 if (dom.getAttribute("layout-type")) //有layout-type解析为面板
                 {
                     control = new flyingon.Panel();
-
-                    if ((items = children_wrapper(dom)).length > 0)
-                    {
-                        control.appendChild.apply(control, items);
-                    }
-
-                    control.__fn_from_dom(dom);
-                    dom.appendChild(control.dom_children);
+                    children = true;
                 }
                 else //否则解析成html控件
                 {
@@ -2264,55 +2297,49 @@
                 break;
         }
 
-
         //同步dom属性至控件
-        for (var i = 0, _ = (items = dom.attributes).length; i < _; i++)
+        for (var i = 0, _ = (cache1 = dom.attributes).length; i < _; i++)
         {
-            if ((name = (item = items[i]).name) in properties)
+            if ((name = (cache2 = cache1[i]).name) in properties)
             {
-                control["set_" + properties[name]](item.value);
+                control["set_" + properties[name]](cache2.value);
             }
         }
 
         //同步样式
-        var style = dom.style;
+        cache1 = dom.style;
+        cache2 = control.dom.style;
+
+        if (children)
+        {
+            cache2.cssText = cache1.cssText + cache2.cssText;
+        }
 
         for (var name in styles)
         {
-            if (item = style[name])
+            if ((value = cache1[name]) !== "")
             {
-                switch (styles[name])
-                {
-                    case 0:
-                        control["set_" + name](item);
-                        break;
+                control["set_" + name](value);
 
-                    case 1:
-                        control["set_" + name](item);
-                        style[name] = "";;
-                        break;
+                if (styles[name]) //清除样式
+                {
+                    cache2[name] = "";;
                 }
             }
         }
 
-        return control;
-    };
-
-
-
-    function children_wrapper(dom) {
-
-        var children = dom.children,
-            length = children.length,
-            items = [],
-            item;
-
-        for (var i = 0; i < length; i++)
+        //处理子控件
+        if (children)
         {
-            items.push(dom_wrapper(children[i]));
+            children = dom.children;
+
+            for (var i = 0, _ = children.length; i < _; i++)
+            {
+                control.appendChild(dom_wrapper(children[i]));
+            }
         }
 
-        return items;
+        return control;
     };
 
 
@@ -2323,11 +2350,17 @@
         if (dom)
         {
             var result = new flyingon.Window(),
-                items = children_wrapper(dom),
+                items = dom.children,
+                length = items.length,
                 item,
                 name;
 
-            result.appendChild.apply(result, items);
+            dom.style.visibility = "hidden";
+
+            for (var i = 0; i < length; i++)
+            {
+                result.appendChild(dom_wrapper(items[i]));
+            }
 
             for (var i = 0, _ = (items = dom.attributes).length; i < _; i++)
             {

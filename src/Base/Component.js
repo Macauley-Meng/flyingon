@@ -43,7 +43,7 @@ flyingon.IComponent = function () {
         //基本类型转换(根据默认值的类型自动转换)
         if (data_type !== "object")
         {
-            cache = "value = ";
+            cache = "\n\n" + "value = ";
 
             if (attributes.style)
             {
@@ -53,19 +53,19 @@ flyingon.IComponent = function () {
             switch (data_type)
             {
                 case "boolean":
-                    cache += "\n\n!!value;";
+                    cache += "!!value;";
                     break;
 
                 case "int":
-                    cache += "\n\n(+value | 0);";
+                    cache += "(+value | 0);";
                     break;
 
                 case "number":
-                    cache += "\n\n(+value || 0);";
+                    cache += "(+value || 0);";
                     break;
 
                 case "string":
-                    cache += "\n\n'' + value;";
+                    cache += "'' + value;";
                     break;
             }
 
@@ -117,7 +117,7 @@ flyingon.IComponent = function () {
 
                 + "fields[name] = value;"
 
-                + (attributes.end_code ? "\n\n\t" + attributes.end_code : "")  //自定义值变更结束代码
+                + (attributes.set_code ? "\n\n\t" + attributes.set_code : "")  //自定义值变更结束代码
                 + "\n\n\t"
 
                 + "return this;\n"
@@ -141,15 +141,15 @@ flyingon.IComponent = function () {
         //赋值
         body.push("fields[name] = value;");
 
-        //自定义值变更代码
-        if (cache = attributes.change_code)
+        //自定义值变更结束代码
+        if (cache = attributes.set_code)
         {
             body.push("\n\n\t");
             body.push(cache);
         }
 
-        //自定义值变更结束代码
-        if (cache = attributes.end_code)
+        //自定义值变更代码
+        if (cache = attributes.change_code)
         {
             body.push("\n\n\t");
             body.push(cache);
@@ -165,16 +165,17 @@ flyingon.IComponent = function () {
         //控件刷新
         if (attributes.layout) //需要重新布局
         {
-            body.push("\n\t(this.__parent || this).update(true);\n\t" + "this.__update_dirty = 1;\t");
+            body.push("\n\n\t");
+            body.push("this.__update_dirty = 1;\n\t(this.__parent || this).update(true);");
         }
         else if (attributes.arrange) //是否需要重新排列
         {
-            body.push("\n\t");
+            body.push("\n\n\t");
             body.push("this.update(true);");
         }
         else if (attributes.update)
         {
-            body.push("\n\t");
+            body.push("\n\n\t");
             body.push("this.update();");
         }
 
