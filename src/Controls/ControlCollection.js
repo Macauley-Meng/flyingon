@@ -192,7 +192,7 @@ flyingon.defineClass("ControlCollection", function (base) {
             return true;
         }
 
-        throw new flyingon.Exception("只能添加" + this.control_type.xtype + "类型的子控件!");
+        throw new flyingon.Exception("只能添加" + target.control_type.xtype + "类型的子控件!");
     };
 
 

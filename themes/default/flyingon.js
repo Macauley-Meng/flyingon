@@ -133,7 +133,6 @@ flyingon.defineStyle({
     //标签面板标题栏样式
     ".flyingon-TabPanel": {
 
-        border: "1px solid blue",
         backgroundColor: "white"
     },
 
@@ -187,6 +186,78 @@ flyingon.defineStyle({
 
     ////标签面板标题栏关闭图标样式
     //".flyingon-TabPanel-close": {
+
+    //},
+
+    //独立标签面板样式
+    "div .flyingon-TabPanel": {
+
+        border: "1px solid blue"
+    },
+
+    //页签控件下的标签面板样式
+    ".flyingon-TabControl .flyingon-TabPanel": {
+
+        borderWidth: "0"
+    },
+
+
+    //页签控件页头样式
+    ".flyingon-TabControl": {
+
+        border: "1px solid blue",
+        backgroundColor: "white"
+    },
+
+    //页签控件页头样式
+    ".flyingon-TabControl-header": {
+
+        backgroundColor: "silver",
+        cursor: "default"
+    },
+
+    //页签控件页签头面板样式
+    ".flyingon-TabControl-header-panel": {
+
+        backgroundColor: "silver"
+    },
+
+    //页签控件左右页头样式
+    ".flyingon-TabControl-left,.flyingon-TabControl-right": {
+
+        width: "30px",
+        vertical: true
+    },
+
+    //页签控件上下页头样式
+    ".flyingon-TabControl-top,.flyingon-TabControl-bottom": {
+
+        height: "30px",
+    },
+
+    //页签控件页头图标样式
+    ".flyingon-TabControl-icon": {
+
+        color: "blue"
+    },
+
+    ////页签控件页头上一页图标样式
+    //".flyingon-TabControl-previous": {
+
+    //},
+
+    ////页签控件页头下一页图标样式
+    //".flyingon-TabControl-next": {
+
+    //},
+
+    ////页签控件页头收拢图标样式
+    //".flyingon-TabControl-collapse": {
+
+    //},
+
+    ////页签控件页头关闭图标样式
+    //".flyingon-TabControl-close": {
 
     //},
 

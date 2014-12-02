@@ -38,7 +38,7 @@
             "": true,           //并列选择器
             " ": true,          //后代选择器
             ">": true,          //子元素选择器
-            "+": true,          //毗邻元素选择器
+            "+": false,         //毗邻元素选择器(不支持css复用)
             "~": true           //之后同级元素选择器
         };
 
@@ -372,6 +372,7 @@
         //grid:         网格布局(支持竖排)
         //table:        表格布局(支持竖排)
         //absolute:     绝对定位(不支持竖排)
+        //tab:          页签布局(不支持竖排)
         //...:          其它自定义布局
         style("layout-type", "flow", {
 
@@ -1878,7 +1879,7 @@
     //IE6或怪异模式只支持" "及","及并列选择器, 但是并列选择器不支持两个class并列
     if (flyingon.browser_MSIE && (flyingon.quirks_mode || !window.XMLHttpRequest))
     {
-        selector_rule_type[""] = selector_rule_type[">"] = selector_rule_type["+"] = selector_rule_type["~"] = false;
+        selector_rule_type[""] = selector_rule_type[">"] = selector_rule_type["~"] = false;
     }
 
 

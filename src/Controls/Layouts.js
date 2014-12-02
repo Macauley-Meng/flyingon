@@ -176,7 +176,7 @@
 
 
         //获取开始调整大小参数
-        this.__fn_resize_start = function (splitter, target, vertical) {
+        this.__fn_resize_start = function (target, vertical, splitter) {
 
             var style = target[vertical ? "get_height" : "get_width"](),
                 value = target[vertical ? "offsetHeight" : "offsetWidth"],
@@ -651,7 +651,7 @@
         };
 
 
-        this.__fn_resize_start = function (splitter, target, vertical) {
+        this.__fn_resize_start = function (target, vertical, splitter) {
 
             var start = base.__fn_resize_start.apply(this, arguments),
                 type = target.get_column3();
@@ -787,11 +787,11 @@
         };
 
 
-        this.__fn_resize_start = function (splitter, target, vertical) {
+        this.__fn_resize_start = function (target, vertical, splitter) {
 
             var mirror = this.mirror,
                 dock = target.get_dock(),
-                start = base.__fn_resize_start.call(this, splitter, target, vertical = dock === "top" || dock === "bottom");
+                start = base.__fn_resize_start.call(this, target, vertical = dock === "top" || dock === "bottom", splitter);
 
             if (vertical)
             {
@@ -896,6 +896,43 @@
 
     });
 
+
+
+    //页签布局(不支持竖排)
+    flyingon.defineLayout("tab", function (base) {
+
+
+        this.arrange = function (target, items, width, height) {
+
+            var index = target.get_selectIndex;
+
+            index = index ? index() : 0;
+
+            for (var i = 0, _ = items.length; i < _; i++)
+            {
+                if (i === index)
+                {
+                    items[i].measure(width, height, true, true);
+                    items[i].locate(0, 0);
+                }
+                else
+                {
+                    target.__fn_hide(items[i]);
+                }
+            }
+
+            target.contentWidth = width;
+            target.contentHeight = height;
+        };
+
+
+        //屏蔽不支持调整大小
+        this.__fn_resize = function () {
+
+        };
+
+
+    });
 
 
 
@@ -1476,7 +1513,7 @@
         };
 
 
-        this.__fn_resize_start = function (splitter, target, vertical) {
+        this.__fn_resize_start = function (target, vertical, splitter) {
 
             var index = (vertical = splitter.__vertical) ? target.__arrange_row : target.__arrange_column,
                 item = (vertical ? this.rows : this.columns)[index],
@@ -2144,7 +2181,7 @@
         };
 
 
-        this.__fn_resize_start = function (splitter, target, vertical) {
+        this.__fn_resize_start = function (target, vertical, splitter) {
 
             var table = splitter.__arrange_table,
                 row = table[target.__arrange_row],
@@ -2297,6 +2334,7 @@
                 break;
         }
 
+
         //同步dom属性至控件
         for (var i = 0, _ = (cache1 = dom.attributes).length; i < _; i++)
         {
@@ -2308,22 +2346,16 @@
 
         //同步样式
         cache1 = dom.style;
-        cache2 = control.dom.style;
-
-        if (children)
-        {
-            cache2.cssText = cache1.cssText + cache2.cssText;
-        }
 
         for (var name in styles)
         {
             if ((value = cache1[name]) !== "")
             {
-                control["set_" + name](value);
+                (control.__styles || (control.__styles = {}))[name] = value;
 
                 if (styles[name]) //清除样式
                 {
-                    cache2[name] = "";;
+                    cache1[name] = "";;
                 }
             }
         }
@@ -2337,6 +2369,9 @@
             {
                 control.appendChild(dom_wrapper(children[i]));
             }
+
+            //需最后处理dom 否则可能会出现循环添加错误
+            control.from_dom(dom);
         }
 
         return control;

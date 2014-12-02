@@ -7,7 +7,7 @@ flyingon.defineClass("Control", function () {
 
 
 
-    Class.create = function () {
+    Class.create = function (dom) {
 
         //变量管理器
         this.__fields = Object.create(this.__defaults);
@@ -15,7 +15,6 @@ flyingon.defineClass("Control", function () {
         //根据dom模板创建关联的dom元素
         (this.dom = this.dom_template.cloneNode(this.dom_template.firstChild)).flyingon = this;
     };
-
 
 
 
@@ -1345,29 +1344,6 @@ flyingon.defineClass("Control", function () {
     (function (flyingon) {
 
 
-        //获取dom关联的目标控件
-        this.__fn_dom_control = (function () {
-
-            var host = document.documentElement;
-
-            return function (dom) {
-
-                while (dom)
-                {
-                    if (dom.flyingon)
-                    {
-                        return dom.flyingon;
-                    }
-
-                    dom = dom.parentNode
-                }
-
-                return host.flyingon;
-            };
-
-        })();
-
-
 
         //setAttributes在IE6/7下的处理
         //var attributes_fix = {
@@ -1388,10 +1364,8 @@ flyingon.defineClass("Control", function () {
 
 
 
-
         var box_sizing = flyingon.__fn_css_prefix("box-sizing"), //box-sizing样式名
             style_template = "position:absolute;" + (box_sizing ? box_sizing + ":border-box;" : "");     //样式模板值
-
 
 
         //创建dom模板(必须在创建类时使用此方法创建dom模板)
@@ -1476,7 +1450,67 @@ flyingon.defineClass("Control", function () {
 
 
         //box-sizing样式名, 为空则表示不支持box-sizing
-        this.__style_box_sizing = flyingon.__fn_style_prefix("box-sizing") || "box-sizing";
+        this.__style_box_sizing = box_sizing = flyingon.__fn_style_prefix("box-sizing") || "box-sizing";
+
+
+
+
+        //获取dom关联的目标控件
+        this.__fn_dom_control = (function () {
+
+            var host = document.documentElement;
+
+            return function (dom) {
+
+                while (dom)
+                {
+                    if (dom.flyingon)
+                    {
+                        return dom.flyingon;
+                    }
+
+                    dom = dom.parentNode
+                }
+
+                return host.flyingon;
+            };
+
+        })();
+
+
+        //从dom初始化对象
+        this.from_dom = function (dom) {
+
+            var target = this.dom,
+                children;
+
+            this.dom = dom;
+
+            dom.style.position = "absolute";
+            dom.style[box_sizing] = "border-box";
+
+            if (dom.className)
+            {
+                this.__fn_className(dom.className);
+            }
+            else
+            {
+                dom.className = this.__className0;
+            }
+
+            if (target && target.firstChild)
+            {
+                children = target.children;
+
+                for (var i = 0, _ = children.length; i < _; i++)
+                {
+                    dom.appendChild(children[i]);
+                }
+            }
+
+            return dom.flyingon = this;
+        };
+
 
 
 

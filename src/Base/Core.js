@@ -428,7 +428,7 @@ flyingon.Exception = function (message, parameters) {
 
         var dom = document.createElement("link");
 
-        dom.rel = "stylesheet"
+        dom.rel = "stylesheet";
         dom.href = url;
 
         head.appendChild(dom);

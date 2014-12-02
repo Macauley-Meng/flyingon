@@ -15,11 +15,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         //根据dom模板创建关联的dom元素
         if (dom)
         {
-            dom.style.position = "absolute";
-            dom.style[this.__style_box_sizing] = "border-box";
-            dom.className = this.__className0;
-
-            (this.dom = dom).flyingon = this;
+            this.from_dom(dom);
         }
         else
         {

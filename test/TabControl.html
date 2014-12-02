@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+
+    <script type="text/javascript">
+
+
+
+        var w = new flyingon.Window().sets({
+
+            layoutType: "flow",
+            border: "4px solid blue",
+            padding: "10px",
+            spacingWidth: "10px",
+            spacingHeight: "10px",
+            droppable: true
+        });
+
+
+
+        var panel = new flyingon.TabControl().sets({
+
+            width: "600px",
+            height: "600px",
+            border: "1px solid red",
+            showCollapse: true
+        });
+
+
+        for (var j = 0; j < 4; j++)
+        {
+            var ctrl = new flyingon.TabPanel().sets({
+
+                icon: "dialog",
+                text: "text " + j
+            });
+
+            panel.appendChild(ctrl);
+        }
+
+
+        w.appendChild(panel);
+
+        w.show();
+
+
+    </script>
+
+</head>
+<body>
+
+
+</body>
+</html>
