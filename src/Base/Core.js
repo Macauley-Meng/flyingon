@@ -327,18 +327,6 @@ window.flyingon = (function () {
     //当前浏览器是否WebKit内核浏览器
     flyingon.browser_WebKit = !!key.match(/WebKit/);
 
-    //if (!window.XMLHttpRequest)
-    //{
-    //    var body = document.body,
-    //        div = document.createElement("div"),
-    //        version = [7, 1, 1, 3.5, 9][names.indexOf(flyingon.browser)];
-
-    //    div.style.cssText = "position:absolute;z-index:1000;background-color:white;left:0;top:0;width:" + body.clientWidth + "px;height:" + body.clientHeight + "px";
-    //    div.innerHTML = "你的浏览器版本太低,请升级至" + flyingon.browser + version + "或更高版本的浏览器!";
-
-    //    body.appendChild(div);
-    //}
-
     //当前是否IE怪异模式
     if (flyingon.browser_MSIE)
     {

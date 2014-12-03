@@ -136,14 +136,7 @@ flyingon.defineStyle({
 
         backgroundColor: "white"
     },
-
-    //标签面板标题栏样式
-    ".flyingon-TabPanel-header": {
-
-        backgroundColor: "silver",
-        cursor: "default"
-    },
-
+    
     //标签面板左右标题栏样式
     ".flyingon-TabPanel-left,.flyingon-TabPanel-right": {
 
@@ -166,6 +159,13 @@ flyingon.defineStyle({
             textAlign: "left",
             verticalAlign: "middle"
         }
+    },
+
+    //标签面板标题栏样式
+    ".flyingon-TabPanel-header": {
+
+        backgroundColor: "silver",
+        cursor: "default"
     },
 
     //标签面板标题栏图标样式
@@ -224,22 +224,20 @@ flyingon.defineStyle({
         backgroundColor: "silver",
         cursor: "default"
     },
-
+    
     //页签控件左右页签样式
     ".flyingon-TabControl-left,.flyingon-TabControl-right": {
 
-        //页签控件左右页签折叠模式样式
-        ".flyingon-TabHeader-collapse": {
-
-            width: "25px",
-            vertical: true
-        }
+        width: "60px",
+        verticalAlign: "top"
     },
 
-    ////页签控件上下页签样式
-    //".flyingon-TabControl-top,.flyingon-TabControl-bottom": {
+    //页签控件左右页签折叠模式样式
+    ".flyingon-TabControl-left-collapse .flyingon-TabControl-right-collapse": {
 
-    //},
+        width: "25px",
+        vertical: true
+    },
 
     ////页签控件页签上一页图标样式
     //".flyingon-TabControl-previous": {

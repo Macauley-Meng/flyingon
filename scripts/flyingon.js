@@ -327,18 +327,6 @@ window.flyingon = (function () {
     //当前浏览器是否WebKit内核浏览器
     flyingon.browser_WebKit = !!key.match(/WebKit/);
 
-    //if (!window.XMLHttpRequest)
-    //{
-    //    var body = document.body,
-    //        div = document.createElement("div"),
-    //        version = [7, 1, 1, 3.5, 9][names.indexOf(flyingon.browser)];
-
-    //    div.style.cssText = "position:absolute;z-index:1000;background-color:white;left:0;top:0;width:" + body.clientWidth + "px;height:" + body.clientHeight + "px";
-    //    div.innerHTML = "你的浏览器版本太低,请升级至" + flyingon.browser + version + "或更高版本的浏览器!";
-
-    //    body.appendChild(div);
-    //}
-
     //当前是否IE怪异模式
     if (flyingon.browser_MSIE)
     {
@@ -3120,6 +3108,26 @@ flyingon.defineClass("XmlSerializeWriter", flyingon.SerializeWriter, function (b
         };
 
     });
+
+
+
+    ////最低支持IE7
+    //!window.XMLHttpRequest && flyingon.ready(function () {
+
+    //    var body = document.body,
+    //        div = document.createElement("div");
+
+    //    div.style.cssText = "position:absolute;z-index:1000;background-color:white;left:0;top:0;width:100%;height:" + (body.clientHeight || 100) + "px";
+    //    div.innerHTML = "您的浏览器版本太低,请升级浏览器!";
+
+    //    body.appendChild(div);
+
+    //    div.onclick = function () {
+
+    //        body.removeChild(div);
+    //    };
+
+    //});
 
 
 
@@ -12298,21 +12306,8 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         //是否收拢
         this.defineProperty("collapse", false, {
 
-            attributes: "layout",
-            set_code: "this.__fn_collapse(value);"
+            attributes: "layout"
         });
-
-
-
-
-
-        this.__fn_collapse = function (value) {
-
-            if (this.__header_collapse)
-            {
-                this.__header_collapse.set_icon(value ? "expand" : "collapse");
-            }
-        };
 
 
 
@@ -12366,6 +12361,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 style1 = this.dom_header.style,
                 style2 = this.dom_body.style,
                 parent = this.__parent,
+                vertical,
                 width,
                 height;
 
@@ -12375,17 +12371,11 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             style2 = this.dom.style;
 
             //获取收拢是否竖直方向收拢
-            if (parent.__layout && parent.__layout.__fn_collapse_vertical(parent, this))
+            if (vertical = parent.__layout && parent.__layout.__fn_collapse_vertical(parent, this))
             {
                 height = this.offsetHeight - box.border_height;
 
-                if (type !== "left" && this.__header_last__ !== "left")
-                {
-                    header.toggleClass(class_prefix + type, class_prefix + "left")
-                      .measure(header_width, height, true, true);
-
-                    this.__header_last__ = "left";
-                }
+                this.__fn_change_header(header, "left").measure(header_width, height, true, true);
 
                 style1.height = height + "px";
                 style1.width = header.offsetWidth + "px";
@@ -12395,17 +12385,16 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             {
                 width = this.offsetWidth - box.border_width;
 
-                if (type !== "top" && this.__header_last__ !== "top")
-                {
-                    header.toggleClass(class_prefix + type, class_prefix + "top")
-                        .measure(width, header_height, true, true);
-
-                    this.__header_last__ = "top";
-                }
+                this.__fn_change_header(header, "top").measure(width, header_height, true, true);
 
                 style1.width = width + "px";
                 style1.height = header.offsetHeight + "px";
                 style2.height = (this.offsetHeight = header.offsetHeight + box.border_height) + "px";
+            }
+
+            if (this.__header_collapse)
+            {
+                this.__header_collapse.set_icon(vertical ? "expand" : "expand1");
             }
 
             //收拢状态不处理自动大小
@@ -12424,13 +12413,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 width = this.offsetWidth - box.border_width,
                 height = this.offsetHeight - box.border_height;
 
-            if (this.__header_last__ && this.__header_last__ !== type)
-            {
-                header.removeClass(class_prefix + this.__header_last__)
-                    .addClass(class_prefix + type);
-
-                this.__header_last__ = null;
-            }
+            this.__fn_change_header(header, type);
 
             switch (type)
             {
@@ -12483,9 +12466,42 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             {
                 style2.display = "";
             }
+
+            if (this.__header_collapse)
+            {
+                this.__header_collapse.set_icon(type === "top" || top === "bottom" ? "collapse" : "collapse1");
+            }
         };
 
 
+        this.__fn_change_header = function (header, value) {
+
+            var oldValue = this.__header_last__;
+
+            if (value !== oldValue)
+            {
+                if (oldValue)
+                {
+                    header.removeClass(class_prefix + oldValue);
+
+                    if (this.__model_oldValue)
+                    {
+                        header.removeClass(this.__model_oldValue);
+                    }
+                }
+
+                header.addClass(class_prefix + value);
+
+                if (this.__model_value)
+                {
+                    header.addClass(this.__model_oldValue = class_prefix + value + "-" + this.__model_value);
+                }
+
+                this.__header_last__ = value;
+            }
+
+            return header;
+        };
 
 
         this.__event_bubble_click = function (event) {
@@ -12556,7 +12572,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 .addClass("flyingon-TabPanel-text");
 
             (this.__header = new tab_header())
-                .addClass("flyingon-TabPanel-header", "flyingon-TabPanel-top")
+                .addClass("flyingon-TabPanel-header")
                 .appendChild(this.__header_text).__parent = this;
 
             this.dom_header.appendChild(this.__header.dom)
@@ -12657,15 +12673,12 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             this.__layout = flyingon.layouts["column3"];
 
 
-            this.__fn_model = function (value, oldValue) {
 
-                this.__header.toggleClass("flyingon-TabHeader-" + oldValue, "flyingon-TabHeader-" + value);
-            };
-
+            var render = this.render;
 
             this.render = function () {
 
-                base.render.call(this);
+                render.call(this);
             };
 
         });
@@ -12688,10 +12701,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         this.__fn_initialize = function () {
 
-            (this.__header = new tab_header())
-                .addClass("flyingon-TabControl-top")
-                .appendChild(this.__header_body = new tab_body()).__parent = this;
-
+            (this.__header = new tab_header()).appendChild(this.__header_body = new tab_body()).__parent = this;
             this.dom_header.appendChild(this.__header.dom);
         };
 
@@ -12705,6 +12715,9 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
+        this.__model_value = "default";
+
+
         //页签模式
         //default   默认
         //collapse  折叠
@@ -12714,7 +12727,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         this.defineProperty("model", "default", {
 
             attributes: "layout",
-            set_code: "this.__header.__fn_model(value, oldValue || 'default');"
+            set_code: "this.__model_value = value;"
         });
 
 

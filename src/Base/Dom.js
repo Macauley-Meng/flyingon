@@ -179,6 +179,26 @@
 
 
 
+    ////最低支持IE7
+    //!window.XMLHttpRequest && flyingon.ready(function () {
+
+    //    var body = document.body,
+    //        div = document.createElement("div");
+
+    //    div.style.cssText = "position:absolute;z-index:1000;background-color:white;left:0;top:0;width:100%;height:" + (body.clientHeight || 100) + "px";
+    //    div.innerHTML = "您的浏览器版本太低,请升级浏览器!";
+
+    //    body.appendChild(div);
+
+    //    div.onclick = function () {
+
+    //        body.removeChild(div);
+    //    };
+
+    //});
+
+
+
     //打印指定dom
     flyingon.dom_print = (function () {
 
