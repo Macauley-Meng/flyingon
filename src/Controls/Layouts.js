@@ -2370,6 +2370,8 @@
                 control.appendChild(dom_wrapper(children[i]));
             }
 
+            dom.innerHTML = "";
+
             //需最后处理dom 否则可能会出现循环添加错误
             control.from_dom(dom);
         }

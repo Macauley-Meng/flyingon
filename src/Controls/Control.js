@@ -1375,12 +1375,7 @@ flyingon.defineClass("Control", function () {
             var dom = this.dom_template = document.createElement(tagName);
 
             //处理className
-            if ((Class.css_className = this.css_className = this.__className0 = this.xtype.replace(/\./g, "-")) !== "flyingon-Control")
-            {
-                this.__className0 = "flyingon-Control " + Class.css_className + " ";
-            }
-
-            dom.className = this.__className0 + dom.className;
+            dom.className = initialize_class.call(this, Class) + dom.className;
 
             //处理属性
             if (attributes)
@@ -1440,8 +1435,35 @@ flyingon.defineClass("Control", function () {
         };
 
 
+        //初始化class相关属性
+        function initialize_class(Class) {
+
+            if (this.xtype && this.xtype !== "flyingon.Control")
+            {
+                return this.__className0 = "flyingon-Control " + (Class.css_className = this.css_className = this.xtype.replace(/\./g, "-")) + " ";
+            }
+
+            //匿名类
+            Class.css_className = this.css_className = "flyingon-Control";
+            return this.__className0 = "flyingon-Control ";
+        };
+
+
         //创建默认dom模板
         this.create_dom_template("div");
+
+
+
+        //类初始化方法
+        this.__Class_initialize__ = function (Class) {
+
+            //处理className
+            if (!Class.css_className)
+            {
+                (this.dom_template = this.dom_template.cloneNode(true)).className = initialize_class.call(this, Class);
+            }
+        };
+
 
 
 
@@ -1481,13 +1503,22 @@ flyingon.defineClass("Control", function () {
         //从dom初始化对象
         this.from_dom = function (dom) {
 
-            var target = this.dom,
-                children;
-
-            this.dom = dom;
+            var children;
 
             dom.style.position = "absolute";
             dom.style[box_sizing] = "border-box";
+
+            if (this.dom && this.dom.firstChild)
+            {
+                children = this.dom.children;
+
+                for (var i = 0, _ = children.length; i < _; i++)
+                {
+                    dom.appendChild(children[0]);
+                }
+            }
+
+            this.dom = dom;
 
             if (dom.className)
             {
@@ -1498,16 +1529,6 @@ flyingon.defineClass("Control", function () {
                 dom.className = this.__className0;
             }
 
-            if (target && target.firstChild)
-            {
-                children = target.children;
-
-                for (var i = 0, _ = children.length; i < _; i++)
-                {
-                    dom.appendChild(children[i]);
-                }
-            }
-
             return dom.flyingon = this;
         };
 
@@ -1516,22 +1537,6 @@ flyingon.defineClass("Control", function () {
 
     }).call(this, flyingon);
 
-
-
-
-
-    //类初始化方法
-    this.__Class_initialize__ = function (Class) {
-
-        //处理className
-        if (!Class.css_className)
-        {
-            var dom = (this.dom_template = this.dom_template.cloneNode(true)),
-                className = this.css_className = Class.css_className = Class.xtype.replace(/\./g, "-");
-
-            this.__className0 = dom.className = className = "flyingon-Control " + this.css_className + " ";
-        }
-    };
 
 
 

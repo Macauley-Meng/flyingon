@@ -6,7 +6,7 @@
 
 
     //页签基础服务
-    var tab_base = function (base) {
+    var tab_base = function (base, header_width, header_height) {
 
 
 
@@ -39,6 +39,18 @@
         };
 
 
+        //创建标题栏图标
+        this.__fn_create_icon = function (column3, className) {
+
+            var target = new flyingon.Icon().set_column3(column3);
+
+            target.addClass(className);
+            this.__header.appendChild(target);
+
+            return target;
+        };
+
+
 
 
         //标题栏
@@ -50,7 +62,7 @@
         this.defineProperty("header", "top", {
 
             attributes: "layout",
-            set_code: "this.__header.removeClass('" + class_prefix + "' + (oldValue || 'top'));this.__header.addClass('" + class_prefix + "' + value);"
+            set_code: "this.__header.toggleClass('" + class_prefix + "' + (oldValue || 'top'), '" + class_prefix + "' + value);"
         });
 
 
@@ -69,18 +81,6 @@
         });
 
 
-
-
-        //创建标题栏图标
-        this.__fn_create_icon = function (column3, className) {
-
-            var target = new flyingon.Icon().set_column3(column3);
-
-            target.addClass(className);
-            this.__header.appendChild(target);
-
-            return target;
-        };
 
 
 
@@ -148,6 +148,8 @@
                 height;
 
             style1.left = style1.top = "0";
+            style2.display = "none";
+
             style2 = this.dom.style;
 
             //获取收拢是否竖直方向收拢
@@ -157,9 +159,8 @@
 
                 if (type !== "left" && this.__header_last__ !== "left")
                 {
-                    header.removeClass(class_prefix + type)
-                      .addClass(class_prefix + "left")
-                      .measure(25, height, true, true);
+                    header.toggleClass(class_prefix + type, class_prefix + "left")
+                      .measure(header_width, height, true, true);
 
                     this.__header_last__ = "left";
                 }
@@ -174,9 +175,8 @@
 
                 if (type !== "top" && this.__header_last__ !== "top")
                 {
-                    header.removeClass(class_prefix + type)
-                        .addClass(class_prefix + "top")
-                        .measure(width, 25, true, true);
+                    header.toggleClass(class_prefix + type, class_prefix + "top")
+                        .measure(width, header_height, true, true);
 
                     this.__header_last__ = "top";
                 }
@@ -213,7 +213,7 @@
             switch (type)
             {
                 case "top":
-                    header.measure(width, 25, true, true);
+                    header.measure(width, header_height, true, true);
 
                     style1.left = style2.left = "0";
                     style1.width = style2.width = width + "px";
@@ -224,7 +224,7 @@
                     break;
 
                 case "left":
-                    header.measure(25, height, true, true);
+                    header.measure(header_width, height, true, true);
 
                     style1.top = style2.top = "0";
                     style1.height = style2.height = height + "px";
@@ -235,7 +235,7 @@
                     break;
 
                 case "right":
-                    header.measure(25, height, true, true);
+                    header.measure(header_width, height, true, true);
 
                     style1.top = style2.top = "0";
                     style1.height = style2.height = height + "px";
@@ -246,7 +246,7 @@
                     break;
 
                 case "bottom":
-                    header.measure(width, 25, true, true);
+                    header.measure(width, header_height, true, true);
 
                     style1.left = style2.left = "0";
                     style1.width = style2.width = width + "px";
@@ -255,6 +255,11 @@
                     style1.top = style2.height = height - y + "px";
                     style2.top = "0";
                     break;
+            }
+
+            if (style2.display)
+            {
+                style2.display = "";
             }
         };
 
@@ -290,6 +295,7 @@
 
 
 
+
     //页签面板控件
     flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
@@ -300,26 +306,45 @@
 
         Class.create = function () {
 
-            (this.__header_text = new flyingon.VerticalText())
-                .set_column3("center")
-                .addClass("flyingon-TabPanel-text");
-
-            (this.__header = new flyingon.Panel())
-                .set_layoutType("column3")
-                .addClass("flyingon-TabPanel-header", "flyingon-TabPanel-top")
-                .appendChild(this.__header_text).__parent = this;
-
-            (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
-
+            this.dom_header = this.dom.children[0];
             this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
+
+            this.__fn_initialize();
         };
 
 
 
 
 
+        //页签头类
+        var tab_header = flyingon.defineClass(flyingon.Control, function (base) {
+
+
+            flyingon.IChildren.call(this, base);
+
+            this.__layout = flyingon.layouts["column3"];
+
+        });
+
+
+        this.__fn_initialize = function () {
+
+            (this.__header_text = new flyingon.VerticalText())
+                .set_column3("center")
+                .addClass("flyingon-TabPanel-text");
+
+            (this.__header = new tab_header())
+                .addClass("flyingon-TabPanel-header", "flyingon-TabPanel-top")
+                .appendChild(this.__header_text).__parent = this;
+
+            this.dom_header.appendChild(this.__header.dom)
+        };
+
+
+
+
         //扩展页签基础服务
-        tab_base.call(this, base);
+        tab_base.call(this, base, 25, 25);
 
 
 
@@ -391,21 +416,62 @@
             //根据dom模板创建关联的dom元素
             (this.dom = this.dom_template.cloneNode(true)).flyingon = this;
 
-            (this.__header_body = new flyingon.Panel())
-                .set_layoutType("line")
-                .set_column3("center")
-                .addClass("flyingon-TabControl-header-panel");
-
-            (this.__header = new flyingon.Panel())
-                .set_layoutType("column3")
-                .addClass("flyingon-TabControl-header", "flyingon-TabControl-top")
-                .appendChild(this.__header_body).__parent = this;
-
-            (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
+            this.dom_header = this.dom.children[0];
 
             this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
+
+            this.__fn_initialize();
         };
 
+
+
+
+        //页签头类
+        var tab_header = flyingon.defineClass("TabHeader", flyingon.Control, function (base) {
+
+
+            flyingon.IChildren.call(this, base);
+
+            this.__layout = flyingon.layouts["column3"];
+
+
+            this.__fn_model = function (value, oldValue) {
+
+                this.__header.toggleClass("flyingon-TabHeader-" + oldValue, "flyingon-TabHeader-" + value);
+            };
+
+
+            this.render = function () {
+
+                base.render.call(this);
+            };
+
+        });
+
+
+
+        var tab_body = flyingon.defineClass(flyingon.Control, function (base) {
+
+
+            flyingon.IChildren.call(this, base);
+
+            this.defaultValue("column3", "center");
+
+
+
+
+        });
+
+
+
+        this.__fn_initialize = function () {
+
+            (this.__header = new tab_header())
+                .addClass("flyingon-TabControl-top")
+                .appendChild(this.__header_body = new tab_body()).__parent = this;
+
+            this.dom_header.appendChild(this.__header.dom);
+        };
 
 
 
@@ -413,7 +479,25 @@
 
 
         //扩展页签基础服务
-        tab_base.call(this, base);
+        tab_base.call(this, base, 30, 30);
+
+
+
+        //页签模式
+        //default   默认
+        //collapse  折叠
+        //vertical  竖直
+        //thumb     缩略图
+        //dot       圆点
+        this.defineProperty("model", "default", {
+
+            attributes: "layout",
+            set_code: "this.__header.__fn_model(value, oldValue || 'default');"
+        });
+
+
+        //是否支持滑动切换页签
+        this.defineProperty("slide", false);
 
 
 

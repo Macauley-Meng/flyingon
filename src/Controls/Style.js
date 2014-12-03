@@ -1617,58 +1617,64 @@
 
 
     //定义扩展控件样式
-    flyingon.defineStyle = function (styles, css_style) {
+    flyingon.defineStyle = function (styles) {
 
         //预处理样式集
         if (styles)
         {
-            var result = [],
-                style,
-                cssText,
-                css_style;
+            var css_list = [];
+
+            //预处理样式
+            for (var selector in styles)
+            {
+                parse_selector(styles, selector, css_list);
+            }
+
+            styles = css_list;
+            css_list = [];
 
             //解析样式(处理引入及合并)
             for (var selector in styles)
             {
-                style = styles[selector];
+                var css_style = selector.indexOf("css:") === 0,
+                    cssText = [],
+                    style;
 
-                if (css_style = selector.indexOf("css:") === 0) //css:开头表示定义标准css样式
+                if (css_style) //css:开头表示定义标准css样式
                 {
                     selector = selector.substring(4);
                 }
 
-                if (style = parse_style(Object.create(null), style, styles, cssText = [], css_style))
+                style = parse_style(null, styles[selector], styles, cssText, css_style);
+                cssText = cssText.join("");
+
+                //解析选择器
+                selector = flyingon.parse_selector(selector);
+
+                if (selector.forks) //如果存在分支则拆分分支为独立选择器
                 {
-                    cssText = cssText.join("");
+                    selector = split_selector(selector);
 
-                    //解析选择器
-                    selector = flyingon.parse_selector(selector);
-
-                    if (selector.forks) //如果存在分支则拆分分支为独立选择器
+                    for (var i = 0, _ = selector.length ; i < _; i++)
                     {
-                        selector = split_selector(selector);
-
-                        for (var i = 0, _ = selector.length ; i < _; i++)
-                        {
-                            result.push(handle_selector(selector[i], style, cssText, css_style));
-                        }
+                        css_list.push(handle_selector(selector[i], style, cssText, css_style));
                     }
-                    else
-                    {
-                        result.push(handle_selector(selector, style, cssText, css_style));
-                    }
+                }
+                else
+                {
+                    css_list.push(handle_selector(selector, style, cssText, css_style));
                 }
             }
 
             //存储样式表
-            flyingon.styleSheets.push(result);
+            flyingon.styleSheets.push(css_list);
 
             //处理样式
             cssText = [];
 
-            for (var i = 0, _ = result.length; i < _; i++)
+            for (var i = 0, _ = css_list.length; i < _; i++)
             {
-                handle_style(result[i], cssText);
+                handle_style(css_list[i], cssText);
             }
 
             //写入样式表
@@ -1677,106 +1683,121 @@
     };
 
 
-    //解析样式(处理引入及合并)
-    function parse_style(target, style, styles, cssText, css_style) {
+    //预处理样式
+    function parse_selector(styles, selector, exports) {
 
-        if (style)
+        var style = styles[selector],
+            result = {},
+            value;
+
+        for (var name in style)
         {
-            var values, value;
-
-            for (var name in style)
+            if ((value = style[name]) || value === 0)
             {
-                if (name && ((value = style[name]) || value === 0))
+                if (value.constructor === Object) //嵌套子样式
                 {
-                    if (name === "import")
-                    {
-                        if (value.constructor === Array) //引入
-                        {
-                            for (var i = 0, _ = value.length; i < _; i++)
-                            {
-                                parse_style(target, styles[value[i]], styles, cssText, css_style);
-                            }
-                        }
-                        else
-                        {
-                            parse_style(target, styles[value], styles, cssText, css_style);
-                        }
-                    }
-                    else if (name in style_split)
-                    {
-                        values = style_split[name](value);
+                    styles[name = selector + " " + name] = value;
+                    parse_selector(styles, name, exports);
+                }
+                else if (name in style_split)
+                {
+                    value = style_split[name](value);
 
-                        for (var key in values)
-                        {
-                            handle_value(target, key, values[key], cssText, css_style);
-                        }
-                    }
-                    else
+                    for (var key in value)
                     {
-                        handle_value(target, name, value, cssText, css_style);
+                        result[key] = value[key];
                     }
                 }
+                else
+                {
+                    result[name] = value;
+                }
             }
+        }
 
-            for (var name in target)
-            {
-                return target;
-            }
+        for (var name in result)
+        {
+            exports[selector] = result;
+            return;
         }
     };
 
 
-    //处理样式值
-    function handle_value(style, name, value, cssText, css_style) {
+    //解析样式(处理引入及合并)
+    function parse_style(target, style, styles, cssText, css_style) {
 
-        if (value || value === 0)
+        //未指定输入目标且有引入时则新建输入目标
+        target = target || (style.import ? {} : style);
+
+        for (var name in style)
         {
-            //类型转换
-            switch (style_data_types[name])
+            var value = style[name];
+
+            if (name !== "import")
             {
-                case "boolean": //布尔型
-                    value = !!value;
-                    break;
-
-                case "int":
-                    value = +value | 0;
-                    break;
-
-                case "number": //小数
-                    value = +value || 0;
-                    break;
-
-                default: //字符串
-                    value = "" + value;
-                    break;
-            }
-
-            style[name] = value;
-
-            if (css_style || !(name in style_no_names))
-            {
-                switch (name) //修改css值
+                //类型转换
+                switch (style_data_types[name])
                 {
-                    case "opacity":
-                        if (!(name in style_test))
-                        {
-                            if (flyingon.browser_MSIE)
-                            {
-                                cssText.push("filter:alpha(opacity=" + (value * 100) + ");");
-                            }
-                            else
-                            {
-                                cssText.push(style_prefix2 + "opacity:" + value + ";");
-                            }
+                    case "boolean": //布尔型
+                        value = !!value;
+                        break;
 
-                            return;
-                        }
+                    case "int":
+                        value = +value | 0;
+                        break;
+
+                    case "number": //小数
+                        value = +value || 0;
+                        break;
+
+                    default: //字符串
+                        value = "" + value;
                         break;
                 }
 
-                cssText.push((original_names[name] || name) + ":" + value + ";");
+                target[name] = value;
+
+                if (css_style || !(name in style_no_names))
+                {
+                    switch (name) //修改css值
+                    {
+                        case "opacity":
+                            if (!(name in style_test))
+                            {
+                                if (flyingon.browser_MSIE)
+                                {
+                                    cssText.push("filter:alpha(opacity=" + (value * 100) + ");");
+                                }
+                                else
+                                {
+                                    cssText.push(style_prefix2 + "opacity:" + value + ";");
+                                }
+
+                                return;
+                            }
+                            break;
+                    }
+
+                    cssText.push((original_names[name] || name) + ":" + value + ";");
+                }
+            }
+            else
+            {
+                if (value.constructor === Array) //引入
+                {
+                    for (var i = 0, _ = value.length; i < _; i++)
+                    {
+                        parse_style(target, styles[value[i]], styles, cssText, css_style);
+                    }
+                }
+                else
+                {
+                    parse_style(target, styles[value], styles, cssText, css_style);
+                }
             }
         }
+
+        return target;
     };
 
 

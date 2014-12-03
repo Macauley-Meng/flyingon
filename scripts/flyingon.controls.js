@@ -912,7 +912,7 @@ flyingon.IEditor = function (base) {
 
 
 
-    //名称
+    //名称(IE567无法直接修改动态创建input元素的name值)
     this.defineProperty("name", "", {
 
         set_code: "this.dom_input.name = value;"

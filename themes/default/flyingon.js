@@ -5,7 +5,8 @@
 
 注1: 可在选择器前加"css:"定义标准css样式, 不能在控件中查询css标准样式值, 且需注意选择器的兼容问题
 注2: 扩展控件样式以"@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式为: @flyingon-Button
-注3: 扩展控件样式支持选择器如下(跨浏览器兼容: 支持IE6+及其它常见浏览器)
+注3: 支持定义嵌套子样式
+注4: 扩展控件样式支持选择器如下(跨浏览器兼容: 支持IE6+及其它常见浏览器)
 
 
 本系统支持的基础选择器如下(注:本系统不支持html标签选择器):
@@ -86,7 +87,7 @@ A~B                    匹配任何在A控件之后的同级B控件
     backgroundColor: "red"
 }
 
-//定义样式示例: 定义名为.class2样式,并引入其它样式
+//定义样式示例: 定义名为.class2样式,并引入其它样式(不能引入嵌套子样式)
 ".class2": {
 
     import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
@@ -131,7 +132,7 @@ flyingon.defineStyle({
 
 
     //标签面板标题栏样式
-    ".flyingon-TabPanel": {
+    "@flyingon-TabPanel": {
 
         backgroundColor: "white"
     },
@@ -146,37 +147,31 @@ flyingon.defineStyle({
     //标签面板左右标题栏样式
     ".flyingon-TabPanel-left,.flyingon-TabPanel-right": {
 
-        vertical: true
+        vertical: true,
+
+        //标签面板左右标题栏文字样式
+        ".flyingon-TabPanel-text": {
+
+            textAlign: "center",
+            verticalAlign: "top"
+        }
     },
 
-    ////标签面板上下标题栏样式
-    //".flyingon-TabPanel-top,.flyingon-TabPanel-bottom": {
+    //标签面板上下标题栏样式
+    ".flyingon-TabPanel-top,.flyingon-TabPanel-bottom": {
 
-    //},
+        //标签面板左右标题栏文字样式
+        ".flyingon-TabPanel-text": {
+
+            textAlign: "left",
+            verticalAlign: "middle"
+        }
+    },
 
     //标签面板标题栏图标样式
     ".flyingon-TabPanel-icon": {
 
         color: "blue"
-    },
-
-    ////标签面板标题栏文字样式
-    //".flyingon-TabPanel-text": {
-
-    //},
-
-    //标签面板左右标题栏文字样式
-    ".flyingon-TabPanel-top,.flyingon-TabPanel-bottom .flyingon-TabPanel-text": {
-
-        textAlign: "left",
-        verticalAlign: "middle"
-    },
-
-    //标签面板左右标题栏文字样式
-    ".flyingon-TabPanel-left,.flyingon-TabPanel-right .flyingon-TabPanel-text": {
-
-        textAlign: "center",
-        verticalAlign: "top"
     },
 
     ////标签面板标题栏收拢图标样式
@@ -195,69 +190,69 @@ flyingon.defineStyle({
         border: "1px solid blue"
     },
 
-    //页签控件下的标签面板样式
-    ".flyingon-TabControl .flyingon-TabPanel": {
 
-        borderWidth: "0"
-    },
-
-
-    //页签控件页头样式
-    ".flyingon-TabControl": {
+    //页签控件样式
+    "@flyingon-TabControl": {
 
         border: "1px solid blue",
-        backgroundColor: "white"
+        backgroundColor: "white",
+
+        //页签控件下的标签面板样式
+        ".flyingon-TabPanel": {
+
+            borderWidth: "0"
+        }
     },
 
-    //页签控件页头样式
-    ".flyingon-TabControl-header": {
+    //页签控件页签头样式
+    ".flyingon-TabHeader": {
 
         backgroundColor: "silver",
         cursor: "default"
     },
 
-    //页签控件页签头面板样式
-    ".flyingon-TabControl-header-panel": {
+    //页签控件页签样式
+    ".flyingon-Tab": {
 
-        backgroundColor: "silver"
+        backgroundColor: "silver",
+        cursor: "default"
     },
 
-    //页签控件左右页头样式
+    //页签控件页签样式
+    ".flyingon-Tab-selected": {
+
+        backgroundColor: "silver",
+        cursor: "default"
+    },
+
+    //页签控件左右页签样式
     ".flyingon-TabControl-left,.flyingon-TabControl-right": {
 
-        width: "30px",
-        vertical: true
+        //页签控件左右页签折叠模式样式
+        ".flyingon-TabHeader-collapse": {
+
+            width: "25px",
+            vertical: true
+        }
     },
 
-    //页签控件上下页头样式
-    ".flyingon-TabControl-top,.flyingon-TabControl-bottom": {
+    ////页签控件上下页签样式
+    //".flyingon-TabControl-top,.flyingon-TabControl-bottom": {
 
-        height: "30px",
-    },
+    //},
 
-    //页签控件页头图标样式
-    ".flyingon-TabControl-icon": {
-
-        color: "blue"
-    },
-
-    ////页签控件页头上一页图标样式
+    ////页签控件页签上一页图标样式
     //".flyingon-TabControl-previous": {
 
     //},
 
-    ////页签控件页头下一页图标样式
+    ////页签控件页签下一页图标样式
     //".flyingon-TabControl-next": {
 
     //},
 
-    ////页签控件页头收拢图标样式
+    ////页签控件页签收拢图标样式
     //".flyingon-TabControl-collapse": {
-
-    //},
-
-    ////页签控件页头关闭图标样式
-    //".flyingon-TabControl-close": {
 
     //},
 

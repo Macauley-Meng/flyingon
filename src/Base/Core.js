@@ -424,12 +424,13 @@ flyingon.Exception = function (message, parameters) {
 
 
     //引入样式
-    flyingon.link = function (url) {
+    flyingon.link = function (href, rel, type) {
 
         var dom = document.createElement("link");
 
-        dom.rel = "stylesheet";
-        dom.href = url;
+        dom.href = href;
+        dom.rel = rel || "stylesheet";
+        dom.type = type || "text/css";
 
         head.appendChild(dom);
 
@@ -870,7 +871,17 @@ flyingon.Exception = function (message, parameters) {
         prototype = Object.create(base);
 
         //注册类型
-        prototype.xtype = this.namespace_name + "." + name;
+        if (!anonymous)
+        {
+            //类名
+            Class.typeName = name;
+
+            //类全名
+            Class.xtype = prototype.xtype = this.namespace_name + "." + name;
+
+            //输出及注册类(匿名类不注册)
+            this[name] = class_list[prototype.xtype] = Class;
+        }
 
         //默认值
         prototype.__defaults = Object.create(base.__defaults || null);
@@ -937,6 +948,12 @@ flyingon.Exception = function (message, parameters) {
                 }
             }
 
+            //重输出及注册类(匿名类不注册)
+            if (prototype.xtype)
+            {
+                this[fn.typeName = name] = class_list[fn.xtype = prototype.xtype] = fn; //重置typeName及xtype防止用户修改
+            }
+
             Class = fn;
             fn = null;
         }
@@ -954,25 +971,12 @@ flyingon.Exception = function (message, parameters) {
         //名字空间
         Class.namesapce = this;
 
-        //类名
-        Class.typeName = name;
-
-        //类全名
-        Class.xtype = prototype.xtype;
-
 
         //绑定类型
         prototype.Class = prototype.constructor = Class;
 
         //定义类型检测方法
         prototype.is = is;
-
-
-        //输出及注册类(匿名类不注册)
-        if (!anonymous)
-        {
-            this[name] = class_list[prototype.xtype] = Class;
-        }
 
 
         //类初始化完毕方法
