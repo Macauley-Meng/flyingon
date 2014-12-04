@@ -5,8 +5,8 @@ flyingon.defineClass("Query", function () {
 
 
     //缓存选择器
-    var selector_cache = {},
-        document = window.document;
+    var document = window.document,
+        selector_cache = {};
 
 
 
@@ -69,10 +69,6 @@ flyingon.defineClass("Query", function () {
         }
     };
 
-
-
-    //开放接口
-    flyingon.query = this;
 
 
 

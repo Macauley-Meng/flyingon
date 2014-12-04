@@ -273,7 +273,7 @@ flyingon.IComponent = function () {
             //扩展至选择器
             if (attributes.query)
             {
-                flyingon.query[name] = new Function("value", "return this.value(" + name + ", value);");
+                flyingon.Query.prototype[name] = new Function("value", "return this.value(" + name + ", value);");
             }
         }
 

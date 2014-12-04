@@ -132,7 +132,9 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                 {
                     if ((height = dom.clientHeight) <= 0)
                     {
-                        if ((height = (window.innerHeight || view.clientHeight) - dom.offsetTop - 8) <= 0)
+                        height = parseInt((document.body.currentStyle || window.getComputedStyle(document.body, null)).marginBottom) || 0;
+
+                        if ((height = (window.innerHeight || view.clientHeight) - dom.offsetTop - height) <= 0)
                         {
                             height = 600;
                         }

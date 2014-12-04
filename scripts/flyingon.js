@@ -3797,7 +3797,7 @@ flyingon.IComponent = function () {
             //扩展至选择器
             if (attributes.query)
             {
-                flyingon.query[name] = new Function("value", "return this.value(" + name + ", value);");
+                flyingon.Query.prototype[name] = new Function("value", "return this.value(" + name + ", value);");
             }
         }
 
@@ -4683,7 +4683,7 @@ flyingon.defineClass("Component", function () {
             flyingon.defineProperty(_this, key, getter, setter);
 
             //扩展至选择器
-            flyingon.query[key] = new Function("value", "return this.value('" + key + "', value);");
+            flyingon.Query.prototype[key] = new Function("value", "return this.value('" + key + "', value);");
         };
 
 
@@ -6103,7 +6103,7 @@ flyingon.defineClass("Component", function () {
     function parse_style(target, style, styles, cssText, css_style) {
 
         //未指定输入目标且有引入时则新建输入目标
-        target = target || (style.import ? {} : style);
+        target = target || (style["import"] ? {} : style); //import关键字 IE678无法编译关键字属性名
 
         for (var name in style)
         {
@@ -6452,8 +6452,8 @@ flyingon.defineClass("Query", function () {
 
 
     //缓存选择器
-    var selector_cache = {},
-        document = window.document;
+    var document = window.document,
+        selector_cache = {};
 
 
 
@@ -6516,10 +6516,6 @@ flyingon.defineClass("Query", function () {
         }
     };
 
-
-
-    //开放接口
-    flyingon.query = this;
 
 
 
@@ -14342,7 +14338,9 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                 {
                     if ((height = dom.clientHeight) <= 0)
                     {
-                        if ((height = (window.innerHeight || view.clientHeight) - dom.offsetTop - 8) <= 0)
+                        height = parseInt((document.body.currentStyle || window.getComputedStyle(document.body, null)).marginBottom) || 0;
+
+                        if ((height = (window.innerHeight || view.clientHeight) - dom.offsetTop - height) <= 0)
                         {
                             height = 600;
                         }

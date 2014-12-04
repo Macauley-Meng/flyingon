@@ -307,7 +307,7 @@
             flyingon.defineProperty(_this, key, getter, setter);
 
             //扩展至选择器
-            flyingon.query[key] = new Function("value", "return this.value('" + key + "', value);");
+            flyingon.Query.prototype[key] = new Function("value", "return this.value('" + key + "', value);");
         };
 
 
@@ -1727,7 +1727,7 @@
     function parse_style(target, style, styles, cssText, css_style) {
 
         //未指定输入目标且有引入时则新建输入目标
-        target = target || (style.import ? {} : style);
+        target = target || (style["import"] ? {} : style); //import关键字 IE678无法编译关键字属性名
 
         for (var name in style)
         {
