@@ -15,7 +15,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         //根据dom模板创建关联的dom元素
         if (dom)
         {
-            this.from_dom(dom);
+            this.__fn_from_dom(dom);
         }
         else
         {

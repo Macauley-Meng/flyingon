@@ -463,52 +463,5 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-
-
-    //查询接口
-    flyingon.IQuery = function (Query) {
-
-
-        //查找控件 selector: css选择器样式字符串
-        this.find = function (selector) {
-
-            return new Query(selector, this);
-        };
-
-        //查找指定id的子控件集合
-        this.findById = function (id, cascade) {
-
-            return new Query(new element_node(cascade ? " " : ">", "#", id), this);
-        };
-
-        //查找指定名称的子控件集合
-        this.findByName = function (name, cascade) {
-
-            var node = new element_node(cascade ? " " : ">", "*"),
-                property = new element_property("name");
-
-            property.operator = "=";
-            property.value = name;
-
-            node.push(property);
-
-            return new Query(node, this);
-        };
-
-        //查找指定类型的子控件集合
-        this.findByTypeName = function (xtype, cascade) {
-
-            return new Query(new element_node(cascade ? " " : ">", "", xtype), this);
-        };
-
-        //查找指定class的控件子控件集合
-        this.findByClassName = function (className, cascade) {
-
-            return new Query(new element_node(cascade ? " " : ">", ".", className), this);
-        };
-
-    };
-
-
-
+    
 })(flyingon);

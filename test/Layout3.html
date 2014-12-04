@@ -73,27 +73,53 @@
 
     <div layout-type="dock">
 
-        <div layout-dock="top" style="height:50px;border:1px solid blue;margin-bottom:2px;background-color:silver;">top</div>
+        <div class="class" layout-dock="top" style="height:50px;border:1px solid blue;margin-bottom:2px;background-color:silver;">top</div>
         <div layout-dock="bottom" style="height: 50px; border: 1px solid blue; margin-top: 2px; background-color: silver;">bottom</div>
-        <div layout-dock="left" layout-control="TabPanel" layout-type="line" layout-vertical="1" tab-icon="dialog" tab-text="功能树" tab-show-collapse="1" tab-show-close="1" tab-collapse="1" style="width:200px;border:1px solid blue;padding:8px;">
+        <div id="id" layout-dock="left" layout-control="TabPanel" layout-type="line" layout-vertical="1" tab-icon="dialog" tab-text="功能树" tab-show-collapse="1" style="width:200px;border:1px solid blue;padding:8px;">
             <div>left 1</div>
             <div>left 2</div>
             <div>left 3</div>
             <div>left 4</div>
         </div>
         <div layout-control="Splitter"></div>
-
         <div layout-dock="right" layout-control="TabPanel" layout-type="line" layout-vertical="1" tab-icon="dialog" tab-text="操作指引" tab-show-collapse="1" style="width:200px;border:1px solid blue;">
             <div>right 1</div>
             <div>right 2</div>
             <div>right 3</div>
             <div>right 4</div>
         </div>
-
         <div layout-control="Splitter" layout-dock="right"></div>
         <div layout-dock="fill" style="border: 1px solid blue;">fill</div>
 
     </div>
+
+
+    <script type="text/javascript">
+
+
+        //选择器示例
+        flyingon.ready(function () {
+
+
+            //选择指定id的控件
+            var items = flyingon(".class");
+
+            //设置控件背景变成黄色
+            items.backgroundColor("yellow");
+
+            //获取控件背景
+            var color = items.backgroundColor();
+
+            //获取左面板并设置为收拢状态
+            flyingon.query_id("id").set_collapse(true);
+
+            ////设置所有标签面板为收拢状态
+            //flyingon.query_xtype("flyingon.TabPanel").call("set_collapse", true);
+
+        });
+
+
+    </script>
 
 
 </body>

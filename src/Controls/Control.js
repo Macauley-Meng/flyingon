@@ -367,9 +367,9 @@ flyingon.defineClass("Control", function () {
             //class
             if (cache = target.__class_list)
             {
-                for (var name in cache)
+                for (var i = 0, _ = cache.length; i < _; i++)
                 {
-                    keys.push(name);
+                    keys.push(cache[i]);
                 }
             }
 
@@ -396,25 +396,21 @@ flyingon.defineClass("Control", function () {
                 if (states.checked)
                 {
                     className += " " + keys.join("--checked ");
-                    className += "flyingon--checked "
                 }
 
                 if (states.focus)
                 {
                     className += " " + keys.join("--focus ");
-                    className += "flyingon--focus "
                 }
 
                 if (states.hover)
                 {
                     className += " " + keys.join("--hover ");
-                    className += "flyingon--hover "
                 }
 
                 if (states.active)
                 {
                     className += " " + keys.join("--active ");
-                    className += "flyingon--active "
                 }
             }
 
@@ -1267,8 +1263,32 @@ flyingon.defineClass("Control", function () {
 
 
 
-        //扩展查寻支持
-        flyingon.extend(this, flyingon.IQuery, flyingon.Query);
+        //按css选择器规范查找控件或子控件
+        this.query = function (selector) {
+
+            return
+        };
+
+
+        //查找指定id的控件或子控件
+        this.query_id = function (id) {
+
+            return flyingon.query_id(id, this);
+        };
+
+
+        //查找指定class的控件或子控件
+        this.query_class = function (className) {
+
+            return flyingon.query_class(className, this);
+        };
+
+
+        //查找指定类型的控件或子控件
+        this.query_xtype = function (xtype) {
+
+            return flyingon.query_xtype(xtype, this);
+        };
 
 
 
@@ -1501,7 +1521,7 @@ flyingon.defineClass("Control", function () {
 
 
         //从dom初始化对象
-        this.from_dom = function (dom) {
+        this.__fn_from_dom = function (dom) {
 
             var children;
 
@@ -1519,6 +1539,11 @@ flyingon.defineClass("Control", function () {
             }
 
             this.dom = dom;
+
+            if (dom.id)
+            {
+                this.__fields.id = dom.id;
+            }
 
             if (dom.className)
             {

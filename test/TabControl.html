@@ -24,8 +24,9 @@
 
 
 
-        var panel = new flyingon.TabControl().sets({
+        var tab = new flyingon.TabControl().sets({
 
+            layoutType: "flow",
             width: "600px",
             height: "600px",
             border: "1px solid red",
@@ -35,17 +36,17 @@
 
         for (var j = 0; j < 4; j++)
         {
-            var ctrl = new flyingon.TabPanel().sets({
+            var page = new flyingon.TabPage().sets({
 
                 icon: "dialog",
                 text: "text " + j
             });
 
-            panel.appendChild(ctrl);
+            tab.appendPage(page);
         }
 
 
-        w.appendChild(panel);
+        w.appendChild(tab);
 
         w.show();
 

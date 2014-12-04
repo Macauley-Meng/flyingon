@@ -5,33 +5,66 @@ flyingon.defineClass("Query", function () {
 
 
     //缓存选择器
-    var selector_cache = {};
+    var selector_cache = {},
+        document = window.document;
 
 
 
-    //selector: css样式选择表达式 
-    //start: 开始搜索节点
-    Class.create = function (selector, start) {
+    //selector:     css样式选择表达式 
+    //start:        开始搜索控件(省略则表示搜索所有控件)
+    //repeat_id:    是否支持重复id
+    Class.create = function (selector, start, repeat_id) {
 
         if (selector)
         {
-            switch (selector.constructor)
+            var selector = selector_cache[selector] || (selector_cache[selector] = flyingon.parse_selector(selector)),
+                length = selector.length,
+                items,
+                exports,
+                node;
+
+            //快速搜索Id及class
+            if (length === 1)
             {
-                case String:
-                    selector = selector_cache[selector] || (selector_cache[selector] = flyingon.parse_selector(selector));
-                    this.__fn_query(selector, start);
-                    break;
+                switch ((node = selector[0]).token)
+                {
+                    case "#": //快速搜索Id
+                        if (repeat_id !== true) //如果指定了重复id则使用通用选择器搜索
+                        {
+                            if (exports = flyingon.query_id(node.name, start))
+                            {
+                                this.push(exports);
+                            }
+                            return;
+                        }
+                        break;
 
-                case Array:
-                    if (selector.length > 0)
-                    {
-                        this.push.apply(this, selector);
-                    }
-                    break;
+                    case ".": //快速搜索class
+                        flyingon.query_class(node.name, start, this);
+                        return;
+                }
+            }
 
-                default:
-                    this.push(selector);
-                    return;
+            //使用通用选择器搜索
+            items = start ? [start] : flyingon.__all_windows;
+
+            for (var i = 0; i < length; i++)
+            {
+                node = selector[i];
+
+                this.__query_types[node.type || " "](node, items, exports = []); //批量传入数组减少函数调用以提升性能
+
+                if (exports.length == 0)
+                {
+                    return exports;
+                }
+
+                items = exports;
+            }
+
+            if (exports.length > 0)
+            {
+                this.push.apply(this, exports);
             }
         }
     };
@@ -40,6 +73,114 @@ flyingon.defineClass("Query", function () {
 
     //开放接口
     flyingon.query = this;
+
+
+
+    //查找指定id的控件
+    flyingon.query_id = function (id, start) {
+
+        var target = document.getElementById(id);
+
+        if (target && (target = target.flyingon))
+        {
+            if (start)
+            {
+                var cache = target;
+
+                do
+                {
+                    if (cache === start)
+                    {
+                        return target;
+                    }
+
+                } while (cache = cache.__parent);
+            }
+            else
+            {
+                return target;
+            }
+        }
+    };
+
+
+    //查找指定class的控件
+    var query_class = flyingon.query_class = document.getElementsByClassName ? function (className, start, exports) {
+
+        var items = (start ? start.dom : document).getElementsByClassName(className),
+            item;
+
+        exports = exports || (exports = new flyingon.Query());
+
+        for (var i = 0, _ = items.length; i < _; i++)
+        {
+            if (item = items[i].flyingon)
+            {
+                exports.push(item);
+            }
+        }
+
+        return exports;
+
+    } : function (className, start, exports) {
+
+        exports = exports || (exports = new flyingon.Query());
+
+        if (start)
+        {
+            if (start.__class_list && start.__class_list[className])
+            {
+                exports.push(start);
+            }
+
+            start = start.__children;
+        }
+        else
+        {
+            start = flyingon.__all_windows;
+        }
+
+        if (start)
+        {
+            for (var i = 0, _ = start.length; i < _; i++)
+            {
+                query_class(className, start[i], exports);
+            }
+        }
+
+        return exports;
+    };
+
+
+    //查找指定类型的控件
+    var query_xtype = flyingon.query_xtype = function (xtype, start, exports) {
+
+        exports = exports || (exports = new flyingon.Query());
+
+        if (start)
+        {
+            if (start.xtype === xtype)
+            {
+                exports.push(start);
+            }
+
+            start = start.__children;
+        }
+        else
+        {
+            start = flyingon.__all_windows;
+        }
+
+        if (start)
+        {
+            for (var i = 0, _ = start.length; i < _; i++)
+            {
+                query_xtype(xtype, start[i], exports);
+            }
+        }
+
+        return exports;
+    };
 
 
 
@@ -443,38 +584,6 @@ flyingon.defineClass("Query", function () {
 
 
 
-    //从start开始查找所有符合条件的元素
-    this.__fn_query = function (selector, start) {
-
-        var items = [start],
-            exports,
-            node;
-
-        for (var i = 0, _ = selector.length; i < _; i++)
-        {
-            node = selector[i];
-
-            this.__query_types[node.type || " "](node, items, exports = []); //批量传入数组减少函数调用以提升性能
-
-            if (exports.length == 0)
-            {
-                return exports;
-            }
-
-            items = exports;
-        }
-
-        if (exports.length > 0)
-        {
-            this.push.apply(this, exports);
-        }
-    };
-
-
-
-
-
-
 
     //子项数
     this.length = 0;
@@ -485,22 +594,17 @@ flyingon.defineClass("Query", function () {
     //移除或替换元素
     this.splice = Array.prototype.splice;
 
+    //复制元素
+    this.slice = Array.prototype.slice;
 
 
 
-
-    //合并
-    this.merge = function (selector, context) {
-
-        this.push.call(this, selector, context);
-        return this;
-    };
 
 
     //保存状态
     this.save = function () {
 
-        var query = new this.Class();
+        var query = new flyingon.Query();
 
         query.push.apply(query, this);
         query.__previous = this;
@@ -610,27 +714,39 @@ flyingon.defineClass("Query", function () {
     //获取指定属性值(只返回第一个有效的元素值)或给指定属性赋值
     this.value = function (name, value) {
 
-        var item;
+        var item, key;
 
         if (value === undefined)
         {
+            key = "get_" + name;
+
             for (var i = 0, _ = this.length; i < _; i++)
             {
-                if ((item = this[i]) && name in item)
+                if (item = this[i])
                 {
-                    return item[name];
+                    if (item[key])
+                    {
+                        return item[key]();
+                    }
+
+                    if (name in item)
+                    {
+                        return item[name];
+                    }
                 }
             }
         }
         else
         {
+            key = "set_" + name;
+
             for (var i = 0, _ = this.length; i < _; i++)
             {
                 if (item = this[i])
                 {
-                    if (item.set)
+                    if (item[key])
                     {
-                        item.set(name, value)
+                        item[key](value)
                     }
                     else
                     {
@@ -672,10 +788,13 @@ flyingon.defineClass("Query", function () {
     };
 
 
-    //以apply的方式循环调用指定名称的方法
-    this.apply = function (name, parameters) {
 
-        var item, fn;
+    //循环调用指定名称的方法
+    this.call = function (name) {
+
+        var parameters = arguments.length > 1 ? this.slice.call(arguments, 1) : null,
+            item,
+            fn;
 
         for (var i = 0, _ = this.length; i < _; i++)
         {

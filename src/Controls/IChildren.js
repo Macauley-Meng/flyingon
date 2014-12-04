@@ -130,11 +130,10 @@ flyingon.IChildren = function (base) {
 
                     for (var i = 0, _ = items.length; i < _; i++)
                     {
-                        //cache.appendChild(items[i].dom);
-                        this.dom_children.appendChild(items[i].dom);
+                        cache.appendChild(items[i].dom);
                     }
 
-                    //this.dom_children.appendChild(cache);
+                    this.dom_children.appendChild(cache);
                     this.__dom_dirty = false;
                 }
 

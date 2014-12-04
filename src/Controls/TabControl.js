@@ -5,7 +5,60 @@
 
 
 
-    //页签基础服务
+    //页签头基础服务
+    var header_base = function (base, class_prefix) {
+
+
+        //calss前缀
+        class_prefix = class_prefix || this.xtype.replace(/\./g, "-") + "-";
+
+
+        Class.create_mode = "merge";
+
+        flyingon.IChildren.call(this, base);
+
+
+        this.__layout = flyingon.layouts["column3"];
+
+
+
+        //获取创建图标代码
+        this.__fn_show_icon = function (visible, name, icon, column3) {
+
+            var key = "__" + name,
+                target = this[key];
+
+            if (visible)
+            {
+                (target || (this[key] = this.__fn_create_icon(name, column3))).set_icon(icon);
+            }
+            else if (this[key])
+            {
+                this[key].set_visibility("collapse");
+            }
+        };
+
+
+        //创建标题栏图标
+        this.__fn_create_icon = function (name, column3) {
+
+            var target = new flyingon.Icon().set_column3(column3);
+
+            target.name = name;
+            target.addClass(class_prefix + "icon" + (name !== "icon" ? "-" + name : ""));
+
+            this.appendChild(target);
+
+            return target;
+        };
+
+
+    };
+
+
+
+
+    //页签控件基础服务
     var tab_base = function (base, header_width, header_height) {
 
 
@@ -20,39 +73,6 @@
 
 
 
-        //获取创建图标代码
-        this.__fn_icon_code = function (name, column3, icon) {
-
-            var key = "this.__header_" + name,
-                code = [];
-
-            code.push("if (value)\n");
-            code.push("{\n\t");
-            code.push("(" + key + " || (" + key + " = this.__fn_create_icon('" + column3 + "', '" + class_prefix + name + "'))).set_icon(" + icon + ");\n");
-            code.push("}\n");
-            code.push("else if (cache = " + key + ")\n");
-            code.push("{\n\t");
-            code.push("cache.set_visibility('collapse');\n");
-            code.push("}");
-
-            return code.join("");
-        };
-
-
-        //创建标题栏图标
-        this.__fn_create_icon = function (column3, className) {
-
-            var target = new flyingon.Icon().set_column3(column3);
-
-            target.addClass(className);
-            this.__header.appendChild(target);
-
-            return target;
-        };
-
-
-
-
         //标题栏
         //top       顶部标题栏
         //left      左侧标题栏
@@ -62,14 +82,21 @@
         this.defineProperty("header", "top", {
 
             attributes: "layout",
-            set_code: "this.__header.toggleClass('" + class_prefix + "' + (oldValue || 'top'), '" + class_prefix + "' + value);"
+            set_code: "this.__fn_change_header(value);"
+        });
+
+
+        //是否显示关闭图标
+        this.defineProperty("showClose", false, {
+
+            set_code: "this.__header.__fn_show_icon(value, 'close', 'close', 'after')"
         });
 
 
         //是否显示收拢图标
         this.defineProperty("showCollapse", false, {
 
-            set_code: this.__fn_icon_code("collapse", "after", "'collapse'")
+            set_code: "this.__header.__fn_show_icon(value, 'collapse', 'collapse', 'after')"
         });
 
 
@@ -82,16 +109,44 @@
 
 
 
+        this.__event_bubble_click = function (event) {
+
+            switch (event.target.name)
+            {
+                case "collapse":
+                    this.set_collapse(!this.get_collapse());
+                    break;
+
+                case "close":
+                    this.remove();
+                    break;
+            }
+        };
+
+
+
+
         //测量控件
-        this.__fn_measure = function (box, no_header) {
+        this.before_measure = function (box) {
 
             var header = this.__header,
                 style = this.dom_header.style,
-                type = this.get_header(),
-                collapse;
+                type;
 
-            //如果由父页签控件处理或不显示标题并且非收拢状态则完全显示内容
-            if (no_header || (!(collapse = this.get_collapse()) && type === "none"))
+            if (this.get_collapse())
+            {
+                if (style.display)
+                {
+                    style.display = "";
+                }
+
+                header.__update_dirty = 1;
+                header.__arrange_dirty = true;
+
+                this.__fn_measure_collapse(box);
+                header.render();
+            }
+            else if ((type = this.get_header()) === "none")
             {
                 style.display = "none";
 
@@ -110,22 +165,14 @@
                 header.__update_dirty = 1;
                 header.__arrange_dirty = true;
 
-                if (collapse && parent) //收拢状态
-                {
-                    this.__fn_measure_collapse(box, type);
-                }
-                else //单独显示
-                {
-                    this.__fn_measure_header(box, type);
-                }
-
+                this.__fn_measure_header(box, type);
                 header.render();
             }
         };
 
 
         //收拢状态测量
-        this.__fn_measure_collapse = function (box, type) {
+        this.__fn_measure_collapse = function (box) {
 
             var header = this.__header,
                 style1 = this.dom_header.style,
@@ -162,9 +209,9 @@
                 style2.height = (this.offsetHeight = header.offsetHeight + box.border_height) + "px";
             }
 
-            if (this.__header_collapse)
+            if (header.__collapse)
             {
-                this.__header_collapse.set_icon(vertical ? "expand" : "expand1");
+                header.__collapse.set_icon(vertical ? "expand" : "expand1");
             }
 
             //收拢状态不处理自动大小
@@ -237,9 +284,9 @@
                 style2.display = "";
             }
 
-            if (this.__header_collapse)
+            if (header.__collapse)
             {
-                this.__header_collapse.set_icon(type === "top" || top === "bottom" ? "collapse" : "collapse1");
+                header.__collapse.set_icon(type === "top" || top === "bottom" ? "collapse" : "collapse1");
             }
         };
 
@@ -254,17 +301,17 @@
                 {
                     header.removeClass(class_prefix + oldValue);
 
-                    if (this.__model_oldValue)
+                    if (this.__header_type_old)
                     {
-                        header.removeClass(this.__model_oldValue);
+                        header.removeClass(this.__header_type_old);
                     }
                 }
 
                 header.addClass(class_prefix + value);
 
-                if (this.__model_value)
+                if (this.__header_type)
                 {
-                    header.addClass(this.__model_oldValue = class_prefix + value + "-" + this.__model_value);
+                    header.addClass(this.__header_type_old = class_prefix + value + "-" + this.__header_type);
                 }
 
                 this.__header_last__ = value;
@@ -272,30 +319,6 @@
 
             return header;
         };
-
-
-        this.__event_bubble_click = function (event) {
-
-            var target = event.target,
-                collapse = this.__header_collapse;
-
-            if (target === this.__header_close)
-            {
-                this.remove(true);
-            }
-            else
-            {
-                if (target === collapse)
-                {
-                    this.set_collapse(!this.get_collapse());
-                }
-                else if (!collapse && this.get_collapse())
-                {
-                    this.set_collapse(false);
-                }
-            }
-        };
-
 
 
     };
@@ -323,16 +346,14 @@
 
 
 
-
         //页签头类
         var tab_header = flyingon.defineClass(flyingon.Control, function (base) {
 
 
-            flyingon.IChildren.call(this, base);
-
-            this.__layout = flyingon.layouts["column3"];
+            header_base.call(this, base, "flyingon-TabPanel-");
 
         });
+
 
 
         this.__fn_initialize = function () {
@@ -357,10 +378,11 @@
 
 
 
+
         //窗口图标
         this.defineProperty("icon", "", {
 
-            set_code: this.__fn_icon_code("icon", "before", "value")
+            set_code: "this.__header.__fn_show_icon(value, 'icon', value, 'before')"
         });
 
 
@@ -371,33 +393,69 @@
         });
 
 
+
+    });
+
+
+
+
+
+    //页签页控件
+    flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
+
+
+
+        Class.create_mode = "merge";
+
+        Class.create = function () {
+
+            this.__fn_initialize();
+        };
+
+
+
+        //页签头类
+        var tab_header = flyingon.defineClass(flyingon.Control, function (base) {
+
+
+            header_base.call(this, base, "flyingon-TabPage-");
+
+        });
+
+
+        this.__fn_initialize = function () {
+
+            this.__header = new tab_header();
+
+            (this.__header.__text = new flyingon.VerticalText())
+                .set_column3("center")
+                .addClass("flyingon-TabPage-text");
+
+            this.__header.addClass("flyingon-TabPage-header")
+                .appendChild(this.__header.__text).__parent = this;
+        };
+
+
+
+        //窗口图标
+        this.defineProperty("icon", "", {
+
+            set_code: "this.__header.__fn_show_icon(value, 'icon', value, 'before')"
+        });
+
+
+        //窗口标题
+        this.defineProperty("text", "", {
+
+            set_code: "this.__header.__text.set_text(value);"
+        });
+
+
         //是否显示关闭图标
         this.defineProperty("showClose", false, {
 
-            set_code: this.__fn_icon_code("close", "after", "'close'")
+            set_code: "this.__header.__fn_show_icon(value, 'close', 'close', 'after')"
         });
-
-
-        //互斥组(同组名的面板只能有一个展开)
-        this.defineProperty("mutex", "", {
-
-            attributes: "layout"
-        });
-
-
-
-
-        this.before_measure = function (box) {
-
-            var parent = this.__parent;
-            this.__fn_measure(box, parent && parent.__layout && parent.__layout.name === "tab");
-        };
-
-
-        this.__fn_expand_mutex = function (value) {
-
-
-        };
 
 
 
@@ -406,23 +464,18 @@
 
 
 
+
     //页签控件
-    flyingon.defineClass("TabControl", flyingon.Panel, function (base) {
+    flyingon.defineClass("TabControl", flyingon.Control, function (base) {
 
 
 
-        Class.create_mode = "replace";
+        Class.create_mode = "merge";
 
         Class.create = function () {
 
-            //变量管理器
-            this.__fields = Object.create(this.__defaults);
-
             //页签控件只能添加TabPanel子控件
-            this.__children = new flyingon.ControlCollection(this, flyingon.TabPanel);
-
-            //根据dom模板创建关联的dom元素
-            (this.dom = this.dom_template.cloneNode(true)).flyingon = this;
+            this.__children = new flyingon.ControlCollection(this, flyingon.TabPage);
 
             this.dom_header = this.dom.children[0];
 
@@ -438,18 +491,22 @@
         var tab_header = flyingon.defineClass("TabHeader", flyingon.Control, function (base) {
 
 
+            Class.create_mode = "merge";
+
             flyingon.IChildren.call(this, base);
+
+
+            header_base.call(this, base, "flyingon-TabHeader-");
+
 
             this.__layout = flyingon.layouts["column3"];
 
 
+            //this.arrange = function (width, height) {
 
-            var render = this.render;
 
-            this.render = function () {
+            //};
 
-                render.call(this);
-            };
 
         });
 
@@ -458,11 +515,19 @@
         var tab_body = flyingon.defineClass(flyingon.Control, function (base) {
 
 
+            Class.create_mode = "merge";
+
             flyingon.IChildren.call(this, base);
+
 
             this.defaultValue("column3", "center");
 
 
+
+            this.arrange = function (width, height) {
+
+
+            };
 
 
         });
@@ -471,13 +536,14 @@
 
         this.__fn_initialize = function () {
 
-            (this.__header = new tab_header()).appendChild(this.__header_body = new tab_body()).__parent = this;
+            (this.__header = new tab_header())
+                .appendChild(this.__header_body = new tab_body())
+                .__parent = this;
+
             this.dom_header.appendChild(this.__header.dom);
         };
 
 
-
-        this.defaultValue("layoutType", "tab");
 
 
         //扩展页签基础服务
@@ -485,7 +551,67 @@
 
 
 
-        this.__model_value = "default";
+
+
+        //页面集合
+        flyingon.defineProperty(this, "pages", function () {
+
+            return this.__children || (this.__children = new flyingon.ControlCollection());
+        });
+
+
+
+
+        //添加页面
+        this.appendPage = function (page) {
+
+            var children = this.__children || this.get_children();
+            children.append.apply(children, arguments);
+
+            return this;
+        };
+
+
+        //在指定位置插入页面
+        this.insertPage = function (index, page) {
+
+            var children = this.__children || this.get_children();
+            children.insert.apply(children, arguments);
+
+            return this;
+        };
+
+
+        //移除页面
+        this.removePage = function (page) {
+
+            var children = this.__children;
+
+            if (children)
+            {
+                children.remove.apply(children, arguments);
+            }
+
+            return this;
+        };
+
+
+        //移除指定位置的页面
+        this.removeAt = function (index, length) {
+
+            var children = this.__children;
+
+            if (children)
+            {
+                children.removeAt.apply(children, index, length);
+            }
+
+            return this;
+        };
+
+
+
+        this.__header_type = "default";
 
 
         //页签模式
@@ -494,10 +620,10 @@
         //vertical  竖直
         //thumb     缩略图
         //dot       圆点
-        this.defineProperty("model", "default", {
+        this.defineProperty("type", "default", {
 
             attributes: "layout",
-            set_code: "this.__model_value = value;"
+            set_code: "this.__header_type = value;"
         });
 
 
@@ -507,14 +633,27 @@
 
 
 
-        this.before_measure = function (box) {
+        //渲染控件
+        this.render = function () {
 
-            this.__fn_measure(box, this.get_layoutType() !== "tab");
+            switch (this.__update_dirty)
+            {
+                case 1:
+                    flyingon.__fn_compute_css(this);
+
+                    break;
+
+                case 2:
+
+                    break;
+            }
         };
 
 
 
+
     });
+
 
 
 

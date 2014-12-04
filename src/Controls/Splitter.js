@@ -14,7 +14,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         if (dom)
         {
-            this.from_dom(dom);
+            this.__fn_from_dom(dom);
         }
         else
         {

@@ -12,7 +12,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
 
     //创建dom元素模板
-    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;");
+    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;user-select:none;-webkit-user-select:none;-moz-user-select:none;");
 
 
 
@@ -113,18 +113,37 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
         return function (icon) {
 
-            var fontFamily = this.__fields.fontFamily;
-
-            if (fontFamily)
+            if (icon)
             {
-                if (fontFamily = font_list[fontFamily])
+                var cache;
+
+                if (icon.indexOf("url" >= 0) && (cache = icon.indexOf(")")) > 0)
                 {
-                    this.dom[name] = fontFamily[icon] || "";
+                    if (++cache === icon.length)
+                    {
+                        this.dom.style.backgroundImage = icon;
+                    }
+                    else
+                    {
+                        this.dom.style.backgroundImage = icon.substring(0, cache);
+                        this.dom.style.backgroundPosition = icon.substring(cache + 1);
+                    }
+                }
+                else if (cache = this.__fields.fontFamily)
+                {
+                    if (cache = font_list[cache])
+                    {
+                        this.dom[name] = cache[icon] || "";
+                    }
+                }
+                else
+                {
+                    this.set_fontFamily("flyingon");
                 }
             }
             else
             {
-                this.set_fontFamily("flyingon");
+                this.dom[name] = "";
             }
         };
 
@@ -142,6 +161,23 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
         }
     };
 
+
+
+    if (flyingon.browser_MSIE)
+    {
+        this.__event_capture_mousedown = function (event) {
+
+            this.dom.onselectstart = function (event) {
+
+                return false;
+            };
+        };
+
+        //this.__event_capture_mouseup = function (event) {
+
+        //    this.dom.onselectstart = null;
+        //};
+    }
 
 
 });

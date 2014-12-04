@@ -13,28 +13,36 @@
 
 
 //根名字空间
-window.flyingon = (function () {
+var flyingon = (function () {
+
+
+    //全局选择器
+    function fn(selector, start, repeat_id) {
+
+        return new flyingon.Query(selector, start, repeat_id);
+    };
 
 
     //当前版本
-    this.current_version = "0.0.1";
+    fn.current_version = "0.0.1";
 
     //当前语言
-    this.current_language = this.current_language || "zh-CHS";
+    fn.current_language = this.current_language || "zh-CHS";
 
     //当前风格
-    this.current_theme = this.current_theme || "default";
+    fn.current_theme = this.current_theme || "default";
 
     //风格路径
-    this.themes_path = this.themes_path || "/themes/";
+    fn.themes_path = this.themes_path || "/themes/";
 
     //字体图标路径
-    this.icons_path = this.icons_path || "/icons/";
-
-    return this;
+    fn.icons_path = this.icons_path || "/icons/";
 
 
-}).call(window.flyingon || {});
+    return fn;
+
+
+}).call(flyingon || {});
 
 
 

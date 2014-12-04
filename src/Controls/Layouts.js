@@ -2364,14 +2364,19 @@
         if (children)
         {
             children = dom.children;
+            cache1 = document.createDocumentFragment();
 
             for (var i = 0, _ = children.length; i < _; i++)
             {
-                control.appendChild(dom_wrapper(children[i]));
+                control.appendChild(cache2 = dom_wrapper(children[0]));
+                cache1.appendChild(cache2.dom);
             }
 
+            control.dom_children.appendChild(cache1);
+            control.__dom_dirty = false;
+
             //需最后处理dom 否则可能会出现循环添加错误
-            control.from_dom(dom);
+            control.__fn_from_dom(dom);
         }
 
         return control;
@@ -2406,7 +2411,11 @@
             }
 
             dom.appendChild(result.dom_window);
-            result.render();
+
+            flyingon.ready(function () {
+
+                result.render();
+            });
 
             return result;
         }

@@ -49,7 +49,7 @@
             {
                 if (list)
                 {
-                    for (var i = 0, _ = list.length; i < _; i++)
+                    for (var i = 0; i < list.length; i++) //执行过程中可能会加入函数，故不能缓存length
                     {
                         list[i++].call(list[i], body);
                     }

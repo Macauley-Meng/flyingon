@@ -30,8 +30,7 @@
         var image1 = new flyingon.Icon().sets({
 
             border: "1px solid red",
-            //backgroundPosition: "0px 0px",
-            backgroundImage: "url(/themes/default/images/tool.png)"
+            icon: "url(/themes/default/images/tool.png),0px 0px"
         });
 
 
@@ -40,6 +39,8 @@
             border: "1px solid red",
             icon: "upload"
         });
+
+        image1.set_icon("download");
 
 
         w.appendChild(image1, image2);

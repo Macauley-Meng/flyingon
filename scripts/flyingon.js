@@ -13,28 +13,36 @@
 
 
 //根名字空间
-window.flyingon = (function () {
+var flyingon = (function () {
+
+
+    //全局选择器
+    function fn(selector, start, repeat_id) {
+
+        return new flyingon.Query(selector, start, repeat_id);
+    };
 
 
     //当前版本
-    this.current_version = "0.0.1";
+    fn.current_version = "0.0.1";
 
     //当前语言
-    this.current_language = this.current_language || "zh-CHS";
+    fn.current_language = this.current_language || "zh-CHS";
 
     //当前风格
-    this.current_theme = this.current_theme || "default";
+    fn.current_theme = this.current_theme || "default";
 
     //风格路径
-    this.themes_path = this.themes_path || "/themes/";
+    fn.themes_path = this.themes_path || "/themes/";
 
     //字体图标路径
-    this.icons_path = this.icons_path || "/icons/";
-
-    return this;
+    fn.icons_path = this.icons_path || "/icons/";
 
 
-}).call(window.flyingon || {});
+    return fn;
+
+
+}).call(flyingon || {});
 
 
 
@@ -1989,54 +1997,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-
-
-    //查询接口
-    flyingon.IQuery = function (Query) {
-
-
-        //查找控件 selector: css选择器样式字符串
-        this.find = function (selector) {
-
-            return new Query(selector, this);
-        };
-
-        //查找指定id的子控件集合
-        this.findById = function (id, cascade) {
-
-            return new Query(new element_node(cascade ? " " : ">", "#", id), this);
-        };
-
-        //查找指定名称的子控件集合
-        this.findByName = function (name, cascade) {
-
-            var node = new element_node(cascade ? " " : ">", "*"),
-                property = new element_property("name");
-
-            property.operator = "=";
-            property.value = name;
-
-            node.push(property);
-
-            return new Query(node, this);
-        };
-
-        //查找指定类型的子控件集合
-        this.findByTypeName = function (xtype, cascade) {
-
-            return new Query(new element_node(cascade ? " " : ">", "", xtype), this);
-        };
-
-        //查找指定class的控件子控件集合
-        this.findByClassName = function (className, cascade) {
-
-            return new Query(new element_node(cascade ? " " : ">", ".", className), this);
-        };
-
-    };
-
-
-
+    
 })(flyingon);
 
 
@@ -2981,7 +2942,7 @@ flyingon.defineClass("XmlSerializeWriter", flyingon.SerializeWriter, function (b
             {
                 if (list)
                 {
-                    for (var i = 0, _ = list.length; i < _; i++)
+                    for (var i = 0; i < list.length; i++) //执行过程中可能会加入函数，故不能缓存length
                     {
                         list[i++].call(list[i], body);
                     }
@@ -6491,33 +6452,66 @@ flyingon.defineClass("Query", function () {
 
 
     //缓存选择器
-    var selector_cache = {};
+    var selector_cache = {},
+        document = window.document;
 
 
 
-    //selector: css样式选择表达式 
-    //start: 开始搜索节点
-    Class.create = function (selector, start) {
+    //selector:     css样式选择表达式 
+    //start:        开始搜索控件(省略则表示搜索所有控件)
+    //repeat_id:    是否支持重复id
+    Class.create = function (selector, start, repeat_id) {
 
         if (selector)
         {
-            switch (selector.constructor)
+            var selector = selector_cache[selector] || (selector_cache[selector] = flyingon.parse_selector(selector)),
+                length = selector.length,
+                items,
+                exports,
+                node;
+
+            //快速搜索Id及class
+            if (length === 1)
             {
-                case String:
-                    selector = selector_cache[selector] || (selector_cache[selector] = flyingon.parse_selector(selector));
-                    this.__fn_query(selector, start);
-                    break;
+                switch ((node = selector[0]).token)
+                {
+                    case "#": //快速搜索Id
+                        if (repeat_id !== true) //如果指定了重复id则使用通用选择器搜索
+                        {
+                            if (exports = flyingon.query_id(node.name, start))
+                            {
+                                this.push(exports);
+                            }
+                            return;
+                        }
+                        break;
 
-                case Array:
-                    if (selector.length > 0)
-                    {
-                        this.push.apply(this, selector);
-                    }
-                    break;
+                    case ".": //快速搜索class
+                        flyingon.query_class(node.name, start, this);
+                        return;
+                }
+            }
 
-                default:
-                    this.push(selector);
-                    return;
+            //使用通用选择器搜索
+            items = start ? [start] : flyingon.__all_windows;
+
+            for (var i = 0; i < length; i++)
+            {
+                node = selector[i];
+
+                this.__query_types[node.type || " "](node, items, exports = []); //批量传入数组减少函数调用以提升性能
+
+                if (exports.length == 0)
+                {
+                    return exports;
+                }
+
+                items = exports;
+            }
+
+            if (exports.length > 0)
+            {
+                this.push.apply(this, exports);
             }
         }
     };
@@ -6526,6 +6520,114 @@ flyingon.defineClass("Query", function () {
 
     //开放接口
     flyingon.query = this;
+
+
+
+    //查找指定id的控件
+    flyingon.query_id = function (id, start) {
+
+        var target = document.getElementById(id);
+
+        if (target && (target = target.flyingon))
+        {
+            if (start)
+            {
+                var cache = target;
+
+                do
+                {
+                    if (cache === start)
+                    {
+                        return target;
+                    }
+
+                } while (cache = cache.__parent);
+            }
+            else
+            {
+                return target;
+            }
+        }
+    };
+
+
+    //查找指定class的控件
+    var query_class = flyingon.query_class = document.getElementsByClassName ? function (className, start, exports) {
+
+        var items = (start ? start.dom : document).getElementsByClassName(className),
+            item;
+
+        exports = exports || (exports = new flyingon.Query());
+
+        for (var i = 0, _ = items.length; i < _; i++)
+        {
+            if (item = items[i].flyingon)
+            {
+                exports.push(item);
+            }
+        }
+
+        return exports;
+
+    } : function (className, start, exports) {
+
+        exports = exports || (exports = new flyingon.Query());
+
+        if (start)
+        {
+            if (start.__class_list && start.__class_list[className])
+            {
+                exports.push(start);
+            }
+
+            start = start.__children;
+        }
+        else
+        {
+            start = flyingon.__all_windows;
+        }
+
+        if (start)
+        {
+            for (var i = 0, _ = start.length; i < _; i++)
+            {
+                query_class(className, start[i], exports);
+            }
+        }
+
+        return exports;
+    };
+
+
+    //查找指定类型的控件
+    var query_xtype = flyingon.query_xtype = function (xtype, start, exports) {
+
+        exports = exports || (exports = new flyingon.Query());
+
+        if (start)
+        {
+            if (start.xtype === xtype)
+            {
+                exports.push(start);
+            }
+
+            start = start.__children;
+        }
+        else
+        {
+            start = flyingon.__all_windows;
+        }
+
+        if (start)
+        {
+            for (var i = 0, _ = start.length; i < _; i++)
+            {
+                query_xtype(xtype, start[i], exports);
+            }
+        }
+
+        return exports;
+    };
 
 
 
@@ -6929,38 +7031,6 @@ flyingon.defineClass("Query", function () {
 
 
 
-    //从start开始查找所有符合条件的元素
-    this.__fn_query = function (selector, start) {
-
-        var items = [start],
-            exports,
-            node;
-
-        for (var i = 0, _ = selector.length; i < _; i++)
-        {
-            node = selector[i];
-
-            this.__query_types[node.type || " "](node, items, exports = []); //批量传入数组减少函数调用以提升性能
-
-            if (exports.length == 0)
-            {
-                return exports;
-            }
-
-            items = exports;
-        }
-
-        if (exports.length > 0)
-        {
-            this.push.apply(this, exports);
-        }
-    };
-
-
-
-
-
-
 
     //子项数
     this.length = 0;
@@ -6971,22 +7041,17 @@ flyingon.defineClass("Query", function () {
     //移除或替换元素
     this.splice = Array.prototype.splice;
 
+    //复制元素
+    this.slice = Array.prototype.slice;
 
 
 
-
-    //合并
-    this.merge = function (selector, context) {
-
-        this.push.call(this, selector, context);
-        return this;
-    };
 
 
     //保存状态
     this.save = function () {
 
-        var query = new this.Class();
+        var query = new flyingon.Query();
 
         query.push.apply(query, this);
         query.__previous = this;
@@ -7096,27 +7161,39 @@ flyingon.defineClass("Query", function () {
     //获取指定属性值(只返回第一个有效的元素值)或给指定属性赋值
     this.value = function (name, value) {
 
-        var item;
+        var item, key;
 
         if (value === undefined)
         {
+            key = "get_" + name;
+
             for (var i = 0, _ = this.length; i < _; i++)
             {
-                if ((item = this[i]) && name in item)
+                if (item = this[i])
                 {
-                    return item[name];
+                    if (item[key])
+                    {
+                        return item[key]();
+                    }
+
+                    if (name in item)
+                    {
+                        return item[name];
+                    }
                 }
             }
         }
         else
         {
+            key = "set_" + name;
+
             for (var i = 0, _ = this.length; i < _; i++)
             {
                 if (item = this[i])
                 {
-                    if (item.set)
+                    if (item[key])
                     {
-                        item.set(name, value)
+                        item[key](value)
                     }
                     else
                     {
@@ -7158,10 +7235,13 @@ flyingon.defineClass("Query", function () {
     };
 
 
-    //以apply的方式循环调用指定名称的方法
-    this.apply = function (name, parameters) {
 
-        var item, fn;
+    //循环调用指定名称的方法
+    this.call = function (name) {
+
+        var parameters = arguments.length > 1 ? this.slice.call(arguments, 1) : null,
+            item,
+            fn;
 
         for (var i = 0, _ = this.length; i < _; i++)
         {
@@ -7602,9 +7682,9 @@ flyingon.defineClass("Control", function () {
             //class
             if (cache = target.__class_list)
             {
-                for (var name in cache)
+                for (var i = 0, _ = cache.length; i < _; i++)
                 {
-                    keys.push(name);
+                    keys.push(cache[i]);
                 }
             }
 
@@ -7631,25 +7711,21 @@ flyingon.defineClass("Control", function () {
                 if (states.checked)
                 {
                     className += " " + keys.join("--checked ");
-                    className += "flyingon--checked "
                 }
 
                 if (states.focus)
                 {
                     className += " " + keys.join("--focus ");
-                    className += "flyingon--focus "
                 }
 
                 if (states.hover)
                 {
                     className += " " + keys.join("--hover ");
-                    className += "flyingon--hover "
                 }
 
                 if (states.active)
                 {
                     className += " " + keys.join("--active ");
-                    className += "flyingon--active "
                 }
             }
 
@@ -8502,8 +8578,32 @@ flyingon.defineClass("Control", function () {
 
 
 
-        //扩展查寻支持
-        flyingon.extend(this, flyingon.IQuery, flyingon.Query);
+        //按css选择器规范查找控件或子控件
+        this.query = function (selector) {
+
+            return
+        };
+
+
+        //查找指定id的控件或子控件
+        this.query_id = function (id) {
+
+            return flyingon.query_id(id, this);
+        };
+
+
+        //查找指定class的控件或子控件
+        this.query_class = function (className) {
+
+            return flyingon.query_class(className, this);
+        };
+
+
+        //查找指定类型的控件或子控件
+        this.query_xtype = function (xtype) {
+
+            return flyingon.query_xtype(xtype, this);
+        };
 
 
 
@@ -8736,7 +8836,7 @@ flyingon.defineClass("Control", function () {
 
 
         //从dom初始化对象
-        this.from_dom = function (dom) {
+        this.__fn_from_dom = function (dom) {
 
             var children;
 
@@ -8754,6 +8854,11 @@ flyingon.defineClass("Control", function () {
             }
 
             this.dom = dom;
+
+            if (dom.id)
+            {
+                this.__fields.id = dom.id;
+            }
 
             if (dom.className)
             {
@@ -11405,14 +11510,19 @@ flyingon.defineClass("ControlCollection", function (base) {
         if (children)
         {
             children = dom.children;
+            cache1 = document.createDocumentFragment();
 
             for (var i = 0, _ = children.length; i < _; i++)
             {
-                control.appendChild(dom_wrapper(children[i]));
+                control.appendChild(cache2 = dom_wrapper(children[0]));
+                cache1.appendChild(cache2.dom);
             }
 
+            control.dom_children.appendChild(cache1);
+            control.__dom_dirty = false;
+
             //需最后处理dom 否则可能会出现循环添加错误
-            control.from_dom(dom);
+            control.__fn_from_dom(dom);
         }
 
         return control;
@@ -11447,7 +11557,11 @@ flyingon.defineClass("ControlCollection", function (base) {
             }
 
             dom.appendChild(result.dom_window);
-            result.render();
+
+            flyingon.ready(function () {
+
+                result.render();
+            });
 
             return result;
         }
@@ -11626,11 +11740,10 @@ flyingon.IChildren = function (base) {
 
                     for (var i = 0, _ = items.length; i < _; i++)
                     {
-                        //cache.appendChild(items[i].dom);
-                        this.dom_children.appendChild(items[i].dom);
+                        cache.appendChild(items[i].dom);
                     }
 
-                    //this.dom_children.appendChild(cache);
+                    this.dom_children.appendChild(cache);
                     this.__dom_dirty = false;
                 }
 
@@ -12156,7 +12269,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         if (dom)
         {
-            this.from_dom(dom);
+            this.__fn_from_dom(dom);
         }
         else
         {
@@ -12235,7 +12348,60 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-    //页签基础服务
+    //页签头基础服务
+    var header_base = function (base, class_prefix) {
+
+
+        //calss前缀
+        class_prefix = class_prefix || this.xtype.replace(/\./g, "-") + "-";
+
+
+        Class.create_mode = "merge";
+
+        flyingon.IChildren.call(this, base);
+
+
+        this.__layout = flyingon.layouts["column3"];
+
+
+
+        //获取创建图标代码
+        this.__fn_show_icon = function (visible, name, icon, column3) {
+
+            var key = "__" + name,
+                target = this[key];
+
+            if (visible)
+            {
+                (target || (this[key] = this.__fn_create_icon(name, column3))).set_icon(icon);
+            }
+            else if (this[key])
+            {
+                this[key].set_visibility("collapse");
+            }
+        };
+
+
+        //创建标题栏图标
+        this.__fn_create_icon = function (name, column3) {
+
+            var target = new flyingon.Icon().set_column3(column3);
+
+            target.name = name;
+            target.addClass(class_prefix + "icon" + (name !== "icon" ? "-" + name : ""));
+
+            this.appendChild(target);
+
+            return target;
+        };
+
+
+    };
+
+
+
+
+    //页签控件基础服务
     var tab_base = function (base, header_width, header_height) {
 
 
@@ -12250,39 +12416,6 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-        //获取创建图标代码
-        this.__fn_icon_code = function (name, column3, icon) {
-
-            var key = "this.__header_" + name,
-                code = [];
-
-            code.push("if (value)\n");
-            code.push("{\n\t");
-            code.push("(" + key + " || (" + key + " = this.__fn_create_icon('" + column3 + "', '" + class_prefix + name + "'))).set_icon(" + icon + ");\n");
-            code.push("}\n");
-            code.push("else if (cache = " + key + ")\n");
-            code.push("{\n\t");
-            code.push("cache.set_visibility('collapse');\n");
-            code.push("}");
-
-            return code.join("");
-        };
-
-
-        //创建标题栏图标
-        this.__fn_create_icon = function (column3, className) {
-
-            var target = new flyingon.Icon().set_column3(column3);
-
-            target.addClass(className);
-            this.__header.appendChild(target);
-
-            return target;
-        };
-
-
-
-
         //标题栏
         //top       顶部标题栏
         //left      左侧标题栏
@@ -12292,14 +12425,21 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         this.defineProperty("header", "top", {
 
             attributes: "layout",
-            set_code: "this.__header.toggleClass('" + class_prefix + "' + (oldValue || 'top'), '" + class_prefix + "' + value);"
+            set_code: "this.__fn_change_header(value);"
+        });
+
+
+        //是否显示关闭图标
+        this.defineProperty("showClose", false, {
+
+            set_code: "this.__header.__fn_show_icon(value, 'close', 'close', 'after')"
         });
 
 
         //是否显示收拢图标
         this.defineProperty("showCollapse", false, {
 
-            set_code: this.__fn_icon_code("collapse", "after", "'collapse'")
+            set_code: "this.__header.__fn_show_icon(value, 'collapse', 'collapse', 'after')"
         });
 
 
@@ -12312,16 +12452,44 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
+        this.__event_bubble_click = function (event) {
+
+            switch (event.target.name)
+            {
+                case "collapse":
+                    this.set_collapse(!this.get_collapse());
+                    break;
+
+                case "close":
+                    this.remove();
+                    break;
+            }
+        };
+
+
+
+
         //测量控件
-        this.__fn_measure = function (box, no_header) {
+        this.before_measure = function (box) {
 
             var header = this.__header,
                 style = this.dom_header.style,
-                type = this.get_header(),
-                collapse;
+                type;
 
-            //如果由父页签控件处理或不显示标题并且非收拢状态则完全显示内容
-            if (no_header || (!(collapse = this.get_collapse()) && type === "none"))
+            if (this.get_collapse())
+            {
+                if (style.display)
+                {
+                    style.display = "";
+                }
+
+                header.__update_dirty = 1;
+                header.__arrange_dirty = true;
+
+                this.__fn_measure_collapse(box);
+                header.render();
+            }
+            else if ((type = this.get_header()) === "none")
             {
                 style.display = "none";
 
@@ -12340,22 +12508,14 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 header.__update_dirty = 1;
                 header.__arrange_dirty = true;
 
-                if (collapse && parent) //收拢状态
-                {
-                    this.__fn_measure_collapse(box, type);
-                }
-                else //单独显示
-                {
-                    this.__fn_measure_header(box, type);
-                }
-
+                this.__fn_measure_header(box, type);
                 header.render();
             }
         };
 
 
         //收拢状态测量
-        this.__fn_measure_collapse = function (box, type) {
+        this.__fn_measure_collapse = function (box) {
 
             var header = this.__header,
                 style1 = this.dom_header.style,
@@ -12392,9 +12552,9 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 style2.height = (this.offsetHeight = header.offsetHeight + box.border_height) + "px";
             }
 
-            if (this.__header_collapse)
+            if (header.__collapse)
             {
-                this.__header_collapse.set_icon(vertical ? "expand" : "expand1");
+                header.__collapse.set_icon(vertical ? "expand" : "expand1");
             }
 
             //收拢状态不处理自动大小
@@ -12467,9 +12627,9 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 style2.display = "";
             }
 
-            if (this.__header_collapse)
+            if (header.__collapse)
             {
-                this.__header_collapse.set_icon(type === "top" || top === "bottom" ? "collapse" : "collapse1");
+                header.__collapse.set_icon(type === "top" || top === "bottom" ? "collapse" : "collapse1");
             }
         };
 
@@ -12484,17 +12644,17 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 {
                     header.removeClass(class_prefix + oldValue);
 
-                    if (this.__model_oldValue)
+                    if (this.__header_type_old)
                     {
-                        header.removeClass(this.__model_oldValue);
+                        header.removeClass(this.__header_type_old);
                     }
                 }
 
                 header.addClass(class_prefix + value);
 
-                if (this.__model_value)
+                if (this.__header_type)
                 {
-                    header.addClass(this.__model_oldValue = class_prefix + value + "-" + this.__model_value);
+                    header.addClass(this.__header_type_old = class_prefix + value + "-" + this.__header_type);
                 }
 
                 this.__header_last__ = value;
@@ -12502,30 +12662,6 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
             return header;
         };
-
-
-        this.__event_bubble_click = function (event) {
-
-            var target = event.target,
-                collapse = this.__header_collapse;
-
-            if (target === this.__header_close)
-            {
-                this.remove(true);
-            }
-            else
-            {
-                if (target === collapse)
-                {
-                    this.set_collapse(!this.get_collapse());
-                }
-                else if (!collapse && this.get_collapse())
-                {
-                    this.set_collapse(false);
-                }
-            }
-        };
-
 
 
     };
@@ -12553,16 +12689,14 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-
         //页签头类
         var tab_header = flyingon.defineClass(flyingon.Control, function (base) {
 
 
-            flyingon.IChildren.call(this, base);
-
-            this.__layout = flyingon.layouts["column3"];
+            header_base.call(this, base, "flyingon-TabPanel-");
 
         });
+
 
 
         this.__fn_initialize = function () {
@@ -12587,10 +12721,11 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
+
         //窗口图标
         this.defineProperty("icon", "", {
 
-            set_code: this.__fn_icon_code("icon", "before", "value")
+            set_code: "this.__header.__fn_show_icon(value, 'icon', value, 'before')"
         });
 
 
@@ -12601,33 +12736,69 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         });
 
 
+
+    });
+
+
+
+
+
+    //页签页控件
+    flyingon.defineClass("TabPage", flyingon.Panel, function (base) {
+
+
+
+        Class.create_mode = "merge";
+
+        Class.create = function () {
+
+            this.__fn_initialize();
+        };
+
+
+
+        //页签头类
+        var tab_header = flyingon.defineClass(flyingon.Control, function (base) {
+
+
+            header_base.call(this, base, "flyingon-TabPage-");
+
+        });
+
+
+        this.__fn_initialize = function () {
+
+            this.__header = new tab_header();
+
+            (this.__header.__text = new flyingon.VerticalText())
+                .set_column3("center")
+                .addClass("flyingon-TabPage-text");
+
+            this.__header.addClass("flyingon-TabPage-header")
+                .appendChild(this.__header.__text).__parent = this;
+        };
+
+
+
+        //窗口图标
+        this.defineProperty("icon", "", {
+
+            set_code: "this.__header.__fn_show_icon(value, 'icon', value, 'before')"
+        });
+
+
+        //窗口标题
+        this.defineProperty("text", "", {
+
+            set_code: "this.__header.__text.set_text(value);"
+        });
+
+
         //是否显示关闭图标
         this.defineProperty("showClose", false, {
 
-            set_code: this.__fn_icon_code("close", "after", "'close'")
+            set_code: "this.__header.__fn_show_icon(value, 'close', 'close', 'after')"
         });
-
-
-        //互斥组(同组名的面板只能有一个展开)
-        this.defineProperty("mutex", "", {
-
-            attributes: "layout"
-        });
-
-
-
-
-        this.before_measure = function (box) {
-
-            var parent = this.__parent;
-            this.__fn_measure(box, parent && parent.__layout && parent.__layout.name === "tab");
-        };
-
-
-        this.__fn_expand_mutex = function (value) {
-
-
-        };
 
 
 
@@ -12636,23 +12807,18 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
+
     //页签控件
-    flyingon.defineClass("TabControl", flyingon.Panel, function (base) {
+    flyingon.defineClass("TabControl", flyingon.Control, function (base) {
 
 
 
-        Class.create_mode = "replace";
+        Class.create_mode = "merge";
 
         Class.create = function () {
 
-            //变量管理器
-            this.__fields = Object.create(this.__defaults);
-
             //页签控件只能添加TabPanel子控件
-            this.__children = new flyingon.ControlCollection(this, flyingon.TabPanel);
-
-            //根据dom模板创建关联的dom元素
-            (this.dom = this.dom_template.cloneNode(true)).flyingon = this;
+            this.__children = new flyingon.ControlCollection(this, flyingon.TabPage);
 
             this.dom_header = this.dom.children[0];
 
@@ -12668,18 +12834,22 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         var tab_header = flyingon.defineClass("TabHeader", flyingon.Control, function (base) {
 
 
+            Class.create_mode = "merge";
+
             flyingon.IChildren.call(this, base);
+
+
+            header_base.call(this, base, "flyingon-TabHeader-");
+
 
             this.__layout = flyingon.layouts["column3"];
 
 
+            //this.arrange = function (width, height) {
 
-            var render = this.render;
 
-            this.render = function () {
+            //};
 
-                render.call(this);
-            };
 
         });
 
@@ -12688,11 +12858,19 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         var tab_body = flyingon.defineClass(flyingon.Control, function (base) {
 
 
+            Class.create_mode = "merge";
+
             flyingon.IChildren.call(this, base);
+
 
             this.defaultValue("column3", "center");
 
 
+
+            this.arrange = function (width, height) {
+
+
+            };
 
 
         });
@@ -12701,13 +12879,14 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         this.__fn_initialize = function () {
 
-            (this.__header = new tab_header()).appendChild(this.__header_body = new tab_body()).__parent = this;
+            (this.__header = new tab_header())
+                .appendChild(this.__header_body = new tab_body())
+                .__parent = this;
+
             this.dom_header.appendChild(this.__header.dom);
         };
 
 
-
-        this.defaultValue("layoutType", "tab");
 
 
         //扩展页签基础服务
@@ -12715,7 +12894,67 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-        this.__model_value = "default";
+
+
+        //页面集合
+        flyingon.defineProperty(this, "pages", function () {
+
+            return this.__children || (this.__children = new flyingon.ControlCollection());
+        });
+
+
+
+
+        //添加页面
+        this.appendPage = function (page) {
+
+            var children = this.__children || this.get_children();
+            children.append.apply(children, arguments);
+
+            return this;
+        };
+
+
+        //在指定位置插入页面
+        this.insertPage = function (index, page) {
+
+            var children = this.__children || this.get_children();
+            children.insert.apply(children, arguments);
+
+            return this;
+        };
+
+
+        //移除页面
+        this.removePage = function (page) {
+
+            var children = this.__children;
+
+            if (children)
+            {
+                children.remove.apply(children, arguments);
+            }
+
+            return this;
+        };
+
+
+        //移除指定位置的页面
+        this.removeAt = function (index, length) {
+
+            var children = this.__children;
+
+            if (children)
+            {
+                children.removeAt.apply(children, index, length);
+            }
+
+            return this;
+        };
+
+
+
+        this.__header_type = "default";
 
 
         //页签模式
@@ -12724,10 +12963,10 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         //vertical  竖直
         //thumb     缩略图
         //dot       圆点
-        this.defineProperty("model", "default", {
+        this.defineProperty("type", "default", {
 
             attributes: "layout",
-            set_code: "this.__model_value = value;"
+            set_code: "this.__header_type = value;"
         });
 
 
@@ -12737,14 +12976,27 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-        this.before_measure = function (box) {
+        //渲染控件
+        this.render = function () {
 
-            this.__fn_measure(box, this.get_layoutType() !== "tab");
+            switch (this.__update_dirty)
+            {
+                case 1:
+                    flyingon.__fn_compute_css(this);
+
+                    break;
+
+                case 2:
+
+                    break;
+            }
         };
 
 
 
+
     });
+
 
 
 
@@ -12944,7 +13196,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
 
     //创建dom元素模板
-    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;");
+    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;user-select:none;-webkit-user-select:none;-moz-user-select:none;");
 
 
 
@@ -13045,18 +13297,37 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
         return function (icon) {
 
-            var fontFamily = this.__fields.fontFamily;
-
-            if (fontFamily)
+            if (icon)
             {
-                if (fontFamily = font_list[fontFamily])
+                var cache;
+
+                if (icon.indexOf("url" >= 0) && (cache = icon.indexOf(")")) > 0)
                 {
-                    this.dom[name] = fontFamily[icon] || "";
+                    if (++cache === icon.length)
+                    {
+                        this.dom.style.backgroundImage = icon;
+                    }
+                    else
+                    {
+                        this.dom.style.backgroundImage = icon.substring(0, cache);
+                        this.dom.style.backgroundPosition = icon.substring(cache + 1);
+                    }
+                }
+                else if (cache = this.__fields.fontFamily)
+                {
+                    if (cache = font_list[cache])
+                    {
+                        this.dom[name] = cache[icon] || "";
+                    }
+                }
+                else
+                {
+                    this.set_fontFamily("flyingon");
                 }
             }
             else
             {
-                this.set_fontFamily("flyingon");
+                this.dom[name] = "";
             }
         };
 
@@ -13074,6 +13345,23 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
         }
     };
 
+
+
+    if (flyingon.browser_MSIE)
+    {
+        this.__event_capture_mousedown = function (event) {
+
+            this.dom.onselectstart = function (event) {
+
+                return false;
+            };
+        };
+
+        //this.__event_capture_mouseup = function (event) {
+
+        //    this.dom.onselectstart = null;
+        //};
+    }
 
 
 });
@@ -13158,7 +13446,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         //根据dom模板创建关联的dom元素
         if (dom)
         {
-            this.from_dom(dom);
+            this.__fn_from_dom(dom);
         }
         else
         {
