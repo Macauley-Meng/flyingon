@@ -89,7 +89,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 //定义样式示例: 定义名为.class2样式,并引入其它样式
 ".class2": {
 
-    import: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
+    load: [".class1", "@flyingon-Button"],  //引入样式,注意不要循环引入
     border: "1px solid blue"
 }
 

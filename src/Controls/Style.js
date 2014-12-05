@@ -1638,14 +1638,14 @@
             {
                 var css_style = selector.indexOf("css:") === 0,
                     cssText = [],
-                    style;
+                    style = styles[selector];
 
                 if (css_style) //css:开头表示定义标准css样式
                 {
                     selector = selector.substring(4);
                 }
 
-                style = parse_style(null, styles[selector], styles, cssText, css_style);
+                style = parse_style(null, style, styles, cssText, css_style);
                 cssText = cssText.join("");
 
                 //解析选择器
@@ -1696,7 +1696,17 @@
             {
                 if (value.constructor === Object) //嵌套子样式
                 {
-                    styles[name = selector + " " + name] = value;
+                    if (name.indexOf("css:") === 0)
+                    {
+                        name = name.substring(4);
+                        name = (selector.indexOf("css:") !== 0 ? "css:" : "") + selector + " " + name;
+                    }
+                    else
+                    {
+                        name = selector + " " + name
+                    }
+
+                    styles[name] = value;
                     parse_selector(styles, name, exports);
                 }
                 else if (name in style_split)
@@ -1727,13 +1737,13 @@
     function parse_style(target, style, styles, cssText, css_style) {
 
         //未指定输入目标且有引入时则新建输入目标
-        target = target || (style["import"] ? {} : style); //import关键字 IE678无法编译关键字属性名
+        target = target || (style.load ? {} : style);
 
         for (var name in style)
         {
             var value = style[name];
 
-            if (name !== "import")
+            if (name !== "load")
             {
                 //类型转换
                 switch (style_data_types[name])

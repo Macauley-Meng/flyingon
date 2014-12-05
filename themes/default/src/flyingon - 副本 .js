@@ -7,7 +7,6 @@
 注2: 扩展控件样式以"@" + 类型全名"."替换为"-" 比如定义Button控件(全名:flyingon.Button)的样式为: @flyingon-Button
 注3: 支持定义嵌套子样式
 注4: 扩展控件样式支持选择器如下(跨浏览器兼容: 支持IE6+及其它常见浏览器)
-注5：IE67属性值后不要添加多余逗号, 否则会无法解析
 
 
 本系统支持的基础选择器如下(注:本系统不支持html标签选择器):
@@ -134,65 +133,20 @@ flyingon.defineStyle({
 
 
 
-    //页签控件页签头样式
-    "@flyingon-TabHeader": {
-
-        backgroundColor: "silver",
-        cursor: "default",
-        width: "auto"
-    },
-
-    //标题栏图标样式
-    ".flyingon-TabHeader-icon": {
-
-        color: "blue"
-    },
-
-    ////标题栏收拢图标样式
-    //".flyingon-TabHeader-collapse": {
-
-    //},
-
-    //标题栏收拢图标样式
-    ".flyingon-TabHeader-collapse:hover": {
-
-        color: "blue"
-    },
-
-    ////标题栏关闭图标样式
-    //".flyingon-TabHeader-close": {
-
-    //},
-
-
     //标签面板标题栏样式
     "@flyingon-TabPanel": {
 
         border: "1px solid blue",
-
-        //标签面板标题栏样式
-        ".flyingon-TabPanel-header": {
-
-            cursor: "default"
-        },
-
-        //标签面板内容区样式
-        ".flyingon-TabPanel-body": {
-
-            backgroundColor: "white"
-        }
+        backgroundColor: "white"
     },
 
     //标签面板左右标题栏样式
     ".flyingon-TabPanel-left,.flyingon-TabPanel-right": {
 
-        "@flyingon-TabHeader": {
-
-            vertical: true
-        },
+        vertical: true,
 
         //标签面板左右标题栏文字样式
-        ".flyingon-TabHeader-text": {
+        ".flyingon-TabPanel-text": {
 
             textAlign: "center",
             verticalAlign: "top"
@@ -203,88 +157,42 @@ flyingon.defineStyle({
     ".flyingon-TabPanel-top,.flyingon-TabPanel-bottom": {
 
         //标签面板左右标题栏文字样式
-        ".flyingon-TabHeader-text": {
+        ".flyingon-TabPanel-text": {
 
             textAlign: "left",
             verticalAlign: "middle"
         }
     },
 
+    //标签面板标题栏样式
+    ".flyingon-TabPanel-header": {
 
-    ".flyingon-TabPanel-tab1-top,.flyingon-TabPanel-tab2-top,.flyingon-TabPanel-tab3-top": {
-
-        "@flyingon-TabHeader": {
-
-            marginTop: "2px",
-            border: "1px solid blue",
-            borderTopLeftRadius: "5px",
-            borderTopRightRadius: "5px",
-            borderBottomWidth: "0",
-            width: "auto",
-            height: "28px",
-            textAlign: "center"
-        },
-
-        "@flyingon-TabHeader-selected": {
-
-        },
-
-        ".flyingon-TabHeader-floor": {
-
-            borderBottom: "1px solid blue"
-        },
-
-        ".flyingon-TabHeader-text": {
-
-            width: "auto"
-        }
+        backgroundColor: "silver",
+        cursor: "default"
     },
 
-    ".flyingon-TabPanel-tab1-left,.flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab3-left": {
+    //标签面板标题栏图标样式
+    ".flyingon-TabPanel-icon": {
 
-        "@flyingon-TabHeader": {
-
-            height: "auto"
-        },
-
-        ".flyingon-TabHeader-floor": {
-
-            borderRight: "1px solid blue"
-        }
+        color: "blue"
     },
 
-    ".flyingon-TabPanel-tab1-right,.flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab3-right": {
+    ////标签面板标题栏收拢图标样式
+    //".flyingon-TabPanel-icon-collapse": {
 
-        "@flyingon-TabHeader": {
+    //},
 
-            height: "auto"
-        },
+    //标签面板标题栏收拢图标样式
+    ".flyingon-TabPanel-icon-collapse:hover": {
 
-        ".flyingon-TabHeader-floor": {
-
-            borderLeft: "1px solid blue"
-        }
+        color: "blue"
     },
 
-    ".flyingon-TabPanel-tab1-bottom,.flyingon-TabPanel-tab2-bottom,.flyingon-TabPanel-tab3-bottom": {
+    ////标签面板标题栏关闭图标样式
+    //".flyingon-TabPanel-icon-close": {
 
-        "@flyingon-TabHeader": {
+    //},
 
-            border: "1px solid blue",
-            borderTopWidth: "0",
-            width: "auto"
-        },
-
-        ".flyingon-TabHeader-text": {
-
-            width: "auto"
-        },
-
-        ".flyingon-TabHeader-floor": {
-
-            borderTop: "1px solid blue"
-        }
-    },
 
 
     //页签控件样式
@@ -293,6 +201,77 @@ flyingon.defineStyle({
         border: "1px solid blue",
         backgroundColor: "white"
     },
+
+    //页签控件页签头样式
+    ".flyingon-TabHeader": {
+
+        backgroundColor: "silver",
+        cursor: "default"
+    },
+
+    //页签控件左右页签样式
+    ".flyingon-TabControl-left,.flyingon-TabControl-right": {
+
+        width: "60px",
+        verticalAlign: "top",
+        vertical: true
+    },
+
+    //页签控件左右页签折叠模式样式
+    ".flyingon-TabControl-left-collapse .flyingon-TabControl-right-collapse": {
+
+        width: "25px",
+
+        ".flyingon-TabPage": {
+
+            //标签面板左右标题栏文字样式
+            ".flyingon-TabPage-text": {
+
+                textAlign: "left",
+                verticalAlign: "middle"
+            }
+        }
+    },
+
+    ////页签控件页签上一页图标样式
+    //".flyingon-TabControl-icon-previous": {
+
+    //},
+
+    ////页签控件页签下一页图标样式
+    //".flyingon-TabControl-icon-next": {
+
+    //},
+
+    ////页签控件页签收拢图标样式
+    //".flyingon-TabControl-icon-collapse": {
+
+    //},
+
+
+    //标签页标题栏样式
+    "@flyingon-TabPage": {
+
+        backgroundColor: "white"
+    },
+
+    //标签页标题栏样式
+    ".flyingon-TabPage-header": {
+
+        backgroundColor: "silver",
+        cursor: "default"
+    },
+
+    //标签页标题栏图标样式
+    ".flyingon-TabPage-icon": {
+
+        color: "blue"
+    },
+
+    ////标签页标题栏关闭图标样式
+    //".flyingon-TabPage-icon-close": {
+
+    //},
 
 
 

@@ -214,10 +214,31 @@
         };
 
 
-        //获取子控件是否竖直收拢
-        this.__fn_collapse_vertical = function (target, item) {
+        //获取子控件收拢方向
+        this.__fn_collapse = function (target) {
 
-            return !this.vertical;
+            return this.__fn_collapse_mirror(this.vertical ? "top" : "left");
+        };
+
+
+        var reverse = { left: "right", top: "bottom", right: "left", bottom: "top" };
+
+        this.__fn_collapse_mirror = function (value) {
+
+            switch (this.mirror)
+            {
+                case "x":
+                    return value === "top" || value === "bottom" ? reverse[value] : value;
+
+                case "y":
+                    return value === "left" || value === "right" ? reverse[value] : value;
+
+                case "center":
+                    return reverse[value];
+
+                default:
+                    return value;
+            }
         };
 
 
@@ -504,7 +525,8 @@
                 y = height,
                 size = width,
                 right = width,
-                list = [],
+                list1 = [],
+                list2 = [],
                 item,
                 type,
                 offset,
@@ -525,24 +547,19 @@
                             break;
 
                         case "after":
-                            cache = item.measure(size, height, false, true).width;
-                            offset = item.locate(right -= cache, 0);
-                            right -= spacingWidth;
+                            list1.push(item);
                             break;
 
                         default:
-                            list.push(item);
+                            list2.push(item);
                             continue;
                     }
+
+                    size = right - x;
 
                     if (offset.y > y)
                     {
                         y = offset.y;
-                    }
-
-                    if ((size = right - x) < 0)
-                    {
-                        size = 0;
                     }
                 }
                 else
@@ -551,14 +568,47 @@
                 }
             }
 
-            for (var i = 0, length = list.length; i < length; i++)
+            for (var i = list1.length - 1; i >= 0; i--)
             {
-                item = list[i];
+                item = list1[i];
 
                 if (size > 0)
                 {
-                    item.measure(size, height, true, true);
-                    item.locate(x, 0);
+                    cache = item.measure(size, height, false, true).width;
+                    offset = item.locate(right -= cache, 0);
+                    right -= spacingWidth;
+
+                    size = right - x;
+
+                    if (offset.y > y)
+                    {
+                        y = offset.y;
+                    }
+                }
+                else
+                {
+                    target.__fn_hide(item);
+                }
+            }
+
+            length = list2.length;
+
+            for (var i = 0 ; i < length; i++)
+            {
+                item = list2[i];
+
+                if (size > 0)
+                {
+                    cache = item.measure(size, height, true, true);
+                    offset = item.locate(x, 0);
+                    x += cache + spacingWidth;
+
+                    size = right - x;
+
+                    if (offset.y > y)
+                    {
+                        y = offset.y;
+                    }
                 }
                 else
                 {
@@ -578,7 +628,8 @@
                 y = 0,
                 size = height,
                 bottom = height,
-                list = [],
+                list1 = [],
+                list2 = [],
                 item,
                 type,
                 offset,
@@ -599,24 +650,19 @@
                             break;
 
                         case "after":
-                            cache = item.measure(width, size, true, false).height;
-                            offset = item.locate(0, bottom -= cache);
-                            bottom -= spacingHeight;
+                            list1.push(item);
                             break;
 
                         default:
-                            list.push(item);
+                            list2.push(item);
                             continue;
                     }
 
-                    if ((size = bottom - y) < 0)
-                    {
-                        size = 0;
-                    }
+                    size = bottom - y;
 
                     if (offset.x > x)
                     {
-                        xy = offset.x;
+                        x = offset.x;
                     }
                 }
                 else
@@ -626,14 +672,47 @@
                 }
             }
 
-            for (var i = 0, length = list.length; i < length; i++)
+            for (var i = list1.length - 1; i >= 0; i--)
             {
-                item = list[i];
+                item = list1[i];
 
                 if (size > 0)
                 {
-                    item.measure(width, size, true, true);
-                    item.locate(0, y);
+                    cache = item.measure(width, size, true, false).height;
+                    offset = item.locate(0, bottom -= cache);
+                    bottom -= spacingHeight;
+
+                    size = bottom - y;
+
+                    if (offset.x > x)
+                    {
+                        x = offset.x;
+                    }
+                }
+                else
+                {
+                    target.__fn_hide(item);
+                }
+            }
+
+            length = list2.length;
+
+            for (var i = 0; i < length; i++)
+            {
+                item = list2[i];
+
+                if (size > 0)
+                {
+                    cache = item.measure(width, size, true, true).height;
+                    offset = item.locate(0, y);
+                    y += cache + spacingHeight;
+
+                    size = bottom - y;
+
+                    if (offset.x > x)
+                    {
+                        x = offset.x;
+                    }
                 }
                 else
                 {
@@ -661,6 +740,16 @@
             return start;
         };
 
+
+        //获取子控件收拢方向
+        this.__fn_collapse = function (target) {
+
+            var column3 = target.get_column3();
+
+            column3 = this.vertical ? (column3 === "after" ? "bottom" : "top") : (column3 === "after" ? "right" : "left");
+
+            return this.__fn_collapse_mirror(column3);
+        };
 
     });
 
@@ -806,11 +895,11 @@
         };
 
 
-        //获取子控件是否竖直收拢
-        this.__fn_collapse_vertical = function (target, item) {
+        //获取子控件收拢方向
+        this.__fn_collapse = function (target) {
 
             var dock = target.get_dock();
-            return dock === "left" || dock === "right";
+            return this.__fn_collapse_mirror(dock !== "none" ? dock : "top");
         };
 
     });
@@ -886,11 +975,10 @@
         };
 
 
-        //获取子控件是否竖直收拢
-        this.__fn_collapse_vertical = function (target, item) {
+        //获取子控件收拢方向
+        this.__fn_collapse = function (target) {
 
-            var header = item.get_header();
-            return header === "left" || header === "right";
+            return "top";
         };
 
 

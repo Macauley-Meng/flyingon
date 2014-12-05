@@ -187,10 +187,18 @@ flyingon.IChildren = function (base) {
     this.__fn_measure_auto = function (box, change) {
 
         var dom = this.dom_children.parentNode,
-            value = this.__compute_style.fontSize; //记录原来的字体大小
+            style = this.__compute_style,
+            value = style.fontSize; //记录原来的字体大小
+
+        this.clientWidth = dom.clientWidth - box.padding_width;
+        this.clientHeight = dom.clientHeight - box.padding_height;
 
         this.render();
-        this.__compute_style.fontSize = value;
+
+        if (style.fontSize !== value)
+        {
+            style.fontSize = value;
+        }
 
         if (box.auto_width)
         {
