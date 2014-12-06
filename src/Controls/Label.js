@@ -32,14 +32,17 @@
 
             var box = this.__boxModel;
 
-            if (box.auto_width || box.auto_height)
+            if (box)
             {
-                this.__update_dirty = 1
-                (this.__parent || this).update(true);
-            }
-            else
-            {
-                this.after_measure(box);
+                if (box.auto_width || box.auto_height)
+                {
+                    this.__update_dirty = 1
+                    (this.__parent || this).update(true);
+                }
+                else
+                {
+                    this.after_measure(box);
+                }
             }
         };
 
@@ -61,6 +64,21 @@
                 default:
                     style.top = this.clientHeight - this.dom_span.offsetHeight + "px";
                     break;
+            }
+        };
+
+
+        //测量自动大小(需返回变化值)
+        this.__fn_measure_auto = function (box, change) {
+
+            if (box.auto_width)
+            {
+                change.width = this.dom_span.offsetWidth + box.client_width - this.offsetWidth;
+            }
+
+            if (box.auto_height)
+            {
+                change.height = this.dom_span.offsetHeight + box.client_height - this.offsetHeight;
             }
         };
 
@@ -93,19 +111,22 @@
 
             this.__vertical_text = false;
 
-            if (box.auto_width || box.auto_height)
+            if (box)
             {
-                this.__update_dirty = 1
-                (this.__parent || this).update(true);
-            }
-            else
-            {
-                if (text)
+                if (box.auto_width || box.auto_height)
                 {
-                    this.before_measure(box);
+                    this.__update_dirty = 1
+                    (this.__parent || this).update(true);
                 }
+                else
+                {
+                    if (text)
+                    {
+                        this.before_measure(box);
+                    }
 
-                this.after_measure(box);
+                    this.after_measure(box);
+                }
             }
         };
 

@@ -174,7 +174,7 @@
 
 
         var _this = this,
-            items = ["left", "top", "right", "bottom"]; //复合样式子项值
+            items = ["top", "right", "bottom", "left"]; //复合样式子项值
 
 
 
@@ -1646,7 +1646,7 @@
                 }
 
                 style = parse_style(null, style, styles, cssText, css_style);
-                cssText = cssText.join("");
+                cssText = cssText.join("\n");
 
                 //解析选择器
                 selector = flyingon.parse_selector(selector);
@@ -1678,7 +1678,7 @@
             }
 
             //写入样式表
-            flyingon.style(cssText.join("\n"), style_object);
+            flyingon.style(cssText.join(""), style_object);
         }
     };
 
@@ -1877,7 +1877,7 @@
         {
             if (selector.css_style = css_style) //css样式直接按原样生成规则
             {
-                selector.cssText = selector + "{" + cssText + "}";
+                selector.cssText = selector.key + "{" + cssText + "}";
             }
             else
             {

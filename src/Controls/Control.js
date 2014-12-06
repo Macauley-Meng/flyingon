@@ -903,19 +903,35 @@ flyingon.defineClass("Control", function () {
         //测量自动大小(需返回变化值)
         this.__fn_measure_auto = function (box, change) {
 
-            var dom = this.dom,
-                style = dom.style;
+            var children = this.dom.children,
+                x = 0,
+                y = 0,
+                item,
+                cache;
+
+            for (var i = 0, _ = children.length; i < _; i++)
+            {
+                item = children[i];
+
+                if ((cache = item.offsetLeft + item.offsetWidth) > x)
+                {
+                    x = cache;
+                }
+
+                if ((cache = item.offsetTop + item.offsetHeight) > x)
+                {
+                    y = cache;
+                }
+            }
 
             if (box.auto_width)
             {
-                style.width = "auto";
-                change.width = dom.offsetWidth - this.offsetWidth;
+                change.width = x + box.client_width - this.offsetWidth;
             }
 
             if (box.auto_height)
             {
-                style.height = "auto";
-                change.height = dom.offsetHeight - this.offsetHeight;
+                change.height = y + box.client_height - this.offsetHeight;
             }
         };
 
@@ -1384,8 +1400,8 @@ flyingon.defineClass("Control", function () {
 
 
 
-        var box_sizing = flyingon.__fn_css_prefix("box-sizing"), //box-sizing样式名
-            style_template = "position:absolute;" + (box_sizing ? box_sizing + ":border-box;" : "");     //样式模板值
+        var box_sizing = flyingon.__fn_css_prefix("box-sizing"), //box-sizing样式名 注意在IE9下如果有滚动条设置border-box值时会变小
+            style_template = "position:absolute;" + (this.__css_box_sizing = box_sizing ? box_sizing + ":border-box;" : "");     //样式模板值
 
 
         //创建dom模板(必须在创建类时使用此方法创建dom模板)
@@ -1492,7 +1508,7 @@ flyingon.defineClass("Control", function () {
 
 
         //box-sizing样式名, 为空则表示不支持box-sizing
-        this.__style_box_sizing = box_sizing = flyingon.__fn_style_prefix("box-sizing") || "box-sizing";
+        this.__style_box_sizing = box_sizing = flyingon.__fn_style_prefix("box-sizing");
 
 
 
@@ -1523,18 +1539,22 @@ flyingon.defineClass("Control", function () {
         //从dom初始化对象
         this.__fn_from_dom = function (dom) {
 
-            var children;
+            var cache;
 
             dom.style.position = "absolute";
-            dom.style[box_sizing] = "border-box";
+
+            if (cache = box_sizing)
+            {
+                dom.style[cache] = "border-box";
+            }
 
             if (this.dom && this.dom.firstChild)
             {
-                children = this.dom.children;
+                cache = this.dom.children;
 
-                for (var i = 0, _ = children.length; i < _; i++)
+                for (var i = 0, _ = cache.length; i < _; i++)
                 {
-                    dom.appendChild(children[0]);
+                    dom.appendChild(cache[0]);
                 }
             }
 
