@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body>
+
+
+    <div style="position: absolute; left:0; top:0;width: 200px; height: 200px; border: 1px solid blue; overflow: scroll;box-sizing:border-box; ">
+
+        <div style="position: relative; left: 0; top: 0; width: 200px; height: 200px; ">
+            正常情况下这个方框的宽高度都是200px，但IE9的宽高少了一个滚动条的大小
+        </div>
+
+    </div>
+
+    <div style="position: absolute; left:210px; top:0;width: 200px; height: 200px; border: 1px solid blue; overflow: scroll;box-sizing:border-box; ">
+
+        <span style="position: relative; left: 0; top: 0; width: 200px; height: 200px; ">
+            正常情况下这个方框的宽高度都是200px，但IE9的宽高少了一个滚动条的大小
+        </span>
+
+    </div>
+
+    <div style="position: absolute;left:0; top:210px; width: 200px; height: 200px; border: 1px solid blue; box-sizing: border-box;">
+        这是200px的方框
+    </div>
+
+</body>
+</html>

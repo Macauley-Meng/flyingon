@@ -142,10 +142,6 @@ flyingon.IChildren = function (base) {
                     this.__compute_style.fontSize = cache;
                 }
 
-                cache = this.dom_children.style;
-                cache.left = box.paddingLeft + "px";
-                cache.top = box.paddingTop + "px";
-
                 this.arrange(width, height);
 
                 this.__arrange_width = width;
@@ -183,15 +179,14 @@ flyingon.IChildren = function (base) {
     this.__layout = flyingon.layouts["column3"];
 
 
-    //测量自动大小
-    this.__fn_measure_auto = function (box, change) {
+    //测量自动大小(需返回width及height的变化量)
+    this.__fn_measure_auto = function (box) {
 
         var dom = this.dom_children.parentNode,
             style = this.__compute_style,
             value = style.fontSize; //记录原来的字体大小
 
-        this.clientWidth = dom.clientWidth - box.padding_width;
-        this.clientHeight = dom.clientHeight - box.padding_height;
+        this.__fn_measure_client(box); //计算客户区大小
 
         this.render();
 
@@ -200,27 +195,18 @@ flyingon.IChildren = function (base) {
             style.fontSize = value;
         }
 
-        if (box.auto_width)
-        {
-            change.width = this.contentWidth - this.clientWidth;
-        }
+        return {
 
-        if (box.auto_height)
-        {
-            change.height = this.contentHeight - this.clientHeight;
-        }
+            width: box.auto_width ? this.contentWidth - this.clientWidth : 0,
+            height: box.auto_height ? this.contentHeight - this.clientHeight : 0
+        };
     };
 
 
     //排列子控件
     this.arrange = function (width, height) {
 
-        var items = this.__children;
-
-        if (items && items.length > 0)
-        {
-            this.__layout.__fn_arrange(this, width, height);
-        }
+        this.__layout.__fn_arrange(this, width, height);
     };
 
 

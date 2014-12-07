@@ -402,6 +402,43 @@
         //number%   控件客户区高度的百分比
         style("spacing-height", "0", "last-value");
 
+        //内容对齐方式简写方式(同时设置横向及纵向对齐方式以空格分开 如:"left top")
+        //left      左边对齐
+        //center    横向居中对齐
+        //right     右边对齐
+        //top       顶部对齐
+        //middle    纵向居中对齐
+        //bottom    底部对齐
+        complex("contentAlign", ["x", "y"], (function () {
+
+            var regex1 = /left|center|right/,
+                regex2 = /top|middle|bottom/;
+
+            return function (value) {
+
+                value = "" + value;
+
+                return {
+
+                    contentAlignX: value && value.match(regex1) || "",
+                    contentAlignY: value && value.match(regex2) || ""
+                };
+            };
+
+        })());
+
+        //内容横向对齐方式
+        //left      左边对齐
+        //center    横向居中对齐
+        //right     右边对齐
+        style("contentAlign-x", "left", "last-value");
+
+        //内容纵向对齐方式
+        //top       顶部对齐
+        //middle    纵向居中对齐
+        //bottom    底部对齐
+        style("contentAlign-y", "top", "last-value");
+
         //流式布局列宽(此值仅对纵向流式布局(flow)有效)
         //length	规定以具体单位计的值 比如像素 厘米等
         //number%   控件客户区宽度的百分比
@@ -440,6 +477,7 @@
         //Array:    格式: [[width, height, layout-table] ...]
         //请注意从前到后的书写顺序
         style("layout-tables", null, "last-value");
+
 
 
 

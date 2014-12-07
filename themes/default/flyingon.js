@@ -205,7 +205,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         },
 
-        ".flyingon-TabPanel-header": {
+        "css:.flyingon-TabPanel-header": {
 
             borderStyle: "solid",
             borderColor: control_border,
@@ -213,7 +213,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             cursor: "default"
         },
 
-        ".flyingon-TabPanel-body": {
+        "css:.flyingon-TabPanel-body": {
 
             borderStyle: "solid",
             borderColor: control_border,

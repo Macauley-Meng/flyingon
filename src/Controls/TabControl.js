@@ -80,10 +80,26 @@ flyingon.defineClass("TabHeader", flyingon.Control, function (base) {
         (this.__layout = layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this, width, height);
     };
 
-    //this.before_measure = function (box) {
 
-    //    this.__layout = box.auto_width || box.auto_height  ? layout_line : layout_column3;
-    //};
+    this.after_measure = function (box) {
+
+        var style = this.dom_children.style;
+
+        switch (this.get_verticalAlign())
+        {
+            case "top":
+                style.top = "0";
+                break;
+
+            case "middle":
+                style.top = ((this.clientHeight - this.contentHeight) >> 1) + "px";
+                break;
+
+            default:
+                style.top = this.clientHeight - this.contentHeight + "px";
+                break;
+        }
+    };
 
 
 });
@@ -112,7 +128,7 @@ flyingon.defineClass("TabPanel", flyingon.Panel, function (base) {
 
 
     //创建模板
-    this.create_dom_template("div", "overflow:hidden;", "<div class='flyingon-TabPanel-header' style='position:absolute;overflow:hidden;" + this.__css_box_sizing + "'></div><div class='flyingon-TabPanel-body' style='position:absolute;overflow:hidden;" + this.__css_box_sizing + "'><div style='width:100%;height:100%;'><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div></div></div>");
+    this.create_dom_template("div", "overflow:hidden;", "<div class='flyingon-TabPanel-header' style='position:absolute;overflow:hidden;" + this.__css_box_sizing + "'></div><div class='flyingon-TabPanel-body' style='position:absolute;overflow:hidden;" + this.__css_box_sizing + "'><div class='flyingon-children-host' style='position:absolute;width:100%;height:100%;'><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div></div></div>");
 
 
 

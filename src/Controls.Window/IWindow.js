@@ -440,13 +440,14 @@
 
 
         //直接绑定事件至dom, 解决某些事件(如scroll)无法在父控件正确捕获的问题
-        flyingon.__fn_dom_event = function (target) {
+        flyingon.__fn_dom_event = function (target, release) {
 
             var dom = target.dom;
 
-            dom.onscroll = onscroll;
-            dom.onfocus = onfocus;
-            dom.onblur = onblur;
+            (target.dom_children && target.dom_children.parentNode || dom).onscroll = release ? null : onscroll;
+
+            dom.onfocus = release ? null : onfocus;
+            dom.onblur = release ? null : onblur;
 
             target.__has_dom_event = true;
         };
@@ -455,11 +456,23 @@
 
         function onscroll(event) {
 
-            var target = dom_target(event || fix_event(window.event)),
-                result = target.dispatchEvent("scroll");
+            var event = event || fix_event(window.event),
+                dom = event.target,
+                target = dom_target(event),
+                result;
 
-            target.__scrollLeft = target.dom.scrollLeft;
-            target.__scrollTop = target.dom.scrollTop;
+            target.__scrollLeft = dom.scrollLeft;
+            target.__scrollTop = dom.scrollTop;
+
+            if (target.__fn_on_scroll)
+            {
+                target.__fn_on_scroll(event);
+            }
+
+            result = target.dispatchEvent("scroll");
+
+            target.__scrollLeft_last = dom.scrollLeft;
+            target.__scrollTop_last = dom.scrollTop;
 
             pressdown = null; //IE滚动时无法触发mouseup事件
 
@@ -484,15 +497,6 @@
         };
 
 
-        function pressdown_cancel(event) {
-
-            if (pressdown)
-            {
-                events.mouseup(event, true);
-            }
-        };
-
-
 
         //初始化绑定事件方法
         return function (dom) {
@@ -502,6 +506,7 @@
                 dom["on" + name] = events[name]; //直接绑定至dom的on事件以提升性能
             }
         };
+
 
 
     })();

@@ -69,16 +69,12 @@
 
 
         //测量自动大小(需返回变化值)
-        this.__fn_measure_auto = function (box, change) {
+        this.__fn_measure_auto = function (box) {
 
-            if (box.auto_width)
-            {
-                change.width = this.dom_span.offsetWidth + box.client_width - this.offsetWidth;
-            }
+            return {
 
-            if (box.auto_height)
-            {
-                change.height = this.dom_span.offsetHeight + box.client_height - this.offsetHeight;
+                width: box.auto_width ? this.dom_span.offsetWidth + box.client_width - this.offsetWidth : 0,
+                height: box.auto_height ? this.dom_span.offsetHeight + box.client_height - this.offsetHeight : 0
             }
         };
 

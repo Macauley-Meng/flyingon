@@ -34,10 +34,16 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
 
-    this.__event_bubble_scroll = function (event) {
+    this.__fn_on_scroll = function (event) {
+
+        var style = this.dom_children.parentNode.style;
+
+        style.dispaly = "none";
 
         this.__render_items = null;
         this.render_children();
+
+        style.dispaly = "";
     };
 
 
@@ -63,10 +69,10 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
         var items = target.__render_items = [],
             children = target.__children,
-            x1 = target.dom.scrollLeft,
-            y1 = target.dom.scrollTop,
-            x2 = target.__scrollLeft,
-            y2 = target.__scrollTop,
+            x1 = target.__scrollLeft,
+            y1 = target.__scrollTop,
+            x2 = target.__scrollLeft_last,
+            y2 = target.__scrollTop_last,
             width = target.offsetWidth,
             height = target.offsetHeight,
             right = x1 + width,
@@ -122,13 +128,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
     //排列子控件
     this.arrange = function (width, height) {
 
-        var items = this.__children;
-
-        if (items && items.length > 0)
-        {
-            (this.__layout = this.layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this, width, height);
-        }
-
+        (this.__layout = this.layout || layouts[this.get_layoutType()] || layout_unkown).__fn_arrange(this, width, height);
         this.__render_items = null;
     };
 

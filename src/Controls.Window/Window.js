@@ -23,9 +23,6 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         dom.className = "flyingon";
         dom.style.cssText = "position:relative;overflow:hidden;width:100%;height:100%";
 
-        //设置dom_children
-        this.dom_children = this.dom.children[0];
-
         //初始化窗口
         this.__fn_init_window(this.dom);
 
@@ -35,11 +32,16 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         //禁止自动dom布局
         flyingon.dom_layout = false;
 
-        //绑定resize事件
+        //窗口大小发生变化时重排
         flyingon.addEventListener(window, "resize", function (event) {
 
+            if (dom.style.height !== "100%")
+            {
+                dom.style.height = "100%";
+            }
+
             _this.__render_items = null;
-            _this.update(true);
+            _this.update(true, true);
         });
 
         //设为活动窗口
@@ -115,7 +117,6 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         return function () {
 
             var dom = this.dom_window,
-                style = dom.style,
                 view = flyingon.quirks_mode ? document.body : document.documentElement, //获取视口对象(怪异模式的浏览器视口对象为document.body)
                 width,
                 height;
@@ -130,7 +131,17 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
                 if (this.__arrange_dirty)
                 {
-                    if ((height = dom.clientHeight) <= 0)
+                    if (!(width = dom.clientWidth)) //IE8有时取不到宽度
+                    {
+                        width = parseInt((document.body.currentStyle || window.getComputedStyle(document.body, null)).marginRight) || 0;
+
+                        if ((width = (window.innerWidth || view.clientWidth) - dom.offsetLeft - width) <= 0)
+                        {
+                            width = 600;
+                        }
+                    }
+
+                    if (!(height = dom.clientHeight))
                     {
                         height = parseInt((document.body.currentStyle || window.getComputedStyle(document.body, null)).marginBottom) || 0;
 
@@ -139,10 +150,10 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
                             height = 600;
                         }
 
-                        style.height = height + "px";
+                        dom.style.height = height + "px";
                     }
 
-                    this.measure(dom.clientWidth || view.clientWidth, height, true, true);
+                    this.measure(width || view.clientWidth, height, true, true);
                     this.locate(0, 0);
                 }
 

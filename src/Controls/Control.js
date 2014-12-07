@@ -503,8 +503,6 @@ flyingon.defineClass("Control", function () {
     (function (flyingon) {
 
 
-        var _this = this;
-
 
         //边框区大小(含边框及滚动条)
         this.offsetLeft = 0;    //相对父控件客户区偏移
@@ -526,25 +524,12 @@ flyingon.defineClass("Control", function () {
 
 
         //上次滚动位置
-        this.__scrollLeft = this.__scrollTop = 0;
+        this.__scrollLeft = this.__scrollTop = this.__scrollLeft_last = this.__scrollLeft_last = 0;
 
 
         //是否需要更新控件 0:不需要 1:需要更新 2:有子控件需要更新
         this.__update_dirty = 1;
 
-
-
-        function defineProperty(name, setter) {
-
-            var getter = new Function("return this.dom." + name + ";");
-
-            if (setter === true)
-            {
-                setter = new Function("value", "this.dom." + name + " = value;");
-            }
-
-            _this.defineProperty(name, getter, setter);;
-        };
 
 
 
@@ -557,16 +542,32 @@ flyingon.defineClass("Control", function () {
 
 
         //水平滚动条位置
-        defineProperty("scrollLeft", true);
+        this.defineProperty("scrollLeft",
+
+            function () {
+
+                return this.__scrollLeft;
+            },
+
+            function (value) {
+
+                (this.dom_children && this.dom_children.parentNode || this.dom).scollLeft = value;
+            });
+
 
         //竖直滚动条位置
-        defineProperty("scrollTop", true);
+        this.defineProperty("scrollTop",
 
-        //内容区宽度
-        defineProperty("scrollWidth");
+            function () {
 
-        //内容区高度
-        defineProperty("scrollHeight");
+                return this.__scrollTop;
+            },
+
+            function (value) {
+
+                (this.dom_children && this.dom_children.parentNode || this.dom).scrollTop = value;
+            });
+
 
 
 
@@ -767,11 +768,7 @@ flyingon.defineClass("Control", function () {
 
 
             //复合控件不设置padding, 通过布局调整内容区的大小来模拟padding, 否则有些浏览器滚动条的宽高不包含paddingRight或paddingBottom
-            if (dom_children)
-            {
-                dom = dom_children.parentNode || dom;
-            }
-            else  //设置padding样式
+            if (!dom_children)
             {
                 style.paddingLeft = box.paddingLeft + "px";
                 style.paddingTop = box.paddingTop + "px";
@@ -814,77 +811,25 @@ flyingon.defineClass("Control", function () {
             style.height = height + "px";
 
 
-            //测量前处理
-            if (this.before_measure)
+            //测量前处理(可在重载方法中返回变化量调整大小)
+            if (this.before_measure && (value = this.before_measure(box)))
             {
-                this.before_measure(box);
+                resize_change(this, style, box, width, height, value);
             }
 
 
-            //处理自动大小
-            if (box.auto_width || box.auto_height)
+            //处理自动大小 __fn_measure_auto需返回width及height的变化量
+            if ((box.auto_width || box.auto_height) && (value = this.__fn_measure_auto(box)))
             {
-                //测量自动大小
-                this.__fn_measure_auto(box, value = {});
-
-                //计算宽度
-                if (box.auto_width && value.width)
-                {
-                    this.offsetWidth += value.width;
-
-                    if (this.offsetWidth < box.minWidth)
-                    {
-                        value.width += box.minWidth - this.offsetWidth;
-                        this.offsetWidth = box.minWidth;
-                    }
-                    else if (box.maxWidth > 0 && this.offsetWidth > box.maxWidth)
-                    {
-                        value.width += box.maxWidth - this.offsetWidth;
-                        this.offsetWidth = box.maxWidth;
-                    }
-
-                    //重设置宽度
-                    style.width = width + value.width + "px";
-                }
-
-                //计算高度
-                if (box.auto_height && value.height)
-                {
-                    this.offsetHeight += value.height;
-
-                    if (this.offsetHeight < box.minHeight)
-                    {
-                        value.height += box.minHeight - this.offsetHeight;
-                        this.offsetHeight = box.minHeight;
-                    }
-                    else if (box.maxHeight > 0 && this.offsetHeight > box.maxHeight)
-                    {
-                        value.width += box.maxHeight - this.offsetHeight;
-                        this.offsetHeight = box.maxHeight;
-                    }
-
-                    //重设置高度
-                    style.height = height + value.height + "px";
-                }
+                resize_change(this, style, box, width, height, value);
             }
 
 
             //计算客户区大小
-            this.clientLeft = box.borderLeft + box.paddingLeft;
-            this.clientTop = box.borderTop + box.paddingTop;
-            this.clientWidth = dom.clientWidth - box.padding_width;
-            this.clientHeight = dom.clientHeight - box.padding_height;
-
-            while (dom !== this.dom)
-            {
-                this.clientLeft += dom.offsetLeft + dom.clientLeft;
-                this.clientTop += dom.offsetTop + dom.clientTop;
-
-                dom = dom.parentNode;
-            }
+            this.__fn_measure_client(box);
 
 
-            //测量后处理
+            //测量后处理(尽量在重载方法中不要改变控件大小)
             if (this.after_measure)
             {
                 this.after_measure(box);
@@ -897,6 +842,49 @@ flyingon.defineClass("Control", function () {
                 width: this.offsetWidth + box.margin_width,
                 height: this.offsetHeight + box.margin_height
             };
+        };
+
+
+        //重设置大小
+        function resize_change(style, box, width, height, change) {
+
+            var value;
+
+            if (value = +change.width)
+            {
+                this.offsetWidth += value;
+
+                if (this.offsetWidth < box.minWidth)
+                {
+                    value += box.minWidth - this.offsetWidth;
+                    this.offsetWidth = box.minWidth;
+                }
+                else if (box.maxWidth > 0 && this.offsetWidth > box.maxWidth)
+                {
+                    value += box.maxWidth - this.offsetWidth;
+                    this.offsetWidth = box.maxWidth;
+                }
+
+                style.width = width + value + "px";
+            }
+
+            if (value = +change.height)
+            {
+                this.offsetHeight += value;
+
+                if (this.offsetHeight < box.minHeight)
+                {
+                    value += box.minHeight - this.offsetHeight;
+                    this.offsetHeight = box.minHeight;
+                }
+                else if (box.maxHeight > 0 && this.offsetHeight > box.maxHeight)
+                {
+                    value += box.maxHeight - this.offsetHeight;
+                    this.offsetHeight = box.maxHeight;
+                }
+
+                style.height = height + value + "px";
+            }
         };
 
 
@@ -933,6 +921,56 @@ flyingon.defineClass("Control", function () {
             {
                 change.height = y + box.client_height - this.offsetHeight;
             }
+        };
+
+
+        //测量客户区大小
+        this.__fn_measure_client = function (box) {
+
+            var dom = this.dom,
+                dom_children = this.dom_children,
+                x,
+                y,
+                width,
+                height;
+
+            x = box.borderLeft + box.paddingLeft;
+            y = box.borderTop + box.paddingTop;
+
+            if (dom_children) //有子控件(注: 如果子控件容器的父dom不允许设置边框)
+            {
+                dom_children = dom_children.parentNode;
+
+                width = dom.offsetWidth - box.padding_width;
+                height = dom.offsetHeight - box.padding_height;
+
+                if (dom_children === dom)
+                {
+                    width -= box.border_width;
+                    height -= box.border_height;
+                }
+                else
+                {
+                    do
+                    {
+                        x += dom_children.offsetLeft + dom_children.clientLeft;
+                        y += dom_children.offsetTop + dom_children.clientTop;
+
+                        dom_children = dom_children.parentNode;
+
+                    } while (dom_children !== this.dom)
+                }
+            }
+            else
+            {
+                width = this.offsetWidth - box.border_width - box.padding_width;
+                height = this.offsetHeight - box.border_height - box.padding_height;
+            }
+
+            this.clientLeft = x;
+            this.clientTop = y;
+            this.clientWidth = width > 0 ? width : 0;
+            this.clientHeight = width > 0 ? height : 0;
         };
 
 
@@ -1356,11 +1394,9 @@ flyingon.defineClass("Control", function () {
                 }
             }
 
-            if ((cache = this.dom).__has_dom_event) //如果绑定了自定义事件则清空以免内存泄露
+            if (this.__has_dom_event) //如果绑定了自定义事件则清空以免内存泄露
             {
-                cache.onscroll = null;
-                cache.onfocus = null;
-                cache.onblue = null;
+                flyingon.__fn_dom_event(this, true);
             }
 
             flyingon.dom_dispose(cache);

@@ -28,8 +28,8 @@
 
             var dom = document.createElement("div");
 
-            dom.style.cssText = "overflow:scroll;width:100px;height:100px;border:0;padding:0;";
-            dom.innerHTML = "<div style='width:200px;height:200px;'></div>";
+            dom.style.cssText = "position:absolute;overflow:scroll;width:100px;height:100px;border:0;padding:0;visibility:hidden;";
+            dom.innerHTML = "<div style='position:relative;width:200px;height:200px;'></div>";
 
             body.appendChild(dom);
 
@@ -39,6 +39,12 @@
             //水平滚动条高度
             this.scroll_height = dom.offsetHeight - dom.clientHeight;
 
+            dom.style.cssText += "box-sizing:border-box";
+
+            //检测是不因滚动条而造成宽高变小(IE9)
+            this.scroll_width_fixed = dom.offsetWidth < 100;
+            this.scroll_height_fixed = dom.offsetHeight < 100;
+
             flyingon.dom_dispose(dom);
 
         }, this);
@@ -47,76 +53,199 @@
 
         this.__fn_arrange = function (target, width, height) {
 
-            var box = target.__boxModel,
-                children = target.__children,
-                dom = target.dom_children,
-                style2 = dom.style,
-                style1 = (dom = dom.parentNode).style,
-                items = [];
+            var children = target.__children;
 
-            this.vertical = target.get_vertical();
-
-            //先筛选出可视控件
-            for (var i = 0, _ = children.length; i < _; i++)
+            if (children && children.length > 0)
             {
-                var item = children[i];
+                var box = target.__boxModel,
+                    dom = target.dom_children,
+                    style2 = dom.style,
+                    style1 = (dom = dom.parentNode).style,
+                    items = [],
+                    item,
+                    cache;
 
-                item.__arrange_index = i;
+                this.vertical = target.get_vertical();
 
-                if (item.__visible = (item.__visibility = item.get_visibility()) !== "collapse")
+                //先筛选出可视控件
+                for (var i = 0, _ = children.length; i < _; i++)
                 {
-                    items.push(item);
+                    var item = children[i];
+
+                    item.__arrange_index = i;
+
+                    if (item.__visible = (item.__visibility = item.get_visibility()) !== "collapse")
+                    {
+                        items.push(item);
+                    }
+                    else
+                    {
+                        target.__fn_hide(item);
+                    }
+                }
+
+                //初始化内容区
+                target.contentWidth = width;
+                target.contentHeight = height;
+
+                //排列
+                this.arrange(target, items, width, height);
+
+                //镜像变换
+                if ((this.mirror = target.__arrange_mirror = target.get_mirror()) !== "none")
+                {
+                    mirror(items, this.mirror, target.contentWidth, target.contentHeight);
+                }
+
+                //减去滚动条
+                if (target.contentWidth <= width)
+                {
+                    style1.overflowX = "hidden";
                 }
                 else
                 {
-                    target.__fn_hide(item);
+                    switch (style1.overflowX = target.get_overflowX())
+                    {
+                        case "auto":
+                        case "scroll":
+                            height -= this.scroll_height;
+
+                            //修复IE9因滚动条变小的问题
+                            if (this.scroll_height_fixed && dom === target.dom)
+                            {
+                                style1.height = target.offsetHeight + this.scroll_height + "px";
+                            }
+                            break;
+                    }
+
+                    //内容区宽度超过客户区宽度时永远左对齐
+                    style2.left = box.paddingLeft + "px";
                 }
-            }
 
-            //初始化内容区
-            target.contentWidth = width;
-            target.contentHeight = height;
+                if (target.contentHeight <= height)
+                {
+                    style1.overflowY = "hidden";
+                }
+                else
+                {
+                    switch (style1.overflowY = target.get_overflowY())
+                    {
+                        case "auto":
+                        case "scroll":
+                            width -= this.scroll_width;
 
-            //排列
-            this.arrange(target, items, width, height);
+                            //修复IE9因滚动条变小的问题
+                            if (this.scroll_width_fixed && dom === target.dom)
+                            {
+                                style1.width = target.offsetWidth + this.scroll_width + "px";
+                            }
+                            break;
+                    }
 
-            //镜像变换
-            if ((this.mirror = target.__arrange_mirror = target.get_mirror()) !== "none")
-            {
-                mirror(items, this.mirror, target.contentWidth, target.contentHeight);
-            }
+                    //内容区高度超过客户区高度时永远顶部对齐
+                    style2.top = box.paddingTop + "px";
+                }
 
-            //设置样式
-            if (target.contentWidth <= width)
-            {
-                style1.overflowX = "hidden"; //不加这句IE有时会出现滚动条
-                style2.width = "100%";
-            }
-            else
-            {
-                style1.overflowX = target.get_overflowX();
+                //处理内容水平对齐
+                if (target.contentWidth < width)
+                {
+                    switch (target.get_contentAlignX())
+                    {
+                        case "left":
+                            style2.left = box.paddingLeft + "px";
+                            break;
+
+                        case "center":
+                            style2.left = ((width - target.contentWidth) >> 1) + box.paddingLeft + "px";
+                            break;
+
+                        default:
+                            style2.left = width - target.contentWidth + box.paddingLeft + "px";
+                            break;
+                    }
+                }
+                else
+                {
+                    style2.left = box.paddingLeft + "px";
+                }
+
+                //处理内容竖直对齐
+                if (target.contentHeight <= height)
+                {
+                    switch (target.get_contentAlignY())
+                    {
+                        case "top":
+                            style2.top = box.paddingTop + "px";
+                            break;
+
+                        case "middle":
+                            style2.top = ((height - target.contentHeight) >> 1) + box.paddingTop + "px";
+                            break;
+
+                        default:
+                            style2.top = height - target.contentHeight + box.paddingTop + "px";
+                            break;
+                    }
+                }
+                else
+                {
+                    style2.top = box.paddingTop + "px";
+                }
+
+                //设置样式
                 style2.width = target.contentWidth + box.paddingRight + "px";
+                style2.height = target.contentHeight + box.paddingBottom + "px";
 
-                if (dom.scrollWidth - box.padding_width < target.contentWidth) //解决设置了paddingRight时在IE怪异模式下无法滚到底的问题
+                //解决设置了paddingRight时在IE怪异模式下无法滚到底的问题
+                if (target.contentWidth > width && dom.scrollWidth - box.padding_width < target.contentWidth)
                 {
                     style2.width = target.contentWidth + box.padding_width + "px";
                 }
-            }
 
-            if (target.contentHeight <= height)
-            {
-                style1.overflowY = "hidden"; //不加这句IE有时会出现滚动条
-                style2.height = "100%";
-            }
-            else
-            {
-                style1.overflowY = target.get_overflowY();
-                style2.height = target.contentHeight + box.paddingBottom + "px";
-
-                if (dom.scrollHeight - box.padding_height < target.contentHeight) //解决设置了paddingBottom时在IE怪异模式下无法滚到底的问题
+                //解决设置了paddingBottom时在IE怪异模式下无法滚到底的问题
+                if (target.contentHeight > height && dom.scrollHeight - box.padding_height < target.contentHeight)
                 {
                     style2.height = target.contentHeight + box.padding_height + "px";
                 }
+            }
+            else
+            {
+                target.contentWidth = 0;
+                target.contentHeight = 0;
+            }
+        };
+
+
+        function mirror(items, mirror, width, height) {
+
+            var item, style;
+
+            switch (mirror)
+            {
+                case "x":
+                    for (var i = 0, _ = items.length; i < _; i++)
+                    {
+                        style = (item = items[i]).dom.style;
+                        style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
+                    }
+                    break;
+
+                case "y":
+                    for (var i = 0, _ = items.length; i < _; i++)
+                    {
+                        style = (item = items[i]).dom.style;
+                        style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
+                    }
+                    break;
+
+                case "center":
+                    for (var i = 0, _ = items.length; i < _; i++)
+                    {
+                        style = (item = items[i]).dom.style;
+                        style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
+                        style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
+                    }
+                    break;
             }
         };
 
@@ -125,35 +254,6 @@
         this.arrange = function (target, items, width, height) {
 
         };
-
-
-        //镜像变换
-        function mirror(items, mirror, width, height) {
-
-            var item, style;
-
-            for (var i = 0, _ = items.length; i < _; i++)
-            {
-                style = (item = items[i]).dom.style;
-
-                switch (mirror)
-                {
-                    case "x":
-                        style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
-                        break;
-
-                    case "y":
-                        style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
-                        break;
-
-                    case "center":
-                        style.left = (item.offsetLeft = width - item.offsetLeft - item.offsetWidth) + "px";
-                        style.top = (item.offsetTop = height - item.offsetTop - item.offsetHeight) + "px";
-                        break;
-                }
-            }
-        };
-
 
 
         //初始化分隔条
@@ -312,7 +412,16 @@
 
                 if (offset.y > height && !fixed) //超行需调整客户区后重排
                 {
-                    return arrange1.call(this, target, items, width - this.scroll_width, height, true);
+                    switch (target.get_overflowY())
+                    {
+                        case "auto":
+                        case "scroll":
+                            return arrange1.call(this, target, items, width - this.scroll_width, height, true);
+
+                        default:
+                            fixed = true;
+                            break;
+                    }
                 }
 
                 if ((x = offset.x) > contentWidth)
@@ -373,7 +482,16 @@
 
                 if (offset.x > width && !fixed) //超行需调整客户区后重排
                 {
-                    return arrange2.call(this, target, items, width, height - this.scroll_height, true);
+                    switch (target.get_overflowX())
+                    {
+                        case "auto":
+                        case "scroll":
+                            return arrange2.call(this, target, items, width, height - this.scroll_height, true);
+
+                        default:
+                            fixed = true;
+                            break;
+                    }
                 }
 
                 if (offset.x > contentWidth)
@@ -458,7 +576,16 @@
 
                 if ((x = offset.x) > width && !fixed) //超行需调整客户区后重排
                 {
-                    return arrange1.call(this, target, items, width, height - this.scroll_height, true);
+                    switch (target.get_overflowX())
+                    {
+                        case "auto":
+                        case "scroll":
+                            return arrange1.call(this, target, items, width, height - this.scroll_height, true);
+
+                        default:
+                            fixed = true;
+                            break;
+                    }
                 }
 
                 if (offset.y > y)
@@ -495,7 +622,16 @@
 
                 if ((y = offset.y) > height && !fixed) //超行需调整客户区后重排
                 {
-                    return arrange2.call(this, target, items, width - this.scroll_width, height, true);
+                    switch (target.get_overflowY())
+                    {
+                        case "auto":
+                        case "scroll":
+                            return arrange2.call(this, target, items, width - this.scroll_width, height, true);
+
+                        default:
+                            fixed = true;
+                            break;
+                    }
                 }
 
                 if (offset.x > x)
@@ -2383,7 +2519,7 @@
 
     function dom_wrapper(dom) {
 
-        var control, children, name, value, cache1, cache2;
+        var control, children, name, cache1, cache2;
 
         switch (dom.getAttribute("layout-control")) //指定布局控件
         {
@@ -2422,6 +2558,35 @@
                 break;
         }
 
+        //同步属性及控件
+        dom_to(dom, control);
+
+        //处理子控件
+        if (children)
+        {
+            children = dom.children;
+            cache1 = document.createDocumentFragment();
+
+            for (var i = 0, _ = children.length; i < _; i++)
+            {
+                control.appendChild(cache2 = dom_wrapper(children[0]));
+                cache1.appendChild(cache2.dom);
+            }
+
+            control.dom_children.appendChild(cache1);
+            control.__dom_dirty = false;
+
+            //需最后处理dom 否则可能会出现循环添加错误
+            control.__fn_from_dom(dom);
+        }
+
+        return control;
+    };
+
+
+    function dom_to(dom, control) {
+
+        var name, value, cache1, cache2;
 
         //同步dom属性至控件
         for (var i = 0, _ = (cache1 = dom.attributes).length; i < _; i++)
@@ -2447,27 +2612,6 @@
                 }
             }
         }
-
-        //处理子控件
-        if (children)
-        {
-            children = dom.children;
-            cache1 = document.createDocumentFragment();
-
-            for (var i = 0, _ = children.length; i < _; i++)
-            {
-                control.appendChild(cache2 = dom_wrapper(children[0]));
-                cache1.appendChild(cache2.dom);
-            }
-
-            control.dom_children.appendChild(cache1);
-            control.__dom_dirty = false;
-
-            //需最后处理dom 否则可能会出现循环添加错误
-            control.__fn_from_dom(dom);
-        }
-
-        return control;
     };
 
 
@@ -2484,6 +2628,8 @@
                 name;
 
             dom.style.visibility = "hidden";
+
+            dom_to(dom, result);
 
             for (var i = 0; i < length; i++)
             {
