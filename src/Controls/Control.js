@@ -620,7 +620,7 @@ flyingon.defineClass("Control", function () {
         this.measure = function (usable_width, usable_height, defaultWidth_to_fill, defaultHeight_to_fill, less_width_to_default, less_height_to_default) {
 
 
-            var box = this.__boxModel || (this.__boxModel = {}),
+            var box = this.__boxModel,
                 fn = this.compute_size,
                 dom = this.dom,
                 dom_children = this.dom_children, //复合控件容器
@@ -629,6 +629,14 @@ flyingon.defineClass("Control", function () {
                 height,
                 value;
 
+            if (box)
+            {
+                box.auto_width = box.auto_height = false;
+            }
+            else
+            {
+                box = this.__boxModel = {}
+            }
 
             //计算盒模型
             box.margin_width = (box.marginLeft = fn(this.get_marginLeft())) + (box.marginRight = fn(this.get_marginRight()));
@@ -814,14 +822,14 @@ flyingon.defineClass("Control", function () {
             //测量前处理(可在重载方法中返回变化量调整大小)
             if (this.before_measure && (value = this.before_measure(box)))
             {
-                resize_change(this, style, box, width, height, value);
+                resize_change.call(this, style, box, width, height, value);
             }
 
 
             //处理自动大小 __fn_measure_auto需返回width及height的变化量
             if ((box.auto_width || box.auto_height) && (value = this.__fn_measure_auto(box)))
             {
-                resize_change(this, style, box, width, height, value);
+                resize_change.call(this, style, box, width, height, value);
             }
 
 
@@ -937,10 +945,8 @@ flyingon.defineClass("Control", function () {
             x = box.borderLeft + box.paddingLeft;
             y = box.borderTop + box.paddingTop;
 
-            if (dom_children) //有子控件(注: 如果子控件容器的父dom不允许设置边框)
+            if (dom_children && (dom_children = dom_children.parentNode)) //有子控件(注: 如果子控件容器的父dom不允许设置边框)
             {
-                dom_children = dom_children.parentNode;
-
                 width = dom.offsetWidth - box.padding_width;
                 height = dom.offsetHeight - box.padding_height;
 
@@ -956,9 +962,7 @@ flyingon.defineClass("Control", function () {
                         x += dom_children.offsetLeft + dom_children.clientLeft;
                         y += dom_children.offsetTop + dom_children.clientTop;
 
-                        dom_children = dom_children.parentNode;
-
-                    } while (dom_children !== this.dom)
+                    } while ((dom_children = dom_children.parentNode) && dom_children !== this.dom)
                 }
             }
             else
@@ -1436,10 +1440,6 @@ flyingon.defineClass("Control", function () {
 
 
 
-        var box_sizing = flyingon.__fn_css_prefix("box-sizing"), //box-sizing样式名 注意在IE9下如果有滚动条设置border-box值时会变小
-            style_template = "position:absolute;" + (this.__css_box_sizing = box_sizing ? box_sizing + ":border-box;" : "");     //样式模板值
-
-
         //创建dom模板(必须在创建类时使用此方法创建dom模板)
         this.create_dom_template = function (tagName, cssText, attributes) {
 
@@ -1474,11 +1474,11 @@ flyingon.defineClass("Control", function () {
 
             if (flyingon.browser_WebKit)
             {
-                dom.setAttribute("style", style_template + (cssText || "")); //此方法创建的样式在chrome,safari中性能要好些
+                dom.setAttribute("style", "position:absolute;" + (cssText || "")); //此方法创建的样式在chrome,safari中性能要好些
             }
             else
             {
-                dom.style.cssText = style_template + (cssText || "");
+                dom.style.cssText = "position:absolute;" + (cssText || "");
             }
 
             //计算盒模型在不同浏览器中的偏差
@@ -1492,7 +1492,7 @@ flyingon.defineClass("Control", function () {
                     dom.type = attributes.type;
                 }
 
-                dom.style.cssText = style_template + "width:100px;height:0;padding:1px;visibility:hidden;";
+                dom.style.cssText = "position:absolute;width:100px;height:0;padding:1px;visibility:hidden;";
 
                 body.appendChild(dom);
 
@@ -1543,11 +1543,6 @@ flyingon.defineClass("Control", function () {
         this.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
 
 
-        //box-sizing样式名, 为空则表示不支持box-sizing
-        this.__style_box_sizing = box_sizing = flyingon.__fn_style_prefix("box-sizing");
-
-
-
 
         //获取dom关联的目标控件
         this.__fn_dom_control = (function () {
@@ -1578,11 +1573,6 @@ flyingon.defineClass("Control", function () {
             var cache;
 
             dom.style.position = "absolute";
-
-            if (cache = box_sizing)
-            {
-                dom.style[cache] = "border-box";
-            }
 
             if (this.dom && this.dom.firstChild)
             {

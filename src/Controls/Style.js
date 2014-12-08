@@ -1730,14 +1730,14 @@
 
         for (var name in style)
         {
-            if ((value = style[name]) || value === 0)
+            if ((value = style[name]) || value === 0 || value === false)
             {
                 if (value.constructor === Object) //嵌套子样式
                 {
                     if (name.indexOf("css:") === 0)
                     {
                         name = name.substring(4);
-                        name = (selector.indexOf("css:") !== 0 ? "css:" : "") + selector + " " + name;
+                        name = (selector.indexOf("css:") !== 0 ? "css:" : "") + selector.replace("@", ".") + " " + name;
                     }
                     else
                     {

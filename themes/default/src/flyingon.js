@@ -165,111 +165,85 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-        //页签头样式
-        "@flyingon-TabHeader": {
-
-            backgroundColor: control_back,
-            cursor: "default"
-        },
-
-        //页签头选中状态时样式
-        ".flyingion-TabHeader-selected": {
-
-        },
-
-        //页签头图标样式
-        ".flyingon-TabHeader-icon": {
-
-            color: control_color
-        },
-
-        //页签头收拢图标样式
-        ".flyingon-TabHeader-collapse": {
-
-            ":hover": {
-
-                color: hover_color
-            }
-        },
-
-        //页签头关闭图标样式
-        ".flyingon-TabHeader-close": {
-
-        },
-
-
-
-        //标签面板标题栏样式
-        //注：不要直接设置.flyingon-TabPanel-header的大小应通过设置@flyingon-TabHeader的大小及margin来控制
+        //标签面板默认样式
         "@flyingon-TabPanel": {
 
-        },
+            //头部区域
+            "css:.flyingon-TabPanel-header": {
 
-        "css:.flyingon-TabPanel-header": {
+                borderStyle: "solid",
+                borderColor: control_border,
+                borderWidth: "0",
+                cursor: "default"
+            },
 
-            borderStyle: "solid",
-            borderColor: control_border,
-            borderWidth: "1px",
-            cursor: "default"
-        },
+            //内容区域
+            "css:.flyingon-TabPanel-body": {
 
-        "css:.flyingon-TabPanel-body": {
+                borderStyle: "solid",
+                borderColor: control_border,
+                borderWidth: "1px",
+                backgroundColor: window_back
+            },
 
-            borderStyle: "solid",
-            borderColor: control_border,
-            borderWidth: "1px",
-            backgroundColor: window_back
-        },
-
-        "css:.flyingon-TabPanel-left": {
-
-            ".flyingon-TabPanel-header": {
-
-                borderRightWidth: "0"
-            }
-        },
-
-        "css:.flyingon-TabPanel-right": {
-
-            ".flyingon-TabPanel-header": {
-
-                borderLeftWidth: "0"
-            }
-        },
-
-        "css:.flyingon-TabPanel-top": {
-
-            ".flyingon-TabPanel-header": {
-
-                borderBottomWidth: "0"
-            }
-        },
-
-        "css:.flyingon-TabPanel-bottom": {
-
-            ".flyingon-TabPanel-header": {
-
-                borderTopWidth: "0"
-            }
-        },
-
-
-        //普通标签面板样式
-        ".flyingon-TabPanel-common-left,.flyingon-TabPanel-common-top,.flyingon-TabPanel-common-right,.flyingon-TabPanel-common-bottom": {
-
+            //页签头
             "@flyingon-TabHeader": {
 
                 layoutType: "column3",
-                margin: "0"
+                margin: "0",
+                borderStyle: "solid",
+                borderColor: control_border,
+                borderWidth: "1px",
+                width: "fill",
+                height: "fill",
+                overflow: "hidden",
+                backgroundColor: control_back,
+                cursor: "default"
             },
 
+            "@flyingon-TabHeader:hover": {
+
+                backgroundColor: hover_back
+            },
+
+            //选中状态时页签头
+            ".flyingion-TabHeader-selected": {
+
+                backgroundColor: focus_back
+            },
+
+            //页签头图标
+            ".flyingon-TabHeader-icon": {
+
+                color: control_color
+            },
+
+            //页签头文字
             ".flyingon-TabHeader-text": {
 
-                column3: "center"
+                column3: "center",
+                width: "fill",
+                height: "fill"
+            },
+
+            //页签头收拢图标
+            ".flyingon-TabHeader-collapse": {
+
+                ":hover": {
+
+                    color: hover_color
+                }
+            },
+
+            //页签头关闭图标
+            ".flyingon-TabHeader-close": {
+
             }
         },
 
-        ".flyingon-TabPanel-common-left,.flyingon-TabPanel-common-right": {
+
+        //左右标签面板默认样式
+        ".flyingon-TabPanel-left,.flyingon-TabPanel-right": {
 
             "css:.flyingon-TabPanel-header": {
 
@@ -279,6 +253,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             "@flyingon-TabHeader": {
 
                 vertical: true,
+                alignY: "top",
                 width: "fill",
                 height: "fill"
             },
@@ -290,7 +265,8 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-common-top,.flyingon-TabPanel-common-bottom": {
+        //上下标签面板默认样式
+        ".flyingon-TabPanel-top,.flyingon-TabPanel-bottom": {
 
             "css:.flyingon-TabPanel-header": {
 
@@ -300,6 +276,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             "@flyingon-TabHeader": {
 
                 vertical: false,
+                alignX: "left",
                 width: "fill",
                 height: "fill"
             },
@@ -312,122 +289,217 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
 
-        //".flyingon-TabPanel-tab1-top,.flyingon-TabPanel-tab2-top,.flyingon-TabPanel-tab3-top": {
+        //收拢状态左右标签面板样式
+        "css:.flyingon-TabPanel-collapse-left,.flyingon-TabPanel-collapse-right .flyingon-TabPanel-header": {
 
-        //    "@flyingon-TabHeader": {
+            width: "28px"
+        },
 
-        //        //marginTop: "2px",
-        //        //border: "1px solid blue",
-        //        //borderTopLeftRadius: "5px",
-        //        //borderTopRightRadius: "5px",
-        //        //borderBottomWidth: "0",
-        //        margin: "1px 10px",
-        //        layoutType: "line",
-        //        //mirror: "y",
-        //        width: "fill",
-        //        height: "28px"
-        //    },
+        //收拢状态上下标签面板默认样式
+        "css:.flyingon-TabPanel-collapse-top,.flyingon-TabPanel-collapse-bottom .flyingon-TabPanel-header": {
 
-        //    "@flyingon-TabHeader-selected": {
-
-        //    },
-
-        //    ".flyingon-TabHeader-text": {
-
-        //        width: "auto"
-        //    }
-        //},
-
-        //".flyingon-TabPanel-tab1-left,.flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab3-left": {
-
-        //    "@flyingon-TabHeader": {
-
-        //        height: "auto"
-        //    }
-        //},
-
-        //".flyingon-TabPanel-tab1-right,.flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab3-right": {
-
-        //    "@flyingon-TabHeader": {
-
-        //        height: "auto"
-        //    }
-        //},
-
-        //".flyingon-TabPanel-tab1-bottom,.flyingon-TabPanel-tab2-bottom,.flyingon-TabPanel-tab3-bottom": {
-
-        //    "@flyingon-TabHeader": {
-
-        //        border: "1px solid blue",
-        //        borderTopWidth: "0",
-        //        width: "auto"
-        //    },
-
-        //    ".flyingon-TabHeader-text": {
-
-        //        width: "auto"
-        //    }
-        //},
+            height: "28px"
+        },
 
 
-        //收拢状态标签面板样式
-        ".flyingon-TabPanel-collapse-left,.flyingon-TabPanel-collapse-top,.flyingon-TabPanel-collapse-right,.flyingon-TabPanel-collapse-bottom": {
+        //outlookbar标签面板样式
+        ".flyingon-TabPanel-outlook-left,.flyingon-TabPanel-outlook-right": {
 
             "@flyingon-TabHeader": {
 
-                layoutType: "column3",
-                margin: "0",
-                borderWidth: "1px"
+                layoutType: "line",
+                contentAlignY: "middle"
             },
 
             ".flyingon-TabHeader-text": {
 
-                column3: "center"
+                height: "auto"
             }
         },
 
-        ".flyingon-TabPanel-collapse-left,.flyingon-TabPanel-collapse-right": {
-
-            "css:.flyingon-TabPanel-header": {
-
-                width: "25px",
-                height: "100%"
-            },
+        ".flyingon-TabPanel-outlook-top,.flyingon-TabPanel-outlook-bottom": {
 
             "@flyingon-TabHeader": {
 
-                vertical: true,
-                width: "fill",
-                height: "fill"
+                layoutType: "line",
+                contentAlignX: "center"
             },
 
             ".flyingon-TabHeader-text": {
 
-                textAlign: "center",
-                verticalAlign: "top"
+                width: "auto"
             }
         },
 
-        ".flyingon-TabPanel-collapse-top,.flyingon-TabPanel-collapse-bottom": {
+
+        //isolate标签面板样式
+        ".flyingon-TabPanel-isolate-left,.flyingon-TabPanel-isolate-right": {
+
+            "@flyingon-TabHeader": {
+
+                layoutType: "line",
+                marginLeft: "1px",
+                marginRight: "1px",
+                borderWidth: "0",
+                contentAlignY: "top",
+                height: "auto",
+                backgroundColor: "transparent"
+            },
+
+            ".flyingon-TabHeader-text": {
+
+                height: "auto"
+            }
+        },
+
+        ".flyingon-TabPanel-isolate-top,.flyingon-TabPanel-isolate-bottom": {
+
+            "@flyingon-TabHeader": {
+
+                layoutType: "line",
+                marginTop: "1px",
+                marginBottom: "1px",
+                borderWidth: "0",
+                contentAlignX: "left",
+                width: "auto",
+                backgroundColor: "transparent"
+            },
+
+            ".flyingon-TabHeader-text": {
+
+                width: "auto"
+            }
+        },
+
+
+        //页签式标签面板样式
+        ".flyingon-TabPanel-tab1-top,.flyingon-TabPanel-tab2-top,.flyingon-TabPanel-tab3-top,.flyingon-TabPanel-tab4-top": {
+
+            "@flyingon-TabHeader": {
+
+                layoutType: "line",
+                width: "auto",
+                borderBottomWidth: "0",
+                borderTopLeftRadius: "5px",
+                borderTopRightRadius: "5px"
+            },
+
+            ".flyingon-TabHeader-text": {
+
+                width: "auto"
+            }
+        },
+
+        ".flyingon-TabPanel-tab1-left,.flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab3-left,.flyingon-TabPanel-tab4-left": {
+
+            "@flyingon-TabHeader": {
+
+                layoutType: "line",
+                height: "auto",
+                borderRightWidth: "0",
+                borderTopLeftRadius: "5px",
+                borderBottomLeftRadius: "5px"
+            },
+
+            ".flyingon-TabHeader-text": {
+
+                height: "auto"
+            }
+        },
+
+        ".flyingon-TabPanel-tab1-right,.flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab3-right,.flyingon-TabPanel-tab4-right": {
+
+            "@flyingon-TabHeader": {
+
+                layoutType: "line",
+                height: "auto",
+                borderLeftWidth: "0",
+                borderTopRightRadius: "5px",
+                borderBottomRightRadius: "5px"
+            },
+
+            ".flyingon-TabHeader-text": {
+
+                height: "auto"
+            }
+        },
+
+        ".flyingon-TabPanel-tab1-bottom,.flyingon-TabPanel-tab2-bottom,.flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-bottom": {
+
+            "@flyingon-TabHeader": {
+
+                layoutType: "line",
+                width: "auto",
+                borderTopWidth: "0",
+                borderBottomLeftRadius: "5px",
+                borderBottomRightRadius: "5px"
+            },
+
+            ".flyingon-TabHeader-text": {
+
+                width: "auto"
+            }
+        },
+
+        ".flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab4-left @flyingon-TabHeader": {
+
+            contentAlignX: "right"
+        },
+
+
+        ".flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab4-left,.flyingon-TabPanel-tab4-right": {
 
             "css:.flyingon-TabPanel-header": {
 
-                width: "100%",
-                height: "25px"
+                width: "120px"
             },
 
             "@flyingon-TabHeader": {
 
                 vertical: false,
-                width: "fill",
-                height: "fill"
+                height: "27px",
+                contentAlignX: "right"
             },
 
             ".flyingon-TabHeader-text": {
 
+                width: "auto",
                 textAlign: "left",
                 verticalAlign: "middle"
             }
+        },
+
+        ".flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab4-right @flyingon-TabHeader": {
+
+            contentAlignX: "left"
+        },
+
+
+        ".flyingon-TabPanel-tab3-top,.flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-top,.flyingon-TabPanel-tab4-bottom": {
+
+            "css:.flyingon-TabPanel-header": {
+
+                height: "120px"
+            },
+
+            "@flyingon-TabHeader": {
+
+                vertical: true,
+                width: "27px",
+                contentAlignY: "bottom"
+            },
+
+            ".flyingon-TabHeader-text": {
+
+                height: "auto",
+                textAlign: "top",
+                verticalAlign: "top"
+            }
+        },
+
+        ".flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-bottom @flyingon-TabHeader": {
+
+            contentAlignY: "top"
         },
 
 

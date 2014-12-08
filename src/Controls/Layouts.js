@@ -39,12 +39,6 @@
             //水平滚动条高度
             this.scroll_height = dom.offsetHeight - dom.clientHeight;
 
-            dom.style.cssText += "box-sizing:border-box";
-
-            //检测是不因滚动条而造成宽高变小(IE9)
-            this.scroll_width_fixed = dom.offsetWidth < 100;
-            this.scroll_height_fixed = dom.offsetHeight < 100;
-
             flyingon.dom_dispose(dom);
 
         }, this);
@@ -109,12 +103,6 @@
                         case "auto":
                         case "scroll":
                             height -= this.scroll_height;
-
-                            //修复IE9因滚动条变小的问题
-                            if (this.scroll_height_fixed && dom === target.dom)
-                            {
-                                style1.height = target.offsetHeight + this.scroll_height + "px";
-                            }
                             break;
                     }
 
@@ -133,12 +121,6 @@
                         case "auto":
                         case "scroll":
                             width -= this.scroll_width;
-
-                            //修复IE9因滚动条变小的问题
-                            if (this.scroll_width_fixed && dom === target.dom)
-                            {
-                                style1.width = target.offsetWidth + this.scroll_width + "px";
-                            }
                             break;
                     }
 
@@ -196,13 +178,13 @@
                 style2.width = target.contentWidth + box.paddingRight + "px";
                 style2.height = target.contentHeight + box.paddingBottom + "px";
 
-                //解决设置了paddingRight时在IE怪异模式下无法滚到底的问题
+                //解决设置了padding时在IE怪异模式下无法滚到底的问题
                 if (target.contentWidth > width && dom.scrollWidth - box.padding_width < target.contentWidth)
                 {
                     style2.width = target.contentWidth + box.padding_width + "px";
                 }
 
-                //解决设置了paddingBottom时在IE怪异模式下无法滚到底的问题
+                //解决设置了padding时在IE怪异模式下无法滚到底的问题
                 if (target.contentHeight > height && dom.scrollHeight - box.padding_height < target.contentHeight)
                 {
                     style2.height = target.contentHeight + box.padding_height + "px";

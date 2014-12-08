@@ -281,6 +281,7 @@
                             break;
 
                         case "alignX":
+                        case "contentAlignX":
                             if (value !== "left" && value !== "center" && value !== "right")
                             {
                                 alert("可选值: left, center, right");
@@ -292,6 +293,7 @@
                             break;
 
                         case "alignY":
+                        case "contentAlignY":
                             if (value !== "top" && value !== "middle" && value !== "bottom")
                             {
                                 alert("可选值: top, middle, bottom");
@@ -403,20 +405,21 @@
 
         <div id="tool">
 
-            <div id="drag" style="border:1px solid black; padding:2px; background-color: yellow;">
+            <div style="border:1px solid black; padding:2px; background-color: yellow;">
 
                 <input type="button" value="horizontal" onclick="vertical(false)" />
                 <input type="button" value="vertical" onclick="vertical(true)" />
 
-                <span style="width: 10px"></span>
+                <span style="margin-left: 20px"></span>
                 <input type="button" value="mirror-none" onclick="mirror('none')" />
                 <input type="button" value="mirror-y" onclick="mirror('y')" />
                 <input type="button" value="mirror-x" onclick="mirror('x')" />
                 <input type="button" value="mirror-center" onclick="mirror('center')" />
 
-                <span style="width: 10px"></span>
+                <span style="margin-left: 20px"></span>
                 <input type="button" value="Paint" onclick="paint()" />
-                <span style="width: 10px"></span>
+
+                <span style="margin-left: 20px"></span>
                 <span style="color:red;">可拖动分隔条调整布局</span>
             </div>
 

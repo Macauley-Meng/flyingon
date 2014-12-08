@@ -10,8 +10,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
     Class.create = function () {
 
-        var _this = this,
-            dom = this.dom_window = document.createElement("div");
+        var dom = this.dom_window = document.createElement("div");
 
         //默认设置为初始化状态,在渲染窗口后终止
         flyingon.__initializing = true;
@@ -32,18 +31,6 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
         //禁止自动dom布局
         flyingon.dom_layout = false;
 
-        //窗口大小发生变化时重排
-        flyingon.addEventListener(window, "resize", function (event) {
-
-            if (dom.style.height !== "100%")
-            {
-                dom.style.height = "100%";
-            }
-
-            _this.__render_items = null;
-            _this.update(true, true);
-        });
-
         //设为活动窗口
         this.__activeWindow = this.__mainWindow = this;
 
@@ -58,6 +45,20 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
         //注册窗口
         flyingon.__all_windows.push(this);
+
+        //窗口大小发生变化时重排(需在dom ready后绑定事件, 否则IE8可能会无法渲染(dom.clientWidth == 0?))
+        flyingon.ready(function () {
+
+            var _this = this;
+
+            flyingon.addEventListener(window, "resize", function (event) {
+
+                _this.__render_items = null;
+                _this.update(true, true);
+            });
+
+        }, this);
+
     };
 
 
@@ -116,10 +117,7 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
         return function () {
 
-            var dom = this.dom_window,
-                view = flyingon.quirks_mode ? document.body : document.documentElement, //获取视口对象(怪异模式的浏览器视口对象为document.body)
-                width,
-                height;
+            var dom = this.dom_window;
 
             if (dom && dom.parentNode)
             {
@@ -131,29 +129,24 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
                 if (this.__arrange_dirty)
                 {
-                    if (!(width = dom.clientWidth)) //IE8有时取不到宽度
-                    {
-                        width = parseInt((document.body.currentStyle || window.getComputedStyle(document.body, null)).marginRight) || 0;
+                    var style = dom.style,
+                        height;
 
-                        if ((width = (window.innerWidth || view.clientWidth) - dom.offsetLeft - width) <= 0)
-                        {
-                            width = 600;
-                        }
-                    }
-
-                    if (!(height = dom.clientHeight))
+                    if (style.height !== "100%" || !(height = dom.clientHeight)) //未设置窗口容器高度则自动计算高度
                     {
                         height = parseInt((document.body.currentStyle || window.getComputedStyle(document.body, null)).marginBottom) || 0;
 
-                        if ((height = (window.innerHeight || view.clientHeight) - dom.offsetTop - height) <= 0)
+                        //获取视口对象(怪异模式的浏览器视口对象为document.body)
+                        //flyingon.quirks_mode ? document.body : document.documentElement 
+                        if ((height = (window.innerHeight || (flyingon.quirks_mode ? document.body : document.documentElement).clientHeight) - dom.offsetTop - height) <= 0)
                         {
                             height = 600;
                         }
 
-                        dom.style.height = height + "px";
+                        style.height = height + "px";
                     }
 
-                    this.measure(width || view.clientWidth, height, true, true);
+                    this.measure(dom.clientWidth, height, true, true);
                     this.locate(0, 0);
                 }
 
