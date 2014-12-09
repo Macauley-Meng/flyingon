@@ -72,28 +72,79 @@
         w.show("host");
 
 
+        flyingon.ready(function () {
+
+
+            var inputs = tool.getElementsByTagName("input");
+
+            for (var i = 0; i < inputs.length; i++)
+            {
+                inputs[i].onkeydown = function (event) {
+
+                    event = event || window.event;
+
+                    if (event.keyCode === 13)
+                    {
+                        this.blur();
+                    }
+                };
+            }
+        });
+
+
+        function set_style(value) {
+
+            panel.set_style(value);
+        };
+
+        function set_header(value) {
+
+            panel.set_header(value);
+        };
+
+        function set_headerWidth(value) {
+
+            panel.set_headerWidth(value);
+        };
+
+        function set_headerHeight(value) {
+
+            panel.set_headerHeight(value);
+        };
+
+        function set_headerOffset(value) {
+
+            panel.set_headerOffset(value);
+        };
+        
 
     </script>
 
 </head>
 <body>
 
-    <div style="border:1px solid black; padding:2px; background-color: yellow;">
+    <div id="tool" style="border:1px solid black; padding:2px; background-color: yellow;">
 
-        <input type="button" value="normal" onclick="panel.set_style(this.value)" />
-        <input type="button" value="outlook" onclick="panel.set_style(this.value)" />
-        <input type="button" value="isolate" onclick="panel.set_style(this.value)" />
-        <input type="button" value="tab1" onclick="panel.set_style(this.value)" />
-        <input type="button" value="tab2" onclick="panel.set_style(this.value)" />
-        <input type="button" value="tab3" onclick="panel.set_style(this.value)" />
-        <input type="button" value="tab4" onclick="panel.set_style(this.value)" />
+        <input type="button" value="normal" onclick="set_style(this.value)" />
+        <input type="button" value="outlook" onclick="set_style(this.value)" />
+        <input type="button" value="thumb" onclick="set_style(this.value)" />
+        <input type="button" value="tab1" onclick="set_style(this.value)" />
+        <input type="button" value="tab2" onclick="set_style(this.value)" />
+        <input type="button" value="tab3" onclick="set_style(this.value)" />
+        <input type="button" value="tab4" onclick="set_style(this.value)" />
 
         <span style="margin-left: 20px"></span>
 
-        <input type="button" value="top" onclick="panel.set_header(this.value)" />
-        <input type="button" value="left" onclick="panel.set_header(this.value)" />
-        <input type="button" value="right" onclick="panel.set_header(this.value)" />
-        <input type="button" value="bottom" onclick="panel.set_header(this.value)" />
+        <input type="button" value="top" onclick="set_header(this.value)" />
+        <input type="button" value="left" onclick="set_header(this.value)" />
+        <input type="button" value="right" onclick="set_header(this.value)" />
+        <input type="button" value="bottom" onclick="set_header(this.value)" />
+
+        <span style="margin-left: 20px"></span>
+        headerWidth<input type="text" style="width:40px;" value="" onchange="set_headerWidth(this.value)" />
+        headerHeight<input type="text" style="width:40px;" value="" onchange="set_headerHeight(this.value)" />
+        headerOffset<input type="text" style="width:40px;" value="0" onchange="set_headerOffset(+this.value || 0)" />
+
     </div>
 
     <div id="host">

@@ -334,6 +334,12 @@
 
         var layout = new layout_base();
 
+        if (!layout_fn)
+        {
+            layout_fn = name;
+            name = null;
+        }
+
         layout_fn.call(layout, layout_base.prototype);
 
         if (name)

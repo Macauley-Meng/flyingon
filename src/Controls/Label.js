@@ -24,27 +24,16 @@
         this.defineProperty("text", "", {
 
             set_code: "this.dom_span." + this.__textContent_name + " = value;",
-            change_code: "this.__fn_change_text(value);"
+            change_code: "this.__fn_change_text(value, false);"
         });
 
 
-        this.__fn_change_text = function (text) {
+        this.defineProperty("html", "", {
 
-            var box = this.__boxModel;
+            set_code: "this.dom_span.innerHTML = value;",
+            change_code: "this.__fn_change_text(value, true);"
+        });
 
-            if (box)
-            {
-                if (box.auto_width || box.auto_height)
-                {
-                    this.__update_dirty = 1
-                    (this.__parent || this).update(true);
-                }
-                else
-                {
-                    this.after_measure(box);
-                }
-            }
-        };
 
 
         this.after_measure = function (box) {
@@ -86,7 +75,28 @@
     flyingon.defineClass("Label", flyingon.Control, function (base) {
 
 
+
         text_base.call(this, base);
+
+
+        this.__fn_change_text = function (text, is_html) {
+
+            var box = this.__boxModel;
+
+            if (box && this.__parent)
+            {
+                if (box.auto_width || box.auto_height)
+                {
+                    this.__update_dirty = 1
+                    this.__parent.update(true);
+                }
+                else
+                {
+                    this.after_measure(box);
+                }
+            }
+        };
+
 
     });
 
@@ -101,13 +111,13 @@
 
 
 
-        this.__fn_change_text = function (text) {
+        this.__fn_change_text = function (text, is_html) {
 
             var box = this.__boxModel;
 
             this.__vertical_text = false;
 
-            if (box)
+            if (box && this.__parent)
             {
                 if (box.auto_width || box.auto_height)
                 {

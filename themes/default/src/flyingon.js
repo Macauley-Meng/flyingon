@@ -168,15 +168,6 @@ A~B                    匹配任何在A控件之后的同级B控件
         //标签面板默认样式
         "@flyingon-TabPanel": {
 
-            //头部区域
-            "css:.flyingon-TabPanel-header": {
-
-                borderStyle: "solid",
-                borderColor: control_border,
-                borderWidth: "0",
-                cursor: "default"
-            },
-
             //内容区域
             "css:.flyingon-TabPanel-body": {
 
@@ -187,7 +178,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             },
 
             //页签头
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "column3",
                 margin: "0",
@@ -201,25 +192,25 @@ A~B                    匹配任何在A控件之后的同级B控件
                 cursor: "default"
             },
 
-            "@flyingon-TabHeader:hover": {
+            "@flyingon-TabPanelHeader:hover": {
 
                 backgroundColor: hover_back
             },
 
             //选中状态时页签头
-            ".flyingion-TabHeader-selected": {
+            ".flyingion-TabPanelHeader-selected": {
 
                 backgroundColor: focus_back
             },
 
             //页签头图标
-            ".flyingon-TabHeader-icon": {
+            ".flyingon-TabPanelHeader-icon": {
 
                 color: control_color
             },
 
             //页签头文字
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 column3: "center",
                 width: "fill",
@@ -227,7 +218,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             },
 
             //页签头收拢图标
-            ".flyingon-TabHeader-collapse": {
+            ".flyingon-TabPanelHeader-collapse": {
 
                 ":hover": {
 
@@ -236,7 +227,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             },
 
             //页签头关闭图标
-            ".flyingon-TabHeader-close": {
+            ".flyingon-TabPanelHeader-close": {
 
             }
         },
@@ -245,20 +236,15 @@ A~B                    匹配任何在A控件之后的同级B控件
         //左右标签面板默认样式
         ".flyingon-TabPanel-left,.flyingon-TabPanel-right": {
 
-            "css:.flyingon-TabPanel-header": {
-
-                width: "27px"
-            },
-
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 vertical: true,
                 alignY: "top",
-                width: "fill",
+                width: "27px",
                 height: "fill"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 textAlign: "center",
                 verticalAlign: "top"
@@ -268,20 +254,15 @@ A~B                    匹配任何在A控件之后的同级B控件
         //上下标签面板默认样式
         ".flyingon-TabPanel-top,.flyingon-TabPanel-bottom": {
 
-            "css:.flyingon-TabPanel-header": {
-
-                height: "27px"
-            },
-
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 vertical: false,
                 alignX: "left",
                 width: "fill",
-                height: "fill"
+                height: "27px"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 textAlign: "left",
                 verticalAlign: "middle"
@@ -290,13 +271,13 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //收拢状态左右标签面板样式
-        "css:.flyingon-TabPanel-collapse-left,.flyingon-TabPanel-collapse-right .flyingon-TabPanel-header": {
+        ".flyingon-TabPanel-collapse-left,.flyingon-TabPanel-collapse-right @flyingon-TabPanelHeader": {
 
             width: "28px"
         },
 
         //收拢状态上下标签面板默认样式
-        "css:.flyingon-TabPanel-collapse-top,.flyingon-TabPanel-collapse-bottom .flyingon-TabPanel-header": {
+        ".flyingon-TabPanel-collapse-top,.flyingon-TabPanel-collapse-bottom @flyingon-TabPanelHeader": {
 
             height: "28px"
         },
@@ -305,13 +286,13 @@ A~B                    匹配任何在A控件之后的同级B控件
         //outlookbar标签面板样式
         ".flyingon-TabPanel-outlook-left,.flyingon-TabPanel-outlook-right": {
 
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 contentAlignY: "middle"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
@@ -319,42 +300,53 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-outlook-top,.flyingon-TabPanel-outlook-bottom": {
 
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 contentAlignX: "center"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
         },
 
 
-        //isolate标签面板样式
-        ".flyingon-TabPanel-isolate-left,.flyingon-TabPanel-isolate-right": {
+        //缩略图标签面板样式
+        ".flyingon-TabPanel-thumb-left,.flyingon-TabPanel-thumb-right": {
 
-            "@flyingon-TabHeader": {
+            "css:.flyingon-TabPanel-body": {
+
+                borderWidth: "0"
+            },
+
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 marginLeft: "1px",
                 marginRight: "1px",
                 borderWidth: "0",
                 contentAlignY: "top",
+                width: "100px",
                 height: "auto",
                 backgroundColor: "transparent"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
         },
 
-        ".flyingon-TabPanel-isolate-top,.flyingon-TabPanel-isolate-bottom": {
+        ".flyingon-TabPanel-thumb-top,.flyingon-TabPanel-thumb-bottom": {
 
-            "@flyingon-TabHeader": {
+            "css:.flyingon-TabPanel-body": {
+
+                borderWidth: "0"
+            },
+
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 marginTop: "1px",
@@ -362,10 +354,11 @@ A~B                    匹配任何在A控件之后的同级B控件
                 borderWidth: "0",
                 contentAlignX: "left",
                 width: "auto",
+                height: "100px",
                 backgroundColor: "transparent"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
@@ -375,7 +368,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         //页签式标签面板样式
         ".flyingon-TabPanel-tab1-top,.flyingon-TabPanel-tab2-top,.flyingon-TabPanel-tab3-top,.flyingon-TabPanel-tab4-top": {
 
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 width: "auto",
@@ -384,7 +377,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                 borderTopRightRadius: "5px"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
@@ -392,7 +385,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab1-left,.flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab3-left,.flyingon-TabPanel-tab4-left": {
 
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 height: "auto",
@@ -401,7 +394,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                 borderBottomLeftRadius: "5px"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
@@ -409,7 +402,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab1-right,.flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab3-right,.flyingon-TabPanel-tab4-right": {
 
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 height: "auto",
@@ -418,7 +411,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                 borderBottomRightRadius: "5px"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
@@ -426,7 +419,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab1-bottom,.flyingon-TabPanel-tab2-bottom,.flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-bottom": {
 
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 width: "auto",
@@ -435,13 +428,13 @@ A~B                    匹配任何在A控件之后的同级B控件
                 borderBottomRightRadius: "5px"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
         },
 
-        ".flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab4-left @flyingon-TabHeader": {
+        ".flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab4-left @flyingon-TabPanelHeader": {
 
             contentAlignX: "right"
         },
@@ -449,19 +442,15 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab4-left,.flyingon-TabPanel-tab4-right": {
 
-            "css:.flyingon-TabPanel-header": {
-
-                width: "120px"
-            },
-
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 vertical: false,
+                width: "120px",
                 height: "27px",
                 contentAlignX: "right"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 width: "auto",
                 textAlign: "left",
@@ -469,7 +458,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab4-right @flyingon-TabHeader": {
+        ".flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab4-right @flyingon-TabPanelHeader": {
 
             contentAlignX: "left"
         },
@@ -477,19 +466,15 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab3-top,.flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-top,.flyingon-TabPanel-tab4-bottom": {
 
-            "css:.flyingon-TabPanel-header": {
-
-                height: "120px"
-            },
-
-            "@flyingon-TabHeader": {
+            "@flyingon-TabPanelHeader": {
 
                 vertical: true,
                 width: "27px",
+                height: "120px",
                 contentAlignY: "bottom"
             },
 
-            ".flyingon-TabHeader-text": {
+            ".flyingon-TabPanelHeader-text": {
 
                 height: "auto",
                 textAlign: "top",
@@ -497,7 +482,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-bottom @flyingon-TabHeader": {
+        ".flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-bottom @flyingon-TabPanelHeader": {
 
             contentAlignY: "top"
         },
@@ -507,8 +492,75 @@ A~B                    匹配任何在A控件之后的同级B控件
         //页签控件样式
         "@flyingon-TabControl": {
 
-            border: "1px solid blue",
-            backgroundColor: window_back
+            borderStyle: "solid",
+            borderColor: control_border,
+            borderWidth: "0",
+
+            //页签头
+            "@flyingon-TabControlHeader": {
+
+                layoutType: "column3",
+                margin: "0",
+                borderStyle: "solid",
+                borderColor: control_border,
+                borderWidth: "0",
+                width: "fill",
+                height: "fill",
+                overflow: "hidden",
+                backgroundColor: control_back,
+                cursor: "default"
+            },
+
+            //页签头收拢图标
+            ".flyingon-TabControlHeader-collapse": {
+
+                ":hover": {
+
+                    color: hover_color
+                }
+            },
+
+            //页签头关闭图标
+            ".flyingon-TabControlHeader-close": {
+
+            }
+        },
+
+
+        //左右标签面板默认样式
+        ".flyingon-TabControl-left,.flyingon-TabControl-right": {
+
+            "@flyingon-TabControlHeader": {
+
+                vertical: true,
+                alignY: "top",
+                width: "27px",
+                height: "fill"
+            },
+
+            ".flyingon-TabControlHeader-text": {
+
+                textAlign: "center",
+                verticalAlign: "top"
+            }
+        },
+
+        //上下标签面板默认样式
+        ".flyingon-TabControl-top,.flyingon-TabControl-bottom": {
+
+            "@flyingon-TabControlHeader": {
+
+                vertical: false,
+                alignX: "left",
+                width: "fill",
+                height: "27px"
+            },
+
+            ".flyingon-TabControlHeader-text": {
+
+                textAlign: "left",
+                verticalAlign: "middle"
+            }
         },
 
 

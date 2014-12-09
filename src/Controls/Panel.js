@@ -33,6 +33,10 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
 
+    //仅渲染可视区的子控件
+    this.__render_visible = true;
+
+
 
     this.__fn_on_scroll = function (event) {
 
@@ -51,7 +55,7 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
     //渲染子控件
     this.render_children = function () {
 
-        var items = this.__render_items || render_items(this),
+        var items = this.__render_items || (this.__render_visible ? render_items(this) : this.__children),
             length;
 
         if (items && (length = items.length) > 0)

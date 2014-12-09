@@ -93,23 +93,6 @@ flyingon.IComponent = function () {
             body.push(cache);
         }
 
-        ////包装属性从被包装对象获取值
-        //if (cache = attributes.wrapper)
-        //{
-        //    body.push("\n\n");
-
-        //    if (cache.constructor === Array)
-        //    {
-        //        body.push(cache[0] + ".set_" + cache[1] + "(value);\n");
-        //        body.push("value = " + cache[0] + ".get_" + cache[1] + "();");
-        //    }
-        //    else
-        //    {
-        //        body.push(cache[0] + "." + cache[1] + " = value;\n");
-        //        body.push("value = " + cache[0] + "." + cache[1] + ";");
-        //    }
-        //}
-
         //初始化代码
         body.push("\n\n"
             + "if (flyingon.__initializing)\n"
@@ -166,7 +149,9 @@ flyingon.IComponent = function () {
         if (attributes.layout) //需要重新布局
         {
             body.push("\n\n\t");
-            body.push("this.__update_dirty = 1;\n\t(this.__parent || this).update(true);");
+            body.push("this.__update_dirty = 1;\n\t");
+            body.push("this.__arrange_dirty = true;\n\t");
+            body.push("(this.__parent || this).update(true);");
         }
         else if (attributes.arrange) //是否需要重新排列
         {

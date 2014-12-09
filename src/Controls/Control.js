@@ -616,8 +616,10 @@ flyingon.defineClass("Control", function () {
         //defaultHeight_to_fill     当高度为auto时是否充满可用空间 true|false
         //less_width_to_default     当宽度不足时是否使用默认宽度 true|false
         //less_height_to_default    当高度不足时是否使用默认高度 true|false
+        //use_usable_width          直接使用usable_width作为控件宽度
+        //use_usable_height         直接使用use_usable_height作为控件高度
         //返回最大占用宽度及高度
-        this.measure = function (usable_width, usable_height, defaultWidth_to_fill, defaultHeight_to_fill, less_width_to_default, less_height_to_default) {
+        this.measure = function (usable_width, usable_height, defaultWidth_to_fill, defaultHeight_to_fill, less_width_to_default, less_height_to_default, use_usable_width, use_usable_height) {
 
 
             var box = this.__boxModel,
@@ -662,112 +664,126 @@ flyingon.defineClass("Control", function () {
 
 
             //处理宽度
-            switch (value = this.get_width())
+            if (use_usable_width) //直接使用指定宽度
             {
-                case "default": //默认
-                    if (defaultWidth_to_fill)
-                    {
+                width = usable_width >= 0 ? usable_width : 0;
+            }
+            else
+            {
+                switch (value = this.get_width())
+                {
+                    case "default": //默认
+                        if (defaultWidth_to_fill)
+                        {
+                            value = true;
+                        }
+                        else
+                        {
+                            width = this.defaultWidth;
+                        }
+                        break;
+
+                    case "fill": //充满可用区域
                         value = true;
+                        break;
+
+                    case "auto": //根据内容自动调整大小
+                        box.auto_width = value = less_width_to_default = true;
+                        break;
+
+                    default:  //其它值
+                        width = value && value.charAt(value.length - 1) === "%" ? (this.__parent.clientWidth * parseFloat(value) / 100 | 0) : fn(value);
+                        break;
+                }
+
+                //充满可用宽度
+                if (value === true)
+                {
+                    if ((usable_width -= box.margin_width) > 0) //有可用空间
+                    {
+                        width = usable_width;
                     }
-                    else
+                    else if (less_width_to_default) //可用空间不足时使用默认宽度
                     {
                         width = this.defaultWidth;
                     }
-                    break;
-
-                case "fill": //充满可用区域
-                    value = true;
-                    break;
-
-                case "auto": //根据内容自动调整大小
-                    box.auto_width = value = less_width_to_default = true;
-                    break;
-
-                default:  //其它值
-                    width = value && value.charAt(value.length - 1) === "%" ? (this.__parent.clientWidth * parseFloat(value) / 100 | 0) : fn(value);
-                    break;
-            }
-
-            //充满可用宽度
-            if (value === true)
-            {
-                if ((usable_width -= box.margin_width) > 0) //有可用空间
-                {
-                    width = usable_width;
+                    else //无空间
+                    {
+                        width = 0;
+                    }
                 }
-                else if (less_width_to_default) //可用空间不足时使用默认宽度
-                {
-                    width = this.defaultWidth;
-                }
-                else //无空间
-                {
-                    width = 0;
-                }
-            }
 
-            //处理最小及最大宽度
-            if (width < box.minWidth)
-            {
-                width = box.minWidth;
-            }
-            else if (width > box.maxWidth && box.maxWidth > 0)
-            {
-                width = box.maxWidth;
+                //处理最小及最大宽度
+                if (width < box.minWidth)
+                {
+                    width = box.minWidth;
+                }
+                else if (width > box.maxWidth && box.maxWidth > 0)
+                {
+                    width = box.maxWidth;
+                }
             }
 
 
             //处理高度
-            switch (value = this.get_height())
+            if (use_usable_height) //直接使用指定高度
             {
-                case "default": //自动
-                    if (defaultHeight_to_fill)
-                    {
+                height = usable_height >= 0 ? usable_height : 0;
+            }
+            else
+            {
+                switch (value = this.get_height())
+                {
+                    case "default": //自动
+                        if (defaultHeight_to_fill)
+                        {
+                            value = true;
+                        }
+                        else
+                        {
+                            height = this.defaultHeight;
+                        }
+                        break;
+
+                    case "fill": //充满可用区域
                         value = true;
+                        break;
+
+                    case "auto": //根据内容自动调整大小
+                        box.auto_height = value = less_height_to_default = true;
+                        break;
+
+                    default:  //其它值
+                        height = value && value.charAt(value.length - 1) === "%" ? (this.__parent.clientHeight * parseFloat(value) / 100 | 0) : fn(value);
+                        break;
+                }
+
+                //充满可用高度
+                if (value === true)
+                {
+                    if ((usable_height -= box.margin_height) > 0) //有可用空间
+                    {
+                        height = usable_height;
                     }
-                    else
+                    else if (less_height_to_default) //可用空间不足时使用默认高度
                     {
                         height = this.defaultHeight;
                     }
-                    break;
-
-                case "fill": //充满可用区域
-                    value = true;
-                    break;
-
-                case "auto": //根据内容自动调整大小
-                    box.auto_height = value = less_height_to_default = true;
-                    break;
-
-                default:  //其它值
-                    height = value && value.charAt(value.length - 1) === "%" ? (this.__parent.clientHeight * parseFloat(value) / 100 | 0) : fn(value);
-                    break;
-            }
-
-            //充满可用高度
-            if (value === true)
-            {
-                if ((usable_height -= box.margin_height) > 0) //有可用空间
-                {
-                    height = usable_height;
+                    else //无空间
+                    {
+                        height = 0;
+                    }
                 }
-                else if (less_height_to_default) //可用空间不足时使用默认高度
-                {
-                    height = this.defaultHeight;
-                }
-                else //无空间
-                {
-                    height = 0;
-                }
-            }
 
-            //处理最小及最大宽度
-            if (height < box.minHeight)
-            {
-                height = box.minHeight;
-            }
-            else if (height > box.maxHeight && box.maxHeight > 0)
-            {
-                height = box.maxHeight;
+                //处理最小及最大宽度
+                if (height < box.minHeight)
+                {
+                    height = box.minHeight;
+                }
+                else if (height > box.maxHeight && box.maxHeight > 0)
+                {
+                    height = box.maxHeight;
+                }
             }
 
 
