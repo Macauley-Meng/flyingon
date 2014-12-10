@@ -57,7 +57,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
     this.defineProperty("start", "center");
 
 
-    //是否显示标题栏
+    //是否显示页签
     this.defineProperty("header", true, "layout");
 
 

@@ -85,7 +85,7 @@ flyingon.defineClass("Control", function () {
 
         if (value == null)
         {
-            value = (value = this.__parent) && parent.__children.indexOf(this) || -1;
+            value = (value = this.__parent) && value.__children.indexOf(this) || -1;
         }
 
         if (index === undefined)
@@ -963,8 +963,8 @@ flyingon.defineClass("Control", function () {
 
             if (dom_children && (dom_children = dom_children.parentNode)) //有子控件(注: 如果子控件容器的父dom不允许设置边框)
             {
-                width = dom.offsetWidth - box.padding_width;
-                height = dom.offsetHeight - box.padding_height;
+                width = dom_children.offsetWidth - box.padding_width;
+                height = dom_children.offsetHeight - box.padding_height;
 
                 if (dom_children === dom)
                 {
@@ -978,7 +978,7 @@ flyingon.defineClass("Control", function () {
                         x += dom_children.offsetLeft + dom_children.clientLeft;
                         y += dom_children.offsetTop + dom_children.clientTop;
 
-                    } while ((dom_children = dom_children.parentNode) && dom_children !== this.dom)
+                    } while ((dom_children = dom_children.parentNode) && dom_children !== dom)
                 }
             }
             else

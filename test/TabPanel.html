@@ -51,7 +51,7 @@
             //style: "common",
             //header: "top",
             //collapse: true,
-            text: "标题栏"
+            text: "页签"
         });
 
 
@@ -92,31 +92,31 @@
         });
 
 
-        function set_style(value) {
+        function set_tab(value) {
 
-            panel.set_style(value);
+            panel.set_tab(value);
         };
 
-        function set_header(value) {
+        function set_tabStyle(value) {
 
-            panel.set_header(value);
+            panel.set_tabStyle(value);
         };
 
-        function set_headerWidth(value) {
+        function set_tabWidth(value) {
 
-            panel.set_headerWidth(value);
+            panel.set_tabWidth(value);
         };
 
-        function set_headerHeight(value) {
+        function set_tabHeight(value) {
 
-            panel.set_headerHeight(value);
+            panel.set_tabHeight(value);
         };
 
-        function set_headerOffset(value) {
+        function set_tabOffset(value) {
 
-            panel.set_headerOffset(value);
+            panel.set_tabOffset(value);
         };
-        
+
 
     </script>
 
@@ -125,25 +125,25 @@
 
     <div id="tool" style="border:1px solid black; padding:2px; background-color: yellow;">
 
-        <input type="button" value="normal" onclick="set_style(this.value)" />
-        <input type="button" value="outlook" onclick="set_style(this.value)" />
-        <input type="button" value="thumb" onclick="set_style(this.value)" />
-        <input type="button" value="tab1" onclick="set_style(this.value)" />
-        <input type="button" value="tab2" onclick="set_style(this.value)" />
-        <input type="button" value="tab3" onclick="set_style(this.value)" />
-        <input type="button" value="tab4" onclick="set_style(this.value)" />
+        <input type="button" value="normal" onclick="set_tabStyle(this.value)" />
+        <input type="button" value="outlook" onclick="set_tabStyle(this.value)" />
+        <input type="button" value="thumb" onclick="set_tabStyle(this.value)" />
+        <input type="button" value="tab1" onclick="set_tabStyle(this.value)" />
+        <input type="button" value="tab2" onclick="set_tabStyle(this.value)" />
+        <input type="button" value="tab3" onclick="set_tabStyle(this.value)" />
+        <input type="button" value="tab4" onclick="set_tabStyle(this.value)" />
 
         <span style="margin-left: 20px"></span>
 
-        <input type="button" value="top" onclick="set_header(this.value)" />
-        <input type="button" value="left" onclick="set_header(this.value)" />
-        <input type="button" value="right" onclick="set_header(this.value)" />
-        <input type="button" value="bottom" onclick="set_header(this.value)" />
+        <input type="button" value="top" onclick="set_tab(this.value)" />
+        <input type="button" value="left" onclick="set_tab(this.value)" />
+        <input type="button" value="right" onclick="set_tab(this.value)" />
+        <input type="button" value="bottom" onclick="set_tab(this.value)" />
 
         <span style="margin-left: 20px"></span>
-        headerWidth<input type="text" style="width:40px;" value="" onchange="set_headerWidth(this.value)" />
-        headerHeight<input type="text" style="width:40px;" value="" onchange="set_headerHeight(this.value)" />
-        headerOffset<input type="text" style="width:40px;" value="0" onchange="set_headerOffset(+this.value || 0)" />
+        headerWidth<input type="text" style="width:40px;" value="" onchange="set_tabWidth(this.value)" />
+        headerHeight<input type="text" style="width:40px;" value="" onchange="set_tabHeight(this.value)" />
+        headerOffset<input type="text" style="width:40px;" value="0" onchange="set_tabOffset(+this.value || 0)" />
 
     </div>
 

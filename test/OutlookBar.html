@@ -39,9 +39,8 @@
         });
 
 
-        var tab = new flyingon.TabControl();
 
-        tab.set_tab("left");
+        var bar = new flyingon.OutlookBar();
 
 
         for (var i = 0; i < 6; i++)
@@ -68,14 +67,15 @@
                 panel.appendChild(ctrl);
             }
 
-            tab.appendChild(panel);
+            bar.appendChild(panel);
         }
 
 
 
-        w.appendChild(tab);
+        w.appendChild(bar);
 
         w.show("host");
+
 
 
         flyingon.ready(function () {
@@ -100,27 +100,27 @@
 
         function set_tab(value) {
 
-            tab.set_tab(value);
+            bar.set_tab(value);
         };
 
         function set_tabStyle(value) {
 
-            tab.set_tabStyle(value);
+            bar.set_tabStyle(value);
         };
 
         function set_tabWidth(value) {
 
-            tab.set_tabWidth(value);
+            bar.set_tabWidth(value);
         };
 
         function set_tabHeight(value) {
 
-            tab.set_tabHeight(value);
+            bar.set_tabHeight(value);
         };
 
         function set_tabOffset(value) {
 
-            tab.set_tabOffset(value);
+            bar.set_tabOffset(value);
         };
 
     </script>
@@ -133,10 +133,10 @@
         <input type="button" value="normal" onclick="set_tabStyle(this.value)" />
         <input type="button" value="outlook" onclick="set_tabStyle(this.value)" />
         <input type="button" value="thumb" onclick="set_tabStyle(this.value)" />
-        <input type="button" value="tab1" onclick="set_tabStyle(this.value)" />
+        <!--<input type="button" value="tab1" onclick="set_tabStyle(this.value)" />
         <input type="button" value="tab2" onclick="set_tabStyle(this.value)" />
         <input type="button" value="tab3" onclick="set_tabStyle(this.value)" />
-        <input type="button" value="tab4" onclick="set_tabStyle(this.value)" />
+        <input type="button" value="tab4" onclick="set_tabStyle(this.value)" />-->
 
         <span style="margin-left: 20px"></span>
 

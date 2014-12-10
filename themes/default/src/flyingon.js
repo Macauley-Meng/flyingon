@@ -197,12 +197,6 @@ A~B                    匹配任何在A控件之后的同级B控件
                 backgroundColor: hover_back
             },
 
-            //选中状态时页签头
-            ".flyingion-TabPanelHeader-selected": {
-
-                backgroundColor: focus_back
-            },
-
             //页签头图标
             ".flyingon-TabPanelHeader-icon": {
 
@@ -316,19 +310,10 @@ A~B                    匹配任何在A控件之后的同级B控件
         //缩略图标签面板样式
         ".flyingon-TabPanel-thumb-left,.flyingon-TabPanel-thumb-right": {
 
-            "css:.flyingon-TabPanel-body": {
-
-                borderWidth: "0"
-            },
-
             "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
-                marginLeft: "1px",
-                marginRight: "1px",
-                borderWidth: "0",
                 contentAlignY: "top",
-                width: "100px",
                 height: "auto",
                 backgroundColor: "transparent"
             },
@@ -341,21 +326,13 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-thumb-top,.flyingon-TabPanel-thumb-bottom": {
 
-            "css:.flyingon-TabPanel-body": {
-
-                borderWidth: "0"
-            },
-
             "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
-                marginTop: "1px",
-                marginBottom: "1px",
-                borderWidth: "0",
                 contentAlignX: "left",
                 width: "auto",
-                height: "100px",
-                backgroundColor: "transparent"
+                backgroundColor: "transparent",
+                paddingRight: "4px"
             },
 
             ".flyingon-TabPanelHeader-text": {
@@ -374,7 +351,8 @@ A~B                    匹配任何在A控件之后的同级B控件
                 width: "auto",
                 borderBottomWidth: "0",
                 borderTopLeftRadius: "5px",
-                borderTopRightRadius: "5px"
+                borderTopRightRadius: "5px",
+                paddingRight: "4px"
             },
 
             ".flyingon-TabPanelHeader-text": {
@@ -425,7 +403,8 @@ A~B                    匹配任何在A控件之后的同级B控件
                 width: "auto",
                 borderTopWidth: "0",
                 borderBottomLeftRadius: "5px",
-                borderBottomRightRadius: "5px"
+                borderBottomRightRadius: "5px",
+                paddingRight: "4px"
             },
 
             ".flyingon-TabPanelHeader-text": {
@@ -488,6 +467,16 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
 
+        //选中状态时页签头
+        ".flyingon-TabPanel-selected": {
+
+            "@flyingon-TabPanelHeader": {
+
+                backgroundColor: hover_back
+            }
+        },
+
+
 
         //页签控件样式
         "@flyingon-TabControl": {
@@ -527,43 +516,6 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
 
-        //左右标签面板默认样式
-        ".flyingon-TabControl-left,.flyingon-TabControl-right": {
-
-            "@flyingon-TabControlHeader": {
-
-                vertical: true,
-                alignY: "top",
-                width: "27px",
-                height: "fill"
-            },
-
-            ".flyingon-TabControlHeader-text": {
-
-                textAlign: "center",
-                verticalAlign: "top"
-            }
-        },
-
-        //上下标签面板默认样式
-        ".flyingon-TabControl-top,.flyingon-TabControl-bottom": {
-
-            "@flyingon-TabControlHeader": {
-
-                vertical: false,
-                alignX: "left",
-                width: "fill",
-                height: "27px"
-            },
-
-            ".flyingon-TabControlHeader-text": {
-
-                textAlign: "left",
-                verticalAlign: "middle"
-            }
-        },
-
-
 
         //按钮控件样式
         "@flyingon-Button": {
@@ -596,7 +548,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             backgroundColor: window_back
         },
 
-        //弹出窗口标题栏样式
+        //弹出窗口页签样式
         ".flyingon-Dialog-header": {
 
             paddingLeft: "2px",
