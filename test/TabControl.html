@@ -39,30 +39,37 @@
         });
 
 
-        var tab = new flyingon.TabControl();
+        var tab = new flyingon.TabControl().sets({
 
-        tab.set_tab("left");
+            //collapse: true,
+            resizable: "both"
+        });
 
 
-        for (var i = 0; i < 6; i++)
+
+        for (var i = 0; i < 8; i++)
         {
             var panel = new flyingon.TabPanel().sets({
 
+                width: "200px",
+                height: "200px",
                 padding: "10px",
                 layoutType: "flow",
                 spacingWidth: "10px",
                 spacingHeight: "10px",
                 icon: "dialog",
-                text: "面板" + i
+                text: "页面" + (i + 1)
             });
 
+            panel.set_weightWidth(i);
+            panel.set_weightHeight(10 + i);
 
             for (var j = 0; j < 50; j++)
             {
                 var ctrl = new flyingon.Label().sets({
 
                     className: "test-control",
-                    text: "text " + j
+                    text: "text " + ((i + 1) * 100 + j + 1)
                 });
 
                 panel.appendChild(ctrl);
@@ -123,6 +130,12 @@
             tab.set_tabOffset(value);
         };
 
+        function set_tabFill(value) {
+
+            tab.set_tabFill(value == "true" || value == "1");
+        };
+
+
     </script>
 
 </head>
@@ -149,6 +162,7 @@
         tabWidth<input type="text" style="width:40px;" value="" onchange="set_tabWidth(this.value)" />
         tabHeight<input type="text" style="width:40px;" value="" onchange="set_tabHeight(this.value)" />
         tabOffset<input type="text" style="width:40px;" value="0" onchange="set_tabOffset(+this.value || 0)" />
+        tabFill<input type="text" style="width:40px;" value="" onchange="set_tabFill(this.value)" />
 
     </div>
 

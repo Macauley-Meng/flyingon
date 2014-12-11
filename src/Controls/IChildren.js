@@ -115,38 +115,39 @@ flyingon.IChildren = function (base) {
         if (items && items.length > 0)
         {
             var width = this.clientWidth,
-                height = this.clientHeight;
+                height = this.clientHeight,
+                cache;
 
             //重排
             if (this.__arrange_dirty || this.__arrange_width !== width || this.__arrange_height !== height)
             {
-                var box = this.__boxModel,
-                    cache;
-
-                //处理子dom
-                if (this.__dom_dirty)
+                if (width > 0 && height > 0)
                 {
-                    cache = document.createDocumentFragment();
-
-                    for (var i = 0, _ = items.length; i < _; i++)
+                    //处理子dom
+                    if (this.__dom_dirty)
                     {
-                        cache.appendChild(items[i].dom);
+                        cache = document.createDocumentFragment();
+
+                        for (var i = 0, _ = items.length; i < _; i++)
+                        {
+                            cache.appendChild(items[i].dom);
+                        }
+
+                        this.dom_children.appendChild(cache);
+                        this.__dom_dirty = false;
                     }
 
-                    this.dom_children.appendChild(cache);
-                    this.__dom_dirty = false;
-                }
+                    if ((cache = this.get_fontSize()) !== this.__compute_style.fontSize)
+                    {
+                        this.__compute_style.fontSize = cache;
+                    }
 
-                if ((cache = this.get_fontSize()) !== this.__compute_style.fontSize)
-                {
-                    this.__compute_style.fontSize = cache;
+                    this.arrange(width, height);
+                    this.__arrange_dirty = false;
                 }
-
-                this.arrange(width, height);
 
                 this.__arrange_width = width;
                 this.__arrange_height = height;
-                this.__arrange_dirty = false;
             }
 
             //渲染子控件
@@ -249,10 +250,13 @@ flyingon.IChildren = function (base) {
     //隐藏子项
     this.__fn_hide = function (item) {
 
-        hide_dom.appendChild(item.dom);
+        if (item.dom.parentNode !== hide_dom)
+        {
+            hide_dom.appendChild(item.dom);
 
-        item.__visible = false;
-        this.__dom_dirty = true;
+            item.__visible = false;
+            this.__dom_dirty = true;
+        }
     };
 
 
@@ -263,11 +267,14 @@ flyingon.IChildren = function (base) {
 
         for (var i = index, _ = items.length; i < _; i++)
         {
-            (item = items[i]).__visible = false;
-            hide_dom.appendChild(item.dom);
-        }
+            if ((item = items[i]).dom !== hide_dom)
+            {
+                hide_dom.appendChild(item.dom);
 
-        this.__dom_dirty = true;
+                item.__visible = false;
+                this.__dom_dirty = true;
+            }
+        }
     };
 
 

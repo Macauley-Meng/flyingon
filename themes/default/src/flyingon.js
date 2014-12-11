@@ -197,6 +197,12 @@ A~B                    匹配任何在A控件之后的同级B控件
                 backgroundColor: hover_back
             },
 
+            //选中状态时页签头
+            ".flyingon-TabPanelHeader-selected": {
+
+                backgroundColor: hover_back
+            },
+
             //页签头图标
             ".flyingon-TabPanelHeader-icon": {
 
@@ -349,10 +355,13 @@ A~B                    匹配任何在A控件之后的同级B控件
 
                 layoutType: "line",
                 width: "auto",
-                borderBottomWidth: "0",
-                borderTopLeftRadius: "5px",
-                borderTopRightRadius: "5px",
                 paddingRight: "4px"
+            },
+
+            ".flyingon-TabPanelHeader-selected": {
+
+                borderBottomWidth: "0",
+                paddingBottom: "1px"
             },
 
             ".flyingon-TabPanelHeader-text": {
@@ -366,10 +375,13 @@ A~B                    匹配任何在A控件之后的同级B控件
             "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
-                height: "auto",
+                height: "auto"
+            },
+
+            ".flyingon-TabPanelHeader-selected": {
+
                 borderRightWidth: "0",
-                borderTopLeftRadius: "5px",
-                borderBottomLeftRadius: "5px"
+                paddingRight: "1px"
             },
 
             ".flyingon-TabPanelHeader-text": {
@@ -383,10 +395,13 @@ A~B                    匹配任何在A控件之后的同级B控件
             "@flyingon-TabPanelHeader": {
 
                 layoutType: "line",
-                height: "auto",
+                height: "auto"
+            },
+
+            ".flyingon-TabPanelHeader-selected": {
+
                 borderLeftWidth: "0",
-                borderTopRightRadius: "5px",
-                borderBottomRightRadius: "5px"
+                paddingLeft: "1px"
             },
 
             ".flyingon-TabPanelHeader-text": {
@@ -401,10 +416,13 @@ A~B                    匹配任何在A控件之后的同级B控件
 
                 layoutType: "line",
                 width: "auto",
-                borderTopWidth: "0",
-                borderBottomLeftRadius: "5px",
-                borderBottomRightRadius: "5px",
                 paddingRight: "4px"
+            },
+
+            ".flyingon-TabPanelHeader-selected": {
+
+                borderTopWidth: "0",
+                paddingTop: "1px"
             },
 
             ".flyingon-TabPanelHeader-text": {
@@ -467,16 +485,6 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
 
-        //选中状态时页签头
-        ".flyingon-TabPanel-selected": {
-
-            "@flyingon-TabPanelHeader": {
-
-                backgroundColor: hover_back
-            }
-        },
-
-
 
         //页签控件样式
         "@flyingon-TabControl": {
@@ -484,6 +492,24 @@ A~B                    匹配任何在A控件之后的同级B控件
             borderStyle: "solid",
             borderColor: control_border,
             borderWidth: "0",
+
+            //上一页图标
+            ".flyingon-TabControl-previous": {
+
+                borderStyle: "solid",
+                borderColor: control_border,
+                borderWidth: "1px",
+                backgroundColor: control_back
+            },
+
+            //下一页图标
+            ".flyingon-TabControl-next": {
+
+                borderStyle: "solid",
+                borderColor: control_border,
+                borderWidth: "1px",
+                backgroundColor: control_back
+            },
 
             //页签头
             "@flyingon-TabControlHeader": {
@@ -498,6 +524,16 @@ A~B                    匹配任何在A控件之后的同级B控件
                 overflow: "hidden",
                 backgroundColor: control_back,
                 cursor: "default"
+            },
+
+            //页签头图标
+            ".flyingon-TabControlHeader-icon": {
+
+            },
+
+            //页签头标题
+            ".flyingon-TabControlHeader-text": {
+
             },
 
             //页签头收拢图标

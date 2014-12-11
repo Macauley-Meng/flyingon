@@ -47,9 +47,9 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
     };
 
 
-    this.insertBefore = function (target, dom) {
+    this.insertBefore = function (dom, target) {
 
-        this.dom.insertBefore(target, dom);
+        this.dom.insertBefore(dom, target);
         return this;
     };
 
