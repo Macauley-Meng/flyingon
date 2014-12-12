@@ -3,7 +3,9 @@
 
 flyingon is an object oriented javascript library
 
-flyingon是一个跨浏览器的完全面向对象的javascript前端开发库,您可以以面向对象的方式使用,修改及扩展javascript功能或UI控件
+flyingon是一个致力于打造世界第一的前端javasript开源库, 基于与现有流行的javascript库完全不同的思想开发, 是一个足以改变当前Web应用开发方式的跨时代的产品
+
+使用100%原生javascript开发, 不依赖任何其它第三方库, 小巧轻便(预计完成全部标准控件不足200K, 再经过gzip压缩的话可能不到100K), 支持几乎所有的浏览器(包括IE6), 简单易用, 易扩展, 具有不下于Java及C#等标准面向对象语言的能力, 易扩展易维护, 具有世界上最强大最好用的布局系统... 
 
 flyingon基于LGPLv3协议,无论您是个人或公司都可以免费使用!有关LPGLv3的更多细节,请参考主目录下的LGPLv3.txt或上网搜索相关内容
 
