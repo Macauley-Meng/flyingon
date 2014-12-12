@@ -12839,6 +12839,21 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
+        Class.create_mode = "merge";
+
+        Class.create = function () {
+
+            this.dom_children = this.dom.children[0];
+            this.__children = new flyingon.ControlCollection(this);
+
+            (this.__text = new flyingon.VerticalText())
+                .set_column3("center")
+                .addClass("flyingon-TabPanelHeader-text");
+
+            this.appendChild(this.__text);
+        };
+
+
 
         flyingon.IChildren.call(this, base);
 
@@ -12980,16 +12995,12 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
         //获取页签数据
-        this.__fn_tab_data = function (collapse) {
+        this.__fn_tab_data = function () {
 
             var data = this.__tab_data || (this.__tab_data = {});
 
-            if (!(data.collapse = collapse !== undefined ? collapse : this.get_collapse()))
-            {
-                data.tab = this.get_tab();
-            }
-
-            data.style = this.get_tabStyle();
+            data.style = (data.collapse = this.get_collapse()) ? "collapse" : this.get_tabStyle(); //收拢状态特殊处理
+            data.tab = this.get_tab();
             data.width = this.get_tabWidth();
             data.height = this.get_tabHeight();
             data.offset = this.get_tabOffset();
@@ -13092,6 +13103,70 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         };
 
 
+        //设置body样式
+        this.body_style = function (name, value) {
+
+            var style = this.dom_body.style;
+
+            if (value !== undefined)
+            {
+                style[name] = value;
+            }
+            else if (value = name)
+            {
+                for (var name in value)
+                {
+                    style[name] = value[name];
+                }
+            }
+
+            return this;
+        };
+
+
+
+        //渲染页签头
+        this.__fn_render_header = function (box, header, data) {
+
+
+            //处理收拢或只显示页签头
+            if (data.collapse || data.only_tab)
+            {
+                var width = header.offsetWidth + box.border_width - this.offsetWidth,
+                    height = header.offsetHeight + box.border_height - this.offsetHeight,
+                    change;
+
+                if (data.only_tab)
+                {
+                    change = { width: width, height: height };
+                }
+                else if (data.direction === "left" || data.direction === "right")  //竖直方向收拢
+                {
+                    change = { width: width }; //返回宽度变化量
+                }
+                else
+                {
+                    change = { height: height }; //返回高度变化量
+                }
+
+                if (data.collapse && header.__collapse)
+                {
+                    header.__collapse.set_icon("expand");
+                }
+
+                header.render();
+
+                return change;
+            }
+
+            if (header.__collapse)
+            {
+                header.__collapse.set_icon(data.direction === "top" || data.direction === "bottom" ? "collapse" : "collapse");
+            }
+
+            header.render();
+        };
+
 
     };
 
@@ -13100,22 +13175,6 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
     //页签头控件
     flyingon.defineClass("TabPanelHeader", flyingon.Control, function (base) {
-
-
-
-        Class.create_mode = "merge";
-
-        Class.create = function () {
-
-            this.dom_children = this.dom.children[0];
-            this.__children = new flyingon.ControlCollection(this);
-
-            (this.__text = new flyingon.VerticalText())
-                .set_column3("center")
-                .addClass("flyingon-TabPanelHeader-text");
-
-            this.appendChild(this.__text);
-        };
 
 
 
@@ -13198,77 +13257,61 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         //重载测量方法
         this.measure = function () {
 
-            var target = this.__parent;
+            var target = this.__parent, //在TabControl中则取TabControl的页签数据
+                class_prefix = "flyingon-TabPanel-",
+                direction = this.__direction_last,
+                style = this.__style_last,
+                data = target instanceof flyingon.TabControl ? (this.__tab_data = target.__tab_data) : this.__fn_tab_data();
 
-            this.__fn_compute_class(this.__tab_data = target.__tab_data || this.__fn_tab_data(), "flyingon-TabPanel-");
+            //获取标题头方向(left, top, right, bottom)
+            data.direction = data.collapse && (target = this.__parent) && (target = target.__layout) && target.__fn_collapse(this) || data.tab; //收拢状态
+
+            if (data.direction !== direction)
+            {
+                if (direction)
+                {
+                    this.removeClass(class_prefix + direction);
+                }
+
+                this.addClass(class_prefix + (this.__direction_last = data.direction));
+            }
+
+            if (data.style !== style)
+            {
+                if (style)
+                {
+                    this.removeClass(class_prefix + style);
+                }
+
+                this.addClass(class_prefix + (this.__style_last = data.style));
+            }
+
+            if (data.direction !== direction || data.style !== style)
+            {
+                if (direction && style)
+                {
+                    this.removeClass(class_prefix + style + "-" + direction);
+                }
+
+                if (data.direction && data.style)
+                {
+                    this.addClass(class_prefix + data.style + "-" + data.direction);
+                }
+            }
 
             return base.measure.apply(this, arguments);
         };
 
 
-        //计算class
-        this.__fn_compute_class = function (data, class_prefix) {
-
-            var tab1 = this.__tab_last,
-                style1 = this.__style_last,
-                tab2,
-                style2,
-                target;
-
-            if (data.collapse && (tab2 = (target = this.__parent) && (target = target.__layout) && target.__fn_collapse(this) || "top")) //收拢状态
-            {
-                this.__collapse_last = tab2;
-                style2 = "collapse";
-            }
-            else
-            {
-                this.__collapse_last = null;
-
-                tab2 = data.tab;
-                style2 = data.style;
-            }
-
-            if (tab1 !== tab2)
-            {
-                if (tab1)
-                {
-                    this.removeClass(class_prefix + tab1);
-                }
-
-                this.addClass(class_prefix + (this.__tab_last = tab2));
-            }
-
-            if (style1 !== style2)
-            {
-                if (style1)
-                {
-                    this.removeClass(class_prefix + style1);
-                }
-
-                this.addClass(class_prefix + (this.__style_last = style2));
-            }
-
-            if (tab1 !== tab2 || style1 !== style2)
-            {
-                if (tab1 && style1)
-                {
-                    this.removeClass(class_prefix + style1 + "-" + tab1);
-                }
-
-                if (tab2 && style2)
-                {
-                    this.addClass(class_prefix + style2 + "-" + tab2);
-                }
-            }
-        };
-
-
-        //测量页签
-        this.__fn_measure_header = function (width, height, data) {
+        //测量前处理
+        this.before_measure = function (box) {
 
             var header = this.__header,
-                tab = this.__collapse_last || this.__tab_last;
+                width = this.offsetWidth - box.border_width,
+                height = this.offsetHeight - box.border_height,
+                data = this.__tab_data;
 
+            //测量页签头
             header.__update_dirty = 1;
             header.__arrange_dirty = true;
 
@@ -13277,7 +13320,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
             if (data.size > 0)
             {
-                if (tab === "top" || tab === "bottom")
+                if (data.direction === "top" || data.direction === "bottom")
                 {
                     header.measure(data.size, height, false, true, false, false, true, false);
                 }
@@ -13291,7 +13334,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 header.measure(width, height, true, true);
             }
 
-            switch (tab)
+            switch (data.direction)
             {
                 case "left":
                     header.locate(0, data.y || 0);
@@ -13309,26 +13352,34 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                     header.locate(data.x || 0, data.only_tab > 0 ? 0 : height - header.offsetHeight);
                     break;
             }
+
+            //渲染页签头
+            return this.__fn_render_header(box, header, data);
         };
 
 
-        //测量body大小
-        this.__fn_measure_body = function (data, width, height) {
+        //重载测量客户区方法(计算内容区域)
+        this.__fn_measure_client = function (box) {
 
-            var header = this.__header,
-                dom_body = this.dom_body,
+            var dom_body = this.dom_body,
                 style = dom_body.style,
-                offset = data.offset;
+                data = this.__tab_data;
 
-            if (!(dom_body.style.display = data.collapse || data.only_tab ? "none" : ""))
+            if (!(style.display = data.collapse || data.only_tab ? "none" : ""))
+                //if (!data.collapse && !data.only_tab)
             {
+                var header = this.__header,
+                    width = this.offsetWidth - box.border_width,
+                    height = this.offsetHeight - box.border_height,
+                    offset = data.offset;
+
                 if (header.offsetWidth > 0 && header.offsetHeight > 0)
                 {
                     offset -= 1;
                 }
 
                 //定位并计算body大小
-                switch (this.__tab_last)
+                switch (data.tab)
                 {
                     case "top":
                         style.left = "0";
@@ -13364,62 +13415,9 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                     style.height = (dom_body.clientHeight << 1) - dom_body.offsetHeight + "px";
                 }
             }
+
+            base.__fn_measure_client.call(this, box);
         };
-
-
-        //测量前处理
-        this.before_measure = function (box) {
-
-            var header = this.__header,
-                width = this.offsetWidth - box.border_width,
-                height = this.offsetHeight - box.border_height,
-                collapse = this.__collapse_last,
-                data = this.__tab_data;
-
-            this.__fn_measure_header(width, height, data);
-
-            if (this.dom_body)
-            {
-                this.__fn_measure_body(data, width, height);
-            }
-
-            if (collapse || data.only_tab)
-            {
-                if (collapse && header.__collapse)
-                {
-                    header.__collapse.set_icon("expand");
-                }
-
-                width = header.offsetWidth + box.border_width - this.offsetWidth;
-                height = header.offsetHeight + box.border_height - this.offsetHeight;
-
-                if (data.only_tab)
-                {
-                    data = { width: width, height: height };
-                }
-                else if (collapse === "left" || collapse === "right")  //竖直方向收拢
-                {
-                    data = { width: width }; //返回宽度变化量
-                }
-                else
-                {
-                    data = { height: height }; //返回高度变化量
-                }
-
-                header.render();
-
-                return data;
-            }
-
-            if (header.__collapse)
-            {
-                data = this.__tab_last;
-                header.__collapse.set_icon(data === "top" || top === "bottom" ? "collapse" : "collapse");
-            }
-
-            header.render();
-        };
-
 
 
     });
@@ -13431,18 +13429,25 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
     flyingon.defineClass("TabControlHeader", flyingon.Control, function (base) {
 
 
-        Class.create_mode = "merge";
-
-        Class.create = function () {
-
-            this.dom_children = this.dom.children[0];
-            this.__children = new flyingon.ControlCollection(this);
-        };
-
-
-
         //扩展页签头基础服务
         header_base.call(this, base, "flyingon-TabControlHeader-");
+
+
+        this.__event_bubble_click = function (event) {
+
+            var target = this.__parent;
+
+            switch (event.target.name)
+            {
+                case "collapse":
+                    target.set_collapse(!target.get_collapse());
+                    break;
+
+                case "close":
+                    target.remove();
+                    break;
+            }
+        };
 
 
     });
@@ -13486,7 +13491,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
         //是否显示标题头
-        this.defineProperty("header", false, "arrange");
+        this.defineProperty("header", true, "arrange");
 
 
         //页签是否充满可用空间
@@ -13494,13 +13499,90 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
+        this.__fn_create_header = function () {
+
+            var header = this.__header = new flyingon.TabControlHeader();
+
+            header.__parent = this;
+            this.dom.appendChild(header.dom);
+
+            return header;
+        };
+
+
+        //重载测量方法
+        this.measure = function () {
+
+            var data = this.__fn_tab_data(),
+                collapse = this.__collapse_last,
+                target;
+
+            if (collapse)
+            {
+                this.removeClass("flyingon-TabControl-collapse-" + collapse);
+            }
+
+            //获取收拢方向(left, top, right, bottom)
+            if (this.__collapse_last = data.collapse && (target = this.__parent) && (target = target.__layout) && target.__fn_collapse(this))
+            {
+                this.addClass("flyingon-TabControl-collapse-" + this.__collapse_last);
+            }
+
+            return base.measure.apply(this, arguments);
+        };
+
+
+        //测量前处理
+        this.before_measure = function (box) {
+
+            var header = this.__header,
+                dom = this.dom_body,
+                style = dom.style,
+                width = this.offsetWidth - box.border_width,
+                data = this.__tab_data;
+
+            if (header && this.get_header())
+            {
+                //测量页签头
+                header.__update_dirty = 1;
+                header.__arrange_dirty = true;
+
+                header.measure(width, 25, true, true);
+                header.locate(0, 0, width);
+
+                //渲染页签头
+                return this.__fn_render_header(box, header, data);
+            }
+        };
+
+
         this.__fn_measure_client = function (box) {
 
-            var dom = this.dom_body,
-                style = dom.style;
+            var header = this.__header,
+                dom = this.dom_body,
+                style = dom.style,
+                y = 0,
+                width = this.offsetWidth - box.border_width;
 
-            style.width = this.offsetWidth - box.border_width + "px";
-            style.height = this.offsetHeight - box.border_height + "px";
+            if (header && !this.__tab_data.collapse && this.get_header())
+            {
+                header.measure(width, 25, true, true);
+                header.locate(0, 0, width);
+                header.render();
+
+                y = header.offsetHeight;
+            }
+
+            style.top = y + "px";
+            style.width = width + "px";
+            style.height = this.offsetHeight - box.border_height - y + "px";
+
+            //处理body盒模型偏差
+            if (!this.box_border_sizing)
+            {
+                style.width = (dom.clientWidth << 1) - dom.offsetWidth + "px";
+                style.height = (dom.clientHeight << 1) - dom.offsetHeight + "px";
+            }
 
             base.__fn_measure_client.call(this, box);
         };
@@ -13510,14 +13592,14 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
             var icon = this.__icon_next;
 
-            if (icon && icon.dom.parentNode === this.dom)
+            if (icon && icon.dom.parentNode === this.dom_children)
             {
-                this.dom.removeChild(icon.dom);
+                this.dom_children.removeChild(icon.dom);
             }
 
-            if ((icon = this.__icon_previous) && icon.dom.parentNode === this.dom)
+            if ((icon = this.__icon_previous) && icon.dom.parentNode === this.dom_children)
             {
-                this.dom.removeChild(icon.dom);
+                this.dom_children.removeChild(icon.dom);
             }
 
             if (this.get_collapse())
@@ -13555,15 +13637,33 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                     item.addClass("flyingon-TabControl-" + name);
                     item.set_icon(icon);
                     item.__parent = target;
+
+                    item.onclick = next ? move_next : move_previous;
                 }
 
-                if (item.dom.parentNode !== target.dom)
+                if (item.dom.parentNode !== target.dom_children)
                 {
-                    target.dom.appendChild(item.dom);
+                    target.dom_children.appendChild(item.dom);
                 }
 
                 item.measure(width, height, true, true);
                 return item;
+            };
+
+
+            function move_next(event) {
+
+                var target = this.__parent;
+
+
+            };
+
+
+            function move_previous(event) {
+
+                var target = this.__parent;
+
+
             };
 
 
@@ -13650,15 +13750,16 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                     for (var i = 0; i < length; i++)
                     {
                         item = items[i];
+                        value = x + values[i];
 
                         if (i === index)
                         {
                             item.locate(0, 0);
-                            item.__header.locate(x + values[i], y);
+                            item.__header.locate(value, y);
                         }
                         else
                         {
-                            item.locate(x + values[i], y);
+                            item.locate(value, y);
                         }
                     }
                 };

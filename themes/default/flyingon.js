@@ -518,7 +518,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                 margin: "0",
                 borderStyle: "solid",
                 borderColor: control_border,
-                borderWidth: "0",
+                borderWidth: "1px 1px 0 1px",
                 width: "fill",
                 height: "fill",
                 overflow: "hidden",

@@ -7,7 +7,15 @@ flyingon是一个跨浏览器的完全面向对象的javascript前端开发库,�
 
 flyingon基于LGPLv3协议,无论您是个人或公司都可以免费使用!有关LPGLv3的更多细节,请参考主目录下的LGPLv3.txt或上网搜索相关内容
 
-作者承诺: 本人会对本标准库(后述会增加树及表格控件)持续升级,且永久免费!
+flyingon主要包含以下内容：
+	1. 核心库(面向对象开发, 属性, 事件, 序列化及反序列化, 数据绑定)(已完成)
+	2. 控件基础体系(盒模型, 样式, 拖拉, 调整大小)(已完成)
+	3. 布局系统(Panel, Splitter, TabPanel, TabControl, OutlookBar)(已完成)
+	4. 基础控件(Button, TextBox...)(开发中)
+	5. 高级控件(TreeView, DataGrid, TreeGrid, VerticalGrid, PropertyGrid)(开发中)
+
+
+作者承诺: 本人会对flyingon持续升级,且永久免费!
 
 
 
