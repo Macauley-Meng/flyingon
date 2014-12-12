@@ -12995,11 +12995,12 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
         //获取页签数据
-        this.__fn_tab_data = function () {
+        this.__fn_tab_data = function (collapse, collapse_style) {
 
             var data = this.__tab_data || (this.__tab_data = {});
 
-            data.style = (data.collapse = this.get_collapse()) ? "collapse" : this.get_tabStyle(); //收拢状态特殊处理
+            data.collapse = collapse !== undefined ? collapse : this.get_collapse();
+            data.style = data.collapse ? (collapse_style || "collapse") : this.get_tabStyle(); //收拢状态特殊处理,不指定则为收拢状态
             data.tab = this.get_tab();
             data.width = this.get_tabWidth();
             data.height = this.get_tabHeight();
@@ -13257,45 +13258,58 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         //重载测量方法
         this.measure = function () {
 
-            var target = this.__parent, //在TabControl中则取TabControl的页签数据
-                class_prefix = "flyingon-TabPanel-",
-                direction = this.__direction_last,
-                style = this.__style_last,
-                data = target instanceof flyingon.TabControl ? (this.__tab_data = target.__tab_data) : this.__fn_tab_data();
+            var class_prefix = "flyingon-TabPanel-",
+                direction1 = this.__direction_last,
+                direction2,
+                style1 = this.__style_last,
+                style2,
+                cache = this.__parent,
+                data;
 
             //获取标题头方向(left, top, right, bottom)
-            data.direction = data.collapse && (target = this.__parent) && (target = target.__layout) && target.__fn_collapse(this) || data.tab; //收拢状态
-
-            if (data.direction !== direction)
+            if (data = cache.__tab_data) //如果是父控件包含页签数据
             {
-                if (direction)
-                {
-                    this.removeClass(class_prefix + direction);
-                }
-
-                this.addClass(class_prefix + (this.__direction_last = data.direction));
+                cache = cache.__parent;
+                this.__tab_data = data;
+            }
+            else
+            {
+                data = this.__fn_tab_data();
             }
 
-            if (data.style !== style)
+            direction2 = data.direction = data.collapse && cache && (cache = cache.__layout) && cache.__fn_collapse(this) || data.tab;
+            style2 = data.style;
+
+            if (direction2 !== direction1)
             {
-                if (style)
+                if (direction1)
                 {
-                    this.removeClass(class_prefix + style);
+                    this.removeClass(class_prefix + direction1);
                 }
 
-                this.addClass(class_prefix + (this.__style_last = data.style));
+                this.addClass(class_prefix + (this.__direction_last = direction2));
             }
 
-            if (data.direction !== direction || data.style !== style)
+            if (style2 !== style1)
             {
-                if (direction && style)
+                if (style1)
                 {
-                    this.removeClass(class_prefix + style + "-" + direction);
+                    this.removeClass(class_prefix + style1);
                 }
 
-                if (data.direction && data.style)
+                this.addClass(class_prefix + (this.__style_last = style2));
+            }
+
+            if (direction2 !== direction1 || style2 !== style1)
+            {
+                if (direction1 && style1)
                 {
-                    this.addClass(class_prefix + data.style + "-" + data.direction);
+                    this.removeClass(class_prefix + style1 + "-" + direction1);
+                }
+
+                if (direction2 && style2)
+                {
+                    this.addClass(class_prefix + style2 + "-" + direction2);
                 }
             }
 
@@ -13345,11 +13359,11 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                     break;
 
                 case "right":
-                    header.locate(data.only_tab > 0 ? 0 : width - header.offsetWidth, data.y || 0);
+                    header.locate(data.collapse || data.only_tab ? 0 : width - header.offsetWidth, data.y || 0);
                     break;
 
                 case "bottom":
-                    header.locate(data.x || 0, data.only_tab > 0 ? 0 : height - header.offsetHeight);
+                    header.locate(data.x || 0, data.collapse || data.only_tab ? 0 : height - header.offsetHeight);
                     break;
             }
 
@@ -13489,13 +13503,16 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-
         //是否显示标题头
         this.defineProperty("header", true, "arrange");
 
 
         //页签是否充满可用空间
         this.defineProperty("tabFill", false, "arrange");
+
+
+        this.defaultValue("tabStyle", "tab1");
+
 
 
 
@@ -13513,7 +13530,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         //重载测量方法
         this.measure = function () {
 
-            var data = this.__fn_tab_data(),
+            var data = this.__fn_tab_data(undefined, "shrink"), //TabControl收拢模式下的TabPanel设为shrink紧缩模式
                 collapse = this.__collapse_last,
                 target;
 
@@ -13536,22 +13553,39 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         this.before_measure = function (box) {
 
             var header = this.__header,
-                dom = this.dom_body,
-                style = dom.style,
+                style = header.dom.style,
                 width = this.offsetWidth - box.border_width,
-                data = this.__tab_data;
+                data = this.__tab_data,
+                cache;
 
-            if (header && this.get_header())
+            if (header && this.get_header() && data.style !== "thumb") //缩略图模式不支持标题头
             {
                 //测量页签头
                 header.__update_dirty = 1;
                 header.__arrange_dirty = true;
+
+                style.width = style.height = "";
+
+                //获取收拢方向(left, top, right, bottom)
+                if (data.collapse && (cache = this.__parent) && (cache = cache.__layout) && (cache = cache.__fn_collapse(this)))
+                {
+                    data.direction = cache;
+                    style.display = "none";
+                }
+                else if (style.display)
+                {
+                    style.display = "";
+                }
 
                 header.measure(width, 25, true, true);
                 header.locate(0, 0, width);
 
                 //渲染页签头
                 return this.__fn_render_header(box, header, data);
+            }
+            else
+            {
+                style.display = "none";
             }
         };
 
@@ -13561,17 +13595,8 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             var header = this.__header,
                 dom = this.dom_body,
                 style = dom.style,
-                y = 0,
+                y = header && !header.dom.style.display ? header.offsetHeight : 0,
                 width = this.offsetWidth - box.border_width;
-
-            if (header && !this.__tab_data.collapse && this.get_header())
-            {
-                header.measure(width, 25, true, true);
-                header.locate(0, 0, width);
-                header.render();
-
-                y = header.offsetHeight;
-            }
 
             style.top = y + "px";
             style.width = width + "px";
@@ -13590,27 +13615,23 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         this.arrange = function (width, height) {
 
-            var icon = this.__icon_next;
+            var target = this.__icon_next;
 
-            if (icon && icon.dom.parentNode === this.dom_children)
+            if (target && target.dom.parentNode === this.dom_children)
             {
-                this.dom_children.removeChild(icon.dom);
+                this.dom_children.removeChild(target.dom);
             }
 
-            if ((icon = this.__icon_previous) && icon.dom.parentNode === this.dom_children)
+            if ((target = this.__icon_previous) && target.dom.parentNode === this.dom_children)
             {
-                this.dom_children.removeChild(icon.dom);
+                this.dom_children.removeChild(target.dom);
             }
 
-            if (this.get_collapse())
+            if ((target = this.__tab_data).collapse)
             {
-                this.__fn_tab_data(true);
-
-
-
-                (this.__layout = layouts.collapse).__fn_arrange(this, width, height);
+                (this.__layout = layout_collapse).__fn_arrange(this, width, height);
             }
-            else if (this.__layout = layouts[this.__fn_tab_data(false).style])
+            else if (this.__layout = layouts[target.style])
             {
                 this.__layout.__fn_arrange(this, width, height);
             }
@@ -13667,7 +13688,170 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             };
 
 
-            this.tab1 = this.tab2 = this.tab3 = this.tab4 = flyingon.defineLayout(function (base) {
+            function arrange1(target, items, width, height, data, item, index, only_tab) {
+
+                var spacingWidth = target.compute_size(target.get_spacingWidth()),
+                    length = items.length,
+                    values = [],
+                    x = 0,
+                    y = 0,
+                    size,
+                    value,
+                    icon;
+
+                for (var i = 0; i < length; i++)
+                {
+                    (item = items[i]).__visible = true;
+
+                    item.__arrange_dirty = !(data.only_tab = only_tab || i !== index);
+                    item.measure(width, height, false, false, false, false, true, true);
+
+                    values.push(x);
+
+                    x += (i !== index ? item.offsetWidth : item.__header.offsetWidth);
+
+                    if (i === index)
+                    {
+                        size = x;
+                    }
+
+                    x += spacingWidth;
+                }
+
+                value = item.__header.offsetHeight;
+
+                if (this.tab === "bottom")
+                {
+                    y = height - value;
+                }
+
+                if (x > width) //显示上一页图标
+                {
+                    icon = show_icon(target, false, "collapse", 20, value);
+                    icon.locate(0, y);
+                    icon.render();
+
+                    x = icon.offsetWidth + spacingWidth;
+
+                    icon = show_icon(target, true, "expand", 20, value);
+                    icon.locate(width -= icon.offsetWidth, y);
+                    icon.render();
+
+                    if (size > width - x)
+                    {
+                        x = width - size - spacingWidth;
+
+                        if (index < length - 1)
+                        {
+                            x -= 20;
+                        }
+                    }
+                }
+                else
+                {
+                    x = 0;
+                }
+
+                for (var i = 0; i < length; i++)
+                {
+                    item = items[i];
+                    value = x + values[i];
+
+                    if (i !== index || only_tab)
+                    {
+                        item.locate(value, y);
+                    }
+                    else
+                    {
+                        item.locate(0, 0);
+                        item.__header.locate(value, y);
+                    }
+                }
+            };
+
+
+            function arrange2(target, items, width, height, data, item, index, only_tab) {
+
+                var spacingHeight = target.compute_size(target.get_spacingHeight()),
+                    length = items.length,
+                    values = [],
+                    x = 0,
+                    y = 0,
+                    size,
+                    value,
+                    icon;
+
+                for (var i = 0; i < length; i++)
+                {
+                    (item = items[i]).__visible = true;
+
+                    item.__arrange_dirty = !(data.only_tab = only_tab || i !== index);
+                    item.measure(width, height, false, false, false, false, true, true);
+
+                    values.push(y);
+
+                    y += (i !== index ? item.offsetHeight : item.__header.offsetHeight);
+
+                    if (i === index)
+                    {
+                        size = y;
+                    }
+
+                    y += spacingHeight;
+                }
+
+                value = item.__header.offsetWidth;
+
+                if (this.tab === "right")
+                {
+                    x = width - value;
+                }
+
+                if (y > width) //显示上一页图标
+                {
+                    icon = show_icon(target, false, "collapse", value, 20);
+                    icon.locate(x, 0);
+                    icon.render();
+
+                    y = icon.offsetHeight + spacingHeight;
+
+                    icon = show_icon(target, true, "expand", value, 20);
+                    icon.locate(x, height -= icon.offsetHeight);
+                    icon.render();
+
+                    if (size > height - y)
+                    {
+                        y = height - size - spacingHeight;
+
+                        if (index < length - 1)
+                        {
+                            y -= 20;
+                        }
+                    }
+                }
+                else
+                {
+                    y = 0;
+                }
+
+                for (var i = 0; i < length; i++)
+                {
+                    item = items[i];
+
+                    if (i !== index || only_tab)
+                    {
+                        item.locate(x, y + values[i]);
+                    }
+                    else
+                    {
+                        item.locate(0, 0);
+                        item.__header.locate(x, y + values[i]);
+                    }
+                }
+            };
+
+
+            this.tab1 = this.tab2 = this.tab3 = this.tab4 = this.thumb = flyingon.defineLayout(function (base) {
 
 
                 function all_weight(items, fn) {
@@ -13680,88 +13864,6 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                     }
 
                     return value;
-                };
-
-
-                function arrange1(target, items, width, height, data, item, index, only_tab) {
-
-                    var spacingWidth = target.compute_size(target.get_spacingWidth()),
-                        length = items.length,
-                        values = [],
-                        x = 0,
-                        y = 0,
-                        size,
-                        value,
-                        icon;
-
-                    for (var i = 0; i < length; i++)
-                    {
-                        (item = items[i]).__visible = true;
-
-                        item.__arrange_dirty = !(data.only_tab = only_tab || i !== index);
-                        item.measure(width, height, false, false, false, false, true, true);
-
-                        values.push(x);
-
-                        x += (i !== index ? item.offsetWidth : item.__header.offsetWidth);
-
-                        if (i === index)
-                        {
-                            size = x;
-                        }
-
-                        x += spacingWidth;
-                    }
-
-                    value = item.__header.offsetHeight;
-
-                    if (this.tab === "bottom")
-                    {
-                        y = height - value;
-                    }
-
-                    if (x > width) //显示上一页图标
-                    {
-                        icon = show_icon(target, false, "collapse", 20, value);
-                        icon.locate(0, y);
-                        icon.render();
-
-                        x = icon.offsetWidth + spacingWidth;
-
-                        icon = show_icon(target, true, "expand", 20, value);
-                        icon.locate(width -= icon.offsetWidth, y);
-                        icon.render();
-
-                        if (size > width - x)
-                        {
-                            x = width - size - spacingWidth;
-
-                            if (index < length - 1)
-                            {
-                                x -= 20;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        x = 0;
-                    }
-
-                    for (var i = 0; i < length; i++)
-                    {
-                        item = items[i];
-                        value = x + values[i];
-
-                        if (i === index)
-                        {
-                            item.locate(0, 0);
-                            item.__header.locate(value, y);
-                        }
-                        else
-                        {
-                            item.locate(value, y);
-                        }
-                    }
                 };
 
 
@@ -13802,87 +13904,6 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                         x += data.size + spacingWidth;
                     }
 
-                };
-
-
-                function arrange2(target, items, width, height, data, item, index, only_tab) {
-
-                    var spacingHeight = target.compute_size(target.get_spacingHeight()),
-                        length = items.length,
-                        values = [],
-                        x = 0,
-                        y = 0,
-                        size,
-                        value,
-                        icon;
-
-                    for (var i = 0; i < length; i++)
-                    {
-                        (item = items[i]).__visible = true;
-
-                        item.__arrange_dirty = !(data.only_tab = only_tab || i !== index);
-                        item.measure(width, height, false, false, false, false, true, true);
-
-                        values.push(y);
-
-                        y += (i !== index ? item.offsetHeight : item.__header.offsetHeight);
-
-                        if (i === index)
-                        {
-                            size = y;
-                        }
-
-                        y += spacingHeight;
-                    }
-
-                    value = item.__header.offsetWidth;
-
-                    if (this.tab === "right")
-                    {
-                        x = width - value;
-                    }
-
-                    if (y > width) //显示上一页图标
-                    {
-                        icon = show_icon(target, false, "collapse", value, 20);
-                        icon.locate(x, 0);
-                        icon.render();
-
-                        y = icon.offsetHeight + spacingHeight;
-
-                        icon = show_icon(target, true, "expand", value, 20);
-                        icon.locate(x, height -= icon.offsetHeight);
-                        icon.render();
-
-                        if (size > height - y)
-                        {
-                            y = height - size - spacingHeight;
-
-                            if (index < length - 1)
-                            {
-                                y -= 20;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        y = 0;
-                    }
-
-                    for (var i = 0; i < length; i++)
-                    {
-                        item = items[i];
-
-                        if (i === index)
-                        {
-                            item.locate(0, 0);
-                            item.__header.locate(x, y + values[i]);
-                        }
-                        else
-                        {
-                            item.locate(x, y + values[i]);
-                        }
-                    }
                 };
 
 
@@ -13943,17 +13964,17 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             });
 
 
-            this.collapse = flyingon.defineLayout(function (base) {
+            layout_collapse = flyingon.defineLayout(function (base) {
 
 
-                //this.arrange = function (target, items, width, height) {
+                this.arrange = function (target, items, width, height) {
 
-                //    var data = arrange_data.call(this, target, items),
-                //        index = this.selectedIndex,
-                //        item = items[index];
+                    var data = arrange_data.call(this, target, items),
+                        index = this.selectedIndex,
+                        item = items[index];
 
-                //    (this.vertical ? arrange2 : arrange1).call(this, target, items, width, height, data, item, index, true);
-                //};
+                    ((this.vertical = data.direction === "left" || data.direction === "right") ? arrange2 : arrange1).call(this, target, items, width, height, data, item, index, true);
+                };
 
             });
 
@@ -13975,7 +13996,8 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             return this;
 
 
-        }).call(Object.create(null));
+        }).call(Object.create(null)),
+            layout_collapse;
 
 
 
