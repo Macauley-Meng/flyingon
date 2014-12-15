@@ -262,6 +262,7 @@
                 if (resizable) //调整大小
                 {
                     target.__fn_resize(resizable, event, pressdown);
+                    target.get_ownerWindow().__fn_registry_update(target, true);
                 }
                 else if (draggable) //拖动
                 {

@@ -13,15 +13,15 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
         //默认设置为初始化状态,在渲染窗口后终止
         flyingon.__initializing = true;
 
-        this.__header.addClass("flyingon-Dialog-header")
-            .set_layoutType("column3")
-            .__parent = this;
-
         this.initialize_header(this.__header = new flyingon.Panel());
 
         (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
 
         this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
+
+        this.__header.addClass("flyingon-Dialog-header")
+            .set_layoutType("column3")
+            .__parent = this;
 
         this.__fn_init_window(this.dom);
     };
@@ -131,6 +131,8 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
             this.set_left(start.x + event.distanceX + "px");
             this.set_top(start.y + event.distanceY + "px");
+
+            this.__fn_registry_update(this, true);
         }
     };
 
