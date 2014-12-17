@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body>
+
+    <div id="flyingon_js"></div>
+
+
+    <script src="../src/Tools/Compressor.js"></script>
+
+    <script type="text/javascript">
+
+
+        var files = [
+
+            "..\\src\\Base\\Core.js",
+            "..\\src\\Base\\Xml.js",
+            "..\\src\\Base\\SelectorParser.js",
+
+            "..\\src\\Base\\Expression.js",
+            "..\\src\\Base\\DataBinding.js",
+
+            "..\\src\\Base\\SerializeReader.js",
+            "..\\src\\Base\\SerializeWriter.js",
+            "..\\src\\Base\\Dom.js",
+            "..\\src\\Base\\Event.js",
+            "..\\src\\Base\\Component.js",
+
+            "..\\src\\Controls\\Dragdrop.js",
+            "..\\src\\Controls\\Style.js",
+
+            "..\\src\\Controls\\Query.js",
+
+            "..\\src\\Controls\\Control.js",
+            "..\\src\\Controls\\ControlCollection.js",
+
+            "..\\src\\Controls\\Layouts.js",
+            "..\\src\\Controls\\IChildren.js",
+
+            "..\\src\\Controls\\Panel.js",
+            "..\\src\\Controls\\Splitter.js",
+            "..\\src\\Controls\\TabControl.js",
+
+            "..\\src\\Controls\\Label.js",
+            "..\\src\\Controls\\Button.js",
+            "..\\src\\Controls\\Icon.js",
+            "..\\src\\Controls\\Image.js",
+            "..\\src\\Controls\\HtmlControl.js",
+
+            "..\\src\\Controls.Window\\IWindow.js",
+            "..\\src\\Controls.Window\\Window.js",
+            "..\\src\\Controls.Window\\Dialog.js"
+        ];
+
+
+        flyingon_js[document.textContent ? "textContent" : "innerText"] = flyingon.compress(files);
+
+
+    </script>
+
+</body>
+</html>

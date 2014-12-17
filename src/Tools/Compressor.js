@@ -1,7 +1,7 @@
 ﻿
+var flyingon = flyingon || (flyingon = {});
 
 
-///Ajax实现
 (function (flyingon) {
 
 
@@ -314,7 +314,112 @@
 
 
 
-})(flyingon);
 
+    var uniqueId = 0;
+
+    //压缩脚本
+    //files: 要压缩的js文件集合
+    //level: 压缩级别 0:仅合并 1:去除注释及空格 2:压缩
+    flyingon.compress = function (files, level) {
+
+        var data = [],
+            text,
+            length;
+
+        if (files && (length = files.length) > 0)
+        {
+            level = level === undefined ? 2 : (+level || 0);
+
+            for (var i = 0; i < length; i++)
+            {
+                if (text = flyingon.ajax_get(files[i] + "?id=" + uniqueId++))
+                {
+                    data.push(text);
+                }
+            }
+
+            text = data.join("\n");
+            return level > 0 ? remove_space(text, level) : text;
+        }
+    };
+
+
+
+    // \"(\\\"|[^"]|\\\r|\\\n)*\"           : 双引号字符串
+    // \'(\\\'|[^']|\\\r|\\\n)*\'           : 单引号字符串
+    // (\w+|[)\]}])\s*\/\s*(\w+|[(\[{])     : 除法
+    // \/(\\\/|[^/])*\/\w?                  : 正则表达式
+    // \/\/[^\n]*                           : 单行注释
+    // \/\*([^*]|\*[^/])*\*\/               : 多行注释
+    var regex_split = /(\"(\\\"|[^"]|\\\r|\\\n)*\")|(\'(\\\'|[^']|\\\r|\\\n)*\')|(\/\/[^\n]*)|(\/\*([^*]|\*[^/])*\*\/)|(\w+|[)\]}])\s*\/\s*(\w+|[(\[{])|(\/(\\\/|[^/])*\/\w?)|(\w+)|(\S)|(\s*\n)+|(\s+)/g; //拆分字符串与非字符串
+
+    //去除注释
+    function remove_space(text, level) {
+
+        var data = [],
+            token,
+            word = false,
+            space = false,
+            cache;
+
+        regex_split.lastIndex = 0;
+
+        while ((cache = regex_split.exec(text)) && (token = cache[0]))
+        {
+            if (cache[13]) //运算符
+            {
+                data.push(token);
+            }
+            else if (cache[12]) //变量
+            {
+                if (word) //如果上一token也是变量则添加空格
+                {
+                    data.push(" ");
+                }
+
+                data.push(token);
+            }
+            else if (cache[14]) //换行
+            {
+                if (word)
+                {
+                    data.push("\n");
+                }
+            }
+            else if (cache[1] || cache[3]) //字符串
+            {
+                data.push(token);
+            }
+            else if (cache[8]) //除法
+            {
+                data.push(cache[8]);
+                data.push("/");
+                data.push(cache[9]);
+            }
+            else if (cache[10]) //正则表达式
+            {
+                data.push(token);
+            }
+
+            if (!(space = cache[15]))    //空格
+            {
+                word = cache[12];     //变量
+            }
+        }
+
+        return level > 1 ? compress(data) : data.join("");
+    };
+
+
+    //压缩
+    function compress(data) {
+
+        return data.join("");
+    };
+
+
+
+
+})(flyingon);
 
 

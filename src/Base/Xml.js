@@ -90,7 +90,7 @@ xmlDoc.documentElement.childNodes(0).hasChild,可以判断是否有子节点
 
 
 
-    /**************************扩展Xml解析方法****************************/
+    /* *************************扩展Xml解析方法*************************** */
 
 
     var regex_encode = /[\<\>\"\'\&]/g,
@@ -205,4 +205,6 @@ xmlDoc.documentElement.childNodes(0).hasChild,可以判断是否有子节点
 
 
 })(flyingon);
+
+
 
