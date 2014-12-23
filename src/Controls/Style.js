@@ -1660,7 +1660,7 @@
         //预处理样式集
         if (styles)
         {
-            var css_list = [];
+            var css_list = {};
 
             //预处理样式
             for (var selector in styles)

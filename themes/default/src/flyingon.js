@@ -120,13 +120,16 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         focus_back = "blue",
         focus_color = "black",
-        focus_border = "blue";
+        focus_border = "blue",
+        
+        disabled_back = "darkgray",
+        disabled_border = "#060606",
+        disabled_color = "#0A0A0A";
 
 
 
     //定义样式
     flyingon.defineStyle({
-
 
 
 
@@ -142,7 +145,12 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             fontSize: "18px",
             color: icon_color,
-            cursor: "default"
+            cursor: "default",
+
+            ":disabled": {
+
+                color: disabled_color
+            }
         },
 
 
@@ -190,11 +198,6 @@ A~B                    匹配任何在A控件之后的同级B控件
                 overflow: "hidden",
                 backgroundColor: control_back,
                 cursor: "default"
-            },
-
-            "@flyingon-TabPanelHeader:hover": {
-
-                backgroundColor: hover_back
             },
 
             //选中状态时页签头
@@ -612,13 +615,23 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabControl-collapse-left,.flyingon-TabControl-collapse-right": {
 
-            width: "27px"
+            backgroundColor: control_back,
+
+            "@flyingon-TabControlHeader": {
+
+                width: "27px"
+            }
         },
 
 
         ".flyingon-TabControl-collapse-top,.flyingon-TabControl-collapse-bottom": {
 
-            height: "27px"
+            backgroundColor: control_back,
+
+            "@flyingon-TabControlHeader": {
+
+                height: "27px"
+            }
         },
 
 

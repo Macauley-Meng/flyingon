@@ -52,12 +52,10 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-    this.__event_bubble_mousedown = function (event) {
+    this.__fn_check_drag = function (draggable, event) {
 
-        if (!event.ctrlKey) //未按下control键禁止拖动或调整大小
-        {
-            event.stopImmediatePropagation(false);
-        }
+        //未按下ctrl键禁止拖动
+        return event.ctrlKey ? draggable : null;
     };
 
 

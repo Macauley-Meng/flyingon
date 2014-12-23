@@ -1083,24 +1083,32 @@ flyingon.defineClass("Control", function () {
 
 
 
-        //获取可调整大小边
-        this.__fn_resize_side = function (resizable, event) {
+
+        //检测拖动
+        this.__fn_check_drag = function (draggable, event) {
+
+            return draggable;
+        };
+
+
+        //检测调整大小
+        this.__fn_check_resize = function (resizable, event) {
 
             var offset = flyingon.dom_offset(this.dom, event.clientX, event.clientY),
                 style = this.dom.style,
                 width = this.offsetWidth,
                 height = this.offsetHeight,
-                resize;
+                result;
 
             if (resizable !== "vertical")
             {
                 if (offset.x >= 0 && offset.x < 4)
                 {
-                    resize = { left: true, cursor: "w-resize" };
+                    result = { left: true, cursor: "w-resize" };
                 }
                 else if (offset.x <= width && offset.x > width - 4)
                 {
-                    resize = { right: true, cursor: "e-resize" };
+                    result = { right: true, cursor: "e-resize" };
                 }
             }
 
@@ -1108,31 +1116,31 @@ flyingon.defineClass("Control", function () {
             {
                 if (offset.y >= 0 && offset.y < 4)
                 {
-                    if (resize)
+                    if (result)
                     {
-                        resize.cursor = resize.left ? "nw-resize" : "ne-resize";
-                        resize.top = true;
+                        result.cursor = result.left ? "nw-resize" : "ne-resize";
+                        result.top = true;
                     }
                     else
                     {
-                        resize = { top: true, cursor: "n-resize" };
+                        result = { top: true, cursor: "n-resize" };
                     }
                 }
                 else if (offset.y <= height && offset.y > height - 4)
                 {
-                    if (resize)
+                    if (result)
                     {
-                        resize.cursor = resize.left ? "sw-resize" : "se-resize";
-                        resize.bottom = true;
+                        result.cursor = result.left ? "sw-resize" : "se-resize";
+                        result.bottom = true;
                     }
                     else
                     {
-                        resize = { bottom: true, cursor: "s-resize" };
+                        result = { bottom: true, cursor: "s-resize" };
                     }
                 }
             }
 
-            return resize;
+            return result;
         };
 
 
@@ -1300,7 +1308,7 @@ flyingon.defineClass("Control", function () {
         //是否可用
         this.defineProperty("enabled", true, {
 
-            change_code: "this.__fn_to_disabled(!value);"
+            set_code: "this.__fn_to_disabled(!value);"
         });
 
 

@@ -8,23 +8,35 @@
 
 
     //语法树节点基类
-    var base_node = flyingon.defineClass(function () {
+    var base_node = function (token) {
+
+
+        if (token)
+        {
+
+            Class.create = function (token) {
+
+                this.token = token;
+            };
+
+
+            this.toString = function () {
+
+                return this.token;
+            };
+
+        }
+
+    };
+
+
+    //复合节点基类
+    var composite_node = function () {
 
 
 
-        //是否单节点
-        this.__x_single = true;
+        flyingon.extend(this, base_node);
 
-
-    });
-
-
-    //表达式节点
-    var expression_node = flyingon.defineClass(base_node, function (base) {
-
-
-        //表达式为复合节点
-        this.__x_single = false;
 
         //子节点数
         this.length = 0;
@@ -32,246 +44,299 @@
         //添加子节点方法
         this.push = Array.prototype.push;
 
+    };
+
+
+
+
+    //语句节点
+    var statement_node = flyingon.defineClass(function (base) {
+
+
+        //节点类型
+        this.type = "statement";
+
+
+        flyingon.extend(this, composite_node);
+
+    });
+
+
+
+    //语句块节点
+    var block_node = flyingon.defineClass(function (base) {
+
+
+        //节点类型
+        this.type = "block";
+
+
+        flyingon.extend(this, composite_node);
+
 
     });
 
 
     //文件节点
-    var file_node = flyingon.defineClass(expression_node, function (base) {
+    var file_node = flyingon.defineClass(block_node, function (base) {
 
 
-        Class.create = function () {
+        //节点类型
+        this.type = "file";
 
-            //引用文件集合
-            this.references = [];
-
-        };
-
+        flyingon.extend(this, composite_node);
 
     });
 
 
     //注释节点
-    var comment_node = flyingon.defineClass(base_node, function (base) {
+    var comment_node = flyingon.defineClass(function (base) {
 
 
-        Class.create = function (token) {
 
-            this.token = token;
-        };
+        //节点类型
+        this.type = "comment";
+
+        flyingon.extend(this, base_node, true);
 
     });
 
 
     //空格节点
-    var space_node = flyingon.defineClass(base_node, function (base) {
+    var space_node = flyingon.defineClass(function (base) {
 
-        Class.create = function (token) {
 
-            this.token = token;
-        };
+        //节点类型
+        this.type = "space";
+
+        flyingon.extend(this, base_node, true);
 
     });
 
 
     //运算符节点
-    var operator_node = flyingon.defineClass(base_node, function (base) {
+    var operator_node = flyingon.defineClass(function (base) {
 
-        Class.create = function (token) {
 
-            this.token = token;
-        };
+        //节点类型
+        this.type = "operator";
+
+        flyingon.extend(this, base_node, true);
 
     });
 
 
     //关键字节点
-    var keyword_node = flyingon.defineClass(base_node, function (base) {
+    var keyword_node = flyingon.defineClass(function (base) {
 
 
-        Class.create = function (token) {
 
-            this.token = token;
-        };
+        //节点类型
+        this.type = "keyword";
+
+        flyingon.extend(this, base_node, true);
 
     });
 
 
     //标识符节点
-    var id_node = flyingon.defineClass(base_node, function (base) {
+    var id_node = flyingon.defineClass(function (base) {
 
-        Class.create = function (token) {
 
-            this.token = token;
-        };
+        //节点类型
+        this.type = "id";
+
+        flyingon.extend(this, base_node, true);
 
     });
 
 
     //数字节点
-    var number_node = flyingon.defineClass(base_node, function (base) {
+    var number_node = flyingon.defineClass(function (base) {
 
-        Class.create = function (token) {
 
-            this.token = token;
-        };
+        //节点类型
+        this.type = "number";
+
+        flyingon.extend(this, base_node, true);
 
     });
 
 
     //字符串节点
-    var string_node = flyingon.defineClass(base_node, function (base) {
+    var string_node = flyingon.defineClass(function (base) {
 
-        Class.create = function (token) {
 
-            this.token = token;
-        };
+        //节点类型
+        this.type = "string";
+
+        flyingon.extend(this, base_node, true);
 
     });
 
 
     //正则表达式节点
-    var regex_node = flyingon.defineClass(base_node, function (base) {
+    var regex_node = flyingon.defineClass(function (base) {
 
-        Class.create = function (token) {
 
-            this.token = token;
-        };
+        //节点类型
+        this.type = "regex";
+
+        flyingon.extend(this, base_node, true);
 
     });
 
 
     //行节点
-    var line_node = flyingon.defineClass(base_node, function (base) {
+    var line_node = flyingon.defineClass(function (base) {
+
+
+        //节点类型
+        this.type = "line";
 
         this.token = "\n";
-    });
 
 
-    //语句节点
-    var statement_node = flyingon.defineClass(base_node, function (base) {
-
-        
-    });
-
-
-
-    //小括号表达式
-    node_types["("] = flyingon.defineClass(base_node, function (base) {
+        flyingon.extend(this, base_node);
 
     });
 
 
 
-    //中括号表达式
-    node_types["["] = flyingon.defineClass(base_node, function (base) {
+
+    //括号表达式
+    node_types["("] = flyingon.defineClass(function (base) {
+
+
+        this.type = "(";
+
+
+        flyingon.extend(this, composite_node);
+
+
+
+        this.__fn_parse = function (parent, items, index) {
+
+            parent.push(this);
+        };
+
 
     });
 
 
-    //大括号表达式
-    node_types["{"] = flyingon.defineClass(base_node, function (base) {
+    //逗号表达式
+    node_types[","] = flyingon.defineClass(base_node, function (base) {
 
+        flyingon.extend(this, composite_node);
     });
+
+
+    //?:运算符
+    node_types["?"] = flyingon.defineClass(base_node, function (base) {
+
+        flyingon.extend(this, composite_node);
+    });
+
+
 
 
     //变量声明节点
-    node_types["var"] = flyingon.defineClass(base_node, function (base) {
+    node_types["var"] = flyingon.defineClass(statement_node, function (base) {
 
     });
 
 
     //函数节点
-    node_types["function"] = flyingon.defineClass(base_node, function (base) {
+    node_types["function"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //if节点
-    node_types["if"] = flyingon.defineClass(base_node, function (base) {
+    node_types["if"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //else if或else节点
-    node_types["else"] = flyingon.defineClass(base_node, function (base) {
+    node_types["else"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //for节点
-    node_types["for"] = flyingon.defineClass(base_node, function (base) {
+    node_types["for"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //while节点
-    node_types["while"] = flyingon.defineClass(base_node, function (base) {
+    node_types["while"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //switch节点
-    node_types["switch"] = flyingon.defineClass(base_node, function (base) {
+    node_types["switch"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //case节点
-    node_types["case"] = flyingon.defineClass(base_node, function (base) {
+    node_types["case"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //default节点
-    node_types["default"] = flyingon.defineClass(base_node, function (base) {
+    node_types["default"] = flyingon.defineClass(statement_node, function (base) {
 
     });
 
 
     //break节点
-    node_types["break"] = flyingon.defineClass(base_node, function (base) {
+    node_types["break"] = flyingon.defineClass(statement_node, function (base) {
 
     });
 
 
     //continue节点
-    node_types["continue"] = flyingon.defineClass(base_node, function (base) {
+    node_types["continue"] = flyingon.defineClass(statement_node, function (base) {
 
     });
 
 
     //return节点
-    node_types["return"] = flyingon.defineClass(base_node, function (base) {
+    node_types["return"] = flyingon.defineClass(statement_node, function (base) {
 
     });
 
 
     //do节点
-    node_types["do"] = flyingon.defineClass(base_node, function (base) {
+    node_types["do"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //try节点
-    node_types["try"] = flyingon.defineClass(base_node, function (base) {
+    node_types["try"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //catch节点
-    node_types["catch"] = flyingon.defineClass(base_node, function (base) {
+    node_types["catch"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
 
     //finally节点
-    node_types["finally"] = flyingon.defineClass(base_node, function (base) {
+    node_types["finally"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
     //with节点
-    node_types["width"] = flyingon.defineClass(base_node, function (base) {
+    node_types["width"] = flyingon.defineClass(block_node, function (base) {
 
     });
 
@@ -307,7 +372,8 @@
     //解析
     function parse(parent, items, index, end) {
 
-        var length = items.length,
+        var types = node_types,
+            length = items.length,
             item = null,
             value,
             cache;
@@ -316,68 +382,69 @@
         {
             if ((item = items[index++]).toUpperCase) //token
             {
-                switch (item)
+                if (cache = types[item])
                 {
-                    case "(":
-                        break;
+                    index = new cache().__fn_parse(parent, items, index);
+                }
+                else
+                {
+                    switch (item)
+                    {
+                        case "[":
+                            break;
 
-                    case "[":
-                        break;
+                        case "{":
+                            break;
 
-                    case "{":
-                        break;
+                        case "/": //除法或正则表达式
 
-                    case "/": //除法或正则表达式
-
-                        //获取前一非空节点
-                        if ((value = parent[cache = parent.length - 1]) instanceof space_node)
-                        {
-                            value = parent[--cache];
-                        }
-
-                        if (value instanceof operator_node || value instanceof statement_node || !value) //前一非空节点为运算符(不包括小括号)或语句结尾则为正则表达式
-                        {
-                            value = [item];
-
-                            while (item = items[index++])
+                            //获取前一非空节点
+                            if ((value = parent[cache = parent.length - 1]) instanceof space_node)
                             {
-                                if (item === "\n") //正则表达式中不能换行
-                                {
-                                    parent.push(new regex_node(value.join("")));
-                                    parent.push(new line_node());
-                                    break;
-                                }
+                                value = parent[--cache];
+                            }
 
-                                if (item !== "/" || value[value.length - 1] === "\\")
+                            if (value instanceof operator_node || value instanceof statement_node || !value) //前一非空节点为运算符(不包括小括号)或语句结尾则为正则表达式
+                            {
+                                value = [item];
+
+                                while (item = items[index++])
                                 {
-                                    value.push(item.token || item);
-                                }
-                                else
-                                {
-                                    value.push("/");
-                                    parent.push(new regex_node(value.join("")));
-                                    break;
+                                    if (item === "\n") //正则表达式中不能换行
+                                    {
+                                        parent.push(new regex_node(value.join("")));
+                                        parent.push(new line_node());
+                                        break;
+                                    }
+
+                                    if (item !== "/" || value[value.length - 1] === "\\")
+                                    {
+                                        value.push(item);
+                                    }
+                                    else
+                                    {
+                                        value.push("/");
+                                        parent.push(new regex_node(value.join("")));
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        else //除法
-                        {
+                            else //除法
+                            {
+                                parent.push(new operator_node(item));
+                            }
+                            break;
+
+                        case ":": //标签
+                            break;
+
+                        case ".": //对象属性
+                            break;
+
+                        default:
                             parent.push(new operator_node(item));
-                        }
-                        break;
-
-                    case "?": //?:
-                        break;
-
-                    case ":": //标签
-                        break;
-
-                    case ".": //对象属性
-                        break;
-
-                    default:
-                        parent.push(new operator_node(item));
-                        break;
+                            break;
+                    }
                 }
             }
             else //node
@@ -434,14 +501,7 @@
             }
             else if (cache[5]) //标识符
             {
-                if (keys[token])
-                {
-                    items.push(types[token] ? token : new keyword_node(token));
-                }
-                else
-                {
-                    items.push(new id_node(token));
-                }
+                items.push(token);
             }
             else if (cache[12]) //空格
             {

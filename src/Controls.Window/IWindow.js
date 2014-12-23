@@ -50,22 +50,33 @@
 
 
         //获取dom目标控件
-        function dom_target(event) {
+        function dom_target(event, enabled) {
 
-            var dom = event.target;
+            var target = event.target;
 
-            while (dom)
+            while (target)
             {
-                if (dom.flyingon)
+                if (target.flyingon)
                 {
-                    return dom.flyingon;
+                    target = target.flyingon;
+
+                    if (enabled !== false)
+                    {
+                        while (!target.get_enabled())
+                        {
+                            target = target.__parent;
+                        }
+                    }
+
+                    return target || host.flyingon;
                 }
 
-                dom = dom.parentNode
+                target = target.parentNode
             }
 
             return host.flyingon;
         };
+
 
 
 
@@ -181,81 +192,108 @@
             if (pressdown)
             {
                 events.mouseup(event);
-                return;
             }
-
-            var ownerWindow = this.flyingon,
-                target = dom_target(event || (event = fix_event(window.event))) || ownerWindow,
-                cache;
-
-            //活动窗口不是当前点击窗口则设置为活动窗口
-            if (ownerWindow.__mainWindow.__activeWindow !== ownerWindow)
+            else
             {
-                ownerWindow.active();
-                host.flyingon = ownerWindow;
-            }
+                var ownerWindow = this.flyingon,
+                    target,
+                    cache;
 
-            //鼠标按键处理
-            //IE678 button: 1->4->2 W3C button: 0->1->2
-            //本系统统一使用which 左中右 1->2->3
-            if (event.which === undefined)
-            {
-                event.which = event.button & 1 ? 1 : (event.button & 2 ? 3 : 2);
-            }
+                //活动窗口不是当前点击窗口则设置为活动窗口
+                if (ownerWindow.__mainWindow.__activeWindow !== ownerWindow)
+                {
+                    ownerWindow.active();
+                    host.flyingon = ownerWindow;
+                }
 
-            //记录鼠标按下位置
-            pressdown = {
+                //鼠标按键处理
+                //IE678 button: 1->4->2 W3C button: 0->1->2
+                //本系统统一使用which 左中右 1->2->3
+                if ((event || (event = fix_event(window.event))).which === undefined)
+                {
+                    event.which = event.button & 1 ? 1 : (event.button & 2 ? 3 : 2);
+                }
 
-                dom: event.target, //按下时触发事件的dom
-                capture: target,
-                which: event.which,
-                clientX: event.clientX,
-                clientY: event.clientY
-            };
+                //记录鼠标按下位置
+                pressdown = {
 
-            //先分发mousedown事件,如果取消默认行为则不执行后续处理
-            if (target.dispatchEvent(new MouseEvent("mousedown", event)) !== false)
-            {
+                    dom: event.target, //按下时触发事件的dom
+                    which: event.which,
+                    clientX: event.clientX,
+                    clientY: event.clientY
+                };
+
+                //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
+                setCapture(capture_dom = event.target, event);
+
                 //可调整大小 触控版目前不支持调整大小
                 if (resizable)
                 {
-                    //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
-                    setCapture(capture_dom = event.target, event);
+                    //设置捕获目标
+                    pressdown.capture = resizable.target;
 
                     //禁止点击事件
                     flyingon.__disable_click = flyingon.__disable_dbclick = true;
                 }
-                else if ((cache = target.get_draggable()) !== "none" && dragdrop.start(target, cache, event)) //可拖动
-                {
-                    //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
-                    setCapture(capture_dom = event.target, event);
-
-                    //记录状态
-                    draggable = cache;
-                }
                 else
                 {
-                    target.__fn_to_active(true); //设置活动状态
-                }
-            }
-            else
-            {
-                resizable = null;
-                target.__fn_to_active(true); //设置活动状态
+                    //查找当前鼠标位置下的控件
+                    cache = target = dom_target(event, false) || ownerWindow;
 
-                setCapture(capture_dom = event.target, event); //返回false则自动捕获鼠标
+                    //检测拖动
+                    while (cache)
+                    {
+                        if ((draggable = cache.get_draggable()) !== "none" && (draggable = cache.__fn_check_drag(draggable, event))) //可拖动
+                        {
+                            if (dragdrop.start(cache, draggable, event))
+                            {
+                                //设置捕获目标
+                                pressdown.capture = cache;
+                                return;
+                            }
+                        }
+
+                        cache = cache.__parent;
+                    }
+
+                    //清除拖动状态
+                    draggable = null;
+
+                    //获取enabled控件
+                    while (!target.get_enabled())
+                    {
+                        if (!(target = target.__parent))
+                        {
+                            target = ownerWindow;
+                            break;
+                        }
+                    }
+
+                    //设置捕获目标
+                    pressdown.capture = target;
+
+                    //分发mousedown事件
+                    target.dispatchEvent(new MouseEvent("mousedown", event));
+
+                    //设置活动状态
+                    target.__fn_to_active(true);
+                }
             }
         };
 
 
         events.mousemove = function (event) {
 
-            var target, cache;
+            var ownerWindow, target, cache;
 
             //防止host处理
             host_mousemove = false;
 
-            event || (event = fix_event(window.event));
+            //fix_event
+            if (!event)
+            {
+                event = fix_event(window.event);
+            }
 
             if (pressdown && (target = pressdown.capture))
             {
@@ -275,30 +313,64 @@
 
                 //window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty(); //清除选区
             }
-            else if (target = dom_target(event))
+            else if (cache = target = dom_target(event, false))
             {
-                resizable = null;
+                ownerWindow = target.__ownerWindow || target.get_ownerWindow();
 
-                if ((cache = target.get_resizable()) === "none" || !(resizable = target.__fn_resize_side(cache, event))) //调整大小状态不触发相关事件
+                //调整大小状态不触发相关事件
+                while (cache)
                 {
-                    if (target !== (cache = hover_control))
+                    if ((resizable = cache.get_resizable()) !== "none" && (resizable = cache.__fn_check_resize(resizable, event)))
                     {
-                        if (cache)
-                        {
-                            cache.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
-                            cache.__fn_to_hover(false);
-                        }
-
-                        hover_control = target;
-
-                        target.dispatchEvent(new MouseEvent("mouseover", event, pressdown));
-                        target.__fn_to_hover(true);
+                        resizable.target = cache;
+                        ownerWindow.__fn_set_cursor(cache, resizable.cursor);
+                        return;
                     }
 
-                    target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
+                    cache = cache.__parent;
                 }
 
-                (target.__ownerWindow || target.get_ownerWindow()).__fn_set_cursor(target, resizable && resizable.cursor);
+                resizable = null;
+
+                //获取enabled控件
+                while (!target.get_enabled())
+                {
+                    if (!(target = target.__parent))
+                    {
+                        target = ownerWindow;
+                        break;
+                    }
+                }
+
+                if (target !== (cache = hover_control))
+                {
+                    if (cache)
+                    {
+                        cache.dispatchEvent(new MouseEvent("mouseout", event, pressdown), true);
+
+                        while (cache)
+                        {
+                            cache.__fn_to_hover(false);
+                            cache = cache.__parent;
+                        }
+                    }
+
+                    hover_control = target;
+
+                    target.dispatchEvent(new MouseEvent("mouseover", event, pressdown));
+
+                    cache = target;
+
+                    while (cache)
+                    {
+                        cache.__fn_to_hover(true);
+                        cache = cache.__parent;
+                    }
+                }
+
+                target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
+
+                ownerWindow.__fn_set_cursor(target);
             }
         };
 

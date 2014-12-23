@@ -114,18 +114,9 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-    this.__event_capture_mousedown = function (event) {
-
-        if (this.__dialog_move__ = event.which === 1 && event.in_dom(this.dom_header)) //按标题栏拖动
-        {
-            return false;
-        }
-    };
-
-
     this.__event_capture_mousemove = function (event) {
 
-        if (event.pressdown && this.__dialog_move__) //按标题栏拖动
+        if (event.pressdown && (event.which === 1 && event.in_dom(this.dom_header))) //按标题栏拖动
         {
             var start = event.pressdown.start || (event.pressdown.start = { x: this.offsetLeft, y: this.offsetTop });
 

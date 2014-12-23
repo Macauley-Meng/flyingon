@@ -542,7 +542,6 @@
 
 
 
-
     function ajax() {
 
         if (!ajax_fn)
@@ -696,6 +695,8 @@
     
         timeout: 0,
     
+        header: null,
+
         data: null,
 
         progress: function(value){
@@ -773,6 +774,14 @@
 
         request.open(type, url, async, options.user, options.password);
 
+        if (options.header)
+        {
+            for (var name in options.header)
+            {
+                request.setRequestHeader(name, options.header[name]);
+            }
+        }
+
         if (post)
         {
             request.setRequestHeader("Content-Type", options["contentType"] || defaults["contentType"]);
@@ -781,14 +790,6 @@
             {
                 data = flyingon.encode(data);
                 request.setRequestHeader("Content-Length", data.length);
-            }
-        }
-
-        if (options.head)
-        {
-            for (var name in options.head)
-            {
-                request.setRequestHeader(name, options.head[name]);
             }
         }
 

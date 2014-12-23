@@ -7,10 +7,10 @@
     //获取布局数据
     function arrange_data(target, items) {
 
-        var data = target.__tab_data,
+        var values = target.__tab_values,
             cache = target.get_selectedIndex();
 
-        this.vertical = (this.tab = data.tab) === "left" || this.tab === "right";
+        this.vertical = (this.tab = values.tab) === "left" || this.tab === "right";
 
         if (cache < 0)
         {
@@ -33,7 +33,7 @@
             target.__selected_last = cache;
         }
 
-        return data;
+        return values;
     };
 
 
@@ -262,7 +262,11 @@
         //left      左侧页签
         //right     右侧页签
         //bottom    底部页签
-        this.defineProperty("tab", "top", "layout");
+        this.defineProperty("tab", "top", {
+
+            attributes: "layout",
+            change_code: "this.__header_data = null;"
+        });
 
 
         //页签样式
@@ -273,19 +277,19 @@
         //tab2      页签2
         //tab3      页签3
         //tab4      页签4
-        this.defineProperty("tabStyle", "normal", "last-value");
+        this.defineProperty("tabStyle", "normal", "layout");
 
 
         //页签宽度(为空表示自动宽度)
-        this.defineProperty("tabWidth", "", "last-value");
+        this.defineProperty("tabWidth", "", "layout");
 
 
         //页签高度(为空表示默认高度)
-        this.defineProperty("tabHeight", "", "last-value");
+        this.defineProperty("tabHeight", "", "layout");
 
 
         //页签偏移距离
-        this.defineProperty("tabOffset", 0, "last-value");
+        this.defineProperty("tabOffset", 0, "layout");
 
 
 
@@ -308,11 +312,11 @@
 
                 attributes: "arrange",
                 minValue: "-1",
-                set_code: "this.__fn_selectedIndex(value);"
+                change_code: "this.__selected_dirty = true;"
             });
 
 
-            this.__fn_selectedIndex = function (value) {
+            this.__fn_selectedIndex_class = function () {
 
                 var target = this.__selected_last;
 
@@ -322,7 +326,7 @@
                     target.__header.removeClass("flyingon-TabPanelHeader-selected");
                 }
 
-                if (target = this.__selected_last = this.__children[value])
+                if (target = this.__selected_last = this.__children[this.get_selectedIndex()])
                 {
                     target.addClass("flyingon-TabPanel-selected");
                     target.__header.addClass("flyingon-TabPanelHeader-selected");
@@ -334,20 +338,20 @@
 
 
         //获取页签数据
-        this.__fn_tab_data = function (collapse, collapse_style) {
+        this.__fn_tab_values = function (collapse, collapse_style) {
 
-            var data = this.__tab_data || (this.__tab_data = {});
+            var values = this.__tab_values || (this.__tab_values = {});
 
-            data.collapse = collapse !== undefined ? collapse : this.get_collapse();
-            data.style = data.collapse ? (collapse_style || "collapse") : this.get_tabStyle(); //收拢状态特殊处理,不指定则为收拢状态
-            data.tab = this.get_tab();
-            data.width = this.get_tabWidth();
-            data.height = this.get_tabHeight();
-            data.offset = this.get_tabOffset();
-            data.only_tab = false; //是否仅显示标签
-            data.x = data.y = data.size = 0; //指定位置及大小
+            values.collapse = collapse !== undefined ? collapse : this.get_collapse();
+            values.style = values.collapse ? (collapse_style || "collapse") : this.get_tabStyle(); //收拢状态特殊处理,不指定则为收拢状态
+            values.tab = this.get_tab();
+            values.width = this.get_tabWidth();
+            values.height = this.get_tabHeight();
+            values.offset = this.get_tabOffset();
+            values.only_tab = false; //是否仅显示标签
+            values.x = values.y = values.size = 0; //指定位置及大小
 
-            return data;
+            return values;
         };
 
 
@@ -603,21 +607,21 @@
                 style1 = this.__style_last,
                 style2,
                 cache = this.__parent,
-                data;
+                values;
 
             //获取标题头方向(left, top, right, bottom)
-            if (data = cache.__tab_data) //如果是父控件包含页签数据
+            if (values = cache.__tab_values) //如果是父控件包含页签数据
             {
                 cache = cache.__parent;
-                this.__tab_data = data;
+                this.__tab_values = values;
             }
             else
             {
-                data = this.__fn_tab_data();
+                values = this.__fn_tab_values();
             }
 
-            direction2 = data.direction = data.collapse && cache && (cache = cache.__layout) && cache.__fn_collapse(this) || data.tab;
-            style2 = data.style;
+            direction2 = values.direction = values.collapse && cache && (cache = cache.__layout) && cache.__fn_collapse(this) || values.tab;
+            style2 = values.style;
 
             if (direction2 !== direction1)
             {
@@ -662,24 +666,24 @@
             var header = this.__header,
                 width = this.offsetWidth - box.border_width,
                 height = this.offsetHeight - box.border_height,
-                data = this.__tab_data;
+                values = this.__tab_values;
 
             //测量页签头
             header.__update_dirty = 1;
             header.__arrange_dirty = true;
 
-            header.set_width(data.width);
-            header.set_height(data.height);
+            header.set_width(values.width);
+            header.set_height(values.height);
 
-            if (data.size > 0)
+            if (values.size > 0)
             {
-                if (data.direction === "top" || data.direction === "bottom")
+                if (values.direction === "top" || values.direction === "bottom")
                 {
-                    header.measure(data.size, height, false, true, false, false, true, false);
+                    header.measure(values.size, height, false, true, false, false, true, false);
                 }
                 else
                 {
-                    header.measure(width, data.size, true, false, false, false, false, true);
+                    header.measure(width, values.size, true, false, false, false, false, true);
                 }
             }
             else
@@ -687,27 +691,27 @@
                 header.measure(width, height, true, true);
             }
 
-            switch (data.direction)
+            switch (values.direction)
             {
                 case "left":
-                    header.locate(0, data.y || 0);
+                    header.locate(0, values.y || 0);
                     break;
 
                 case "top":
-                    header.locate(data.x || 0, 0);
+                    header.locate(values.x || 0, 0);
                     break;
 
                 case "right":
-                    header.locate(data.collapse || data.only_tab ? 0 : width - header.offsetWidth, data.y || 0);
+                    header.locate(values.collapse || values.only_tab ? 0 : width - header.offsetWidth, values.y || 0);
                     break;
 
                 case "bottom":
-                    header.locate(data.x || 0, data.collapse || data.only_tab ? 0 : height - header.offsetHeight);
+                    header.locate(values.x || 0, values.collapse || values.only_tab ? 0 : height - header.offsetHeight);
                     break;
             }
 
             //渲染页签头
-            return this.__fn_render_header(box, header, data);
+            return this.__fn_render_header(box, header, values);
         };
 
 
@@ -716,15 +720,15 @@
 
             var dom_body = this.dom_body,
                 style = dom_body.style,
-                data = this.__tab_data;
+                values = this.__tab_values;
 
-            if (!(style.display = data.collapse || data.only_tab ? "none" : ""))
+            if (!(style.display = values.collapse || values.only_tab ? "none" : ""))
                 //if (!data.collapse && !data.only_tab)
             {
                 var header = this.__header,
                     width = this.offsetWidth - box.border_width,
                     height = this.offsetHeight - box.border_height,
-                    offset = data.offset;
+                    offset = values.offset;
 
                 if (header.offsetWidth > 0 && header.offsetHeight > 0)
                 {
@@ -732,7 +736,7 @@
                 }
 
                 //定位并计算body大小
-                switch (data.tab)
+                switch (values.tab)
                 {
                     case "top":
                         style.left = "0";
@@ -833,6 +837,10 @@
 
 
 
+        var layouts = Object.create(null);
+
+
+
         //扩展页签基础服务
         tab_base.call(this, base, true);
 
@@ -866,10 +874,12 @@
         };
 
 
+
+
         //重载测量方法
         this.measure = function () {
 
-            var data = this.__fn_tab_data(undefined, "shrink"), //TabControl收拢模式下的TabPanel设为shrink紧缩模式
+            var values = this.__fn_tab_values(undefined, "shrink"), //TabControl收拢模式下的TabPanel设为shrink紧缩模式
                 collapse = this.__collapse_last,
                 target;
 
@@ -879,7 +889,7 @@
             }
 
             //获取收拢方向(left, top, right, bottom)
-            if (this.__collapse_last = data.collapse && (target = this.__parent) && (target = target.__layout) && target.__fn_collapse(this))
+            if (this.__collapse_last = values.collapse && (target = this.__parent) && (target = target.__layout) && target.__fn_collapse(this))
             {
                 this.addClass("flyingon-TabControl-collapse-" + this.__collapse_last);
             }
@@ -894,10 +904,10 @@
             var header = this.__header,
                 style = header.dom.style,
                 width = this.offsetWidth - box.border_width,
-                data = this.__tab_data,
+                values = this.__tab_values,
                 cache;
 
-            if (header && this.get_header() && data.style !== "thumb") //缩略图模式不支持标题头
+            if (header && this.get_header() && values.style !== "thumb") //缩略图模式不支持标题头
             {
                 //测量页签头
                 header.__update_dirty = 1;
@@ -906,9 +916,9 @@
                 style.width = style.height = "";
 
                 //获取收拢方向(left, top, right, bottom)
-                if (data.collapse && (cache = this.__parent) && (cache = cache.__layout) && (cache = cache.__fn_collapse(this)))
+                if (values.collapse && (cache = this.__parent) && (cache = cache.__layout) && (cache = cache.__fn_collapse(this)))
                 {
-                    data.direction = cache;
+                    values.direction = cache;
                     style.display = "none";
                 }
                 else if (style.display)
@@ -920,7 +930,7 @@
                 header.locate(0, 0, width);
 
                 //渲染页签头
-                return this.__fn_render_header(box, header, data);
+                return this.__fn_render_header(box, header, values);
             }
             else
             {
@@ -954,6 +964,7 @@
 
         this.arrange = function (width, height) {
 
+            //移除翻页按钮
             var target = this.__icon_next;
 
             if (target && target.dom.parentNode === this.dom_children)
@@ -966,9 +977,13 @@
                 this.dom_children.removeChild(target.dom);
             }
 
-            if ((target = this.__tab_data).collapse)
+            //取消或设置选中样式
+            this.__fn_selectedIndex_class();
+
+            //布局
+            if ((target = this.__tab_values).collapse)
             {
-                (this.__layout = layout_collapse).__fn_arrange(this, width, height);
+                (this.__layout = layouts.collapse).__fn_arrange(this, width, height);
             }
             else if (this.__layout = layouts[target.style])
             {
@@ -978,14 +993,16 @@
             {
                 base.arrange.call(this, width, height);
             }
+
+            this.__selected_dirty = false;
         };
 
 
+        //布局集
+        (function () {
 
-        var layouts = (function () {
 
-
-            function show_icon(target, next, icon, width, height) {
+            function show_icon(target, icon, width, height, next, vertical) {
 
                 var name = next ? "next" : "previous",
                     key = "__icon_" + name,
@@ -997,6 +1014,7 @@
                     item.addClass("flyingon-TabControl-" + name);
                     item.set_icon(icon);
                     item.__parent = target;
+                    item.__vertical = vertical;
 
                     item.onclick = next ? move_next : move_previous;
                 }
@@ -1013,17 +1031,40 @@
 
             function move_next(event) {
 
-                var target = this.__parent;
+                var target = this.__parent,
+                    children = target.__children,
+                    values = target.__header_values,
+                    end = values.end,
+                    size;
 
+                for (var i = 1, length = values.length - 1 ; i <= length; i++)
+                {
+                    size = (i < length ? values[i + 1] : values.last) - values[i];
 
+                    if (values.offset + values[i] + size > end)
+                    {
+                        values.offset = end - values[i] - size;
+                        target.update(true);
+                        break;
+                    }
+                }
             };
 
 
             function move_previous(event) {
 
-                var target = this.__parent;
+                var target = this.__parent,
+                    values = target.__header_values;
 
-
+                for (var i = values.length - 1; i >= 0; i--)
+                {
+                    if (values.offset + values[i] < values.start)
+                    {
+                        values.offset = values.start - values[i];
+                        target.update(true);
+                        break;
+                    }
+                }
             };
 
 
@@ -1034,10 +1075,12 @@
                     values = [],
                     x = 0,
                     y = 0,
-                    size,
+                    offset,
                     value,
-                    icon;
+                    icon1,
+                    icon2;
 
+                //测量页签
                 for (var i = 0; i < length; i++)
                 {
                     (item = items[i]).__visible = true;
@@ -1051,12 +1094,13 @@
 
                     if (i === index)
                     {
-                        size = x;
+                        offset = x;
                     }
 
                     x += spacingWidth;
                 }
 
+                values.last = x;
                 value = item.__header.offsetHeight;
 
                 if (this.tab === "bottom")
@@ -1066,25 +1110,39 @@
 
                 if (x > width) //显示上一页图标
                 {
-                    icon = show_icon(target, false, "collapse", 20, value);
-                    icon.locate(0, y);
-                    icon.render();
+                    icon1 = show_icon(target, "collapse", 20, value, false, false);
+                    icon1.locate(0, y);
 
-                    x = icon.offsetWidth + spacingWidth;
+                    icon2 = show_icon(target, "expand", 20, value, true, false);
+                    icon2.locate(width -= icon2.offsetWidth, y);
 
-                    icon = show_icon(target, true, "expand", 20, value);
-                    icon.locate(width -= icon.offsetWidth, y);
-                    icon.render();
+                    x = values.start = icon1.offsetWidth + spacingWidth;
 
-                    if (size > width - x)
+                    var header = target.__header_values; //页头渲染数据
+
+                    if (header && (!target.__selected_dirty || header.offset + values[index + 1] <= width)) //计算起始位置
                     {
-                        x = width - size - spacingWidth;
-
-                        if (index < length - 1)
+                        if (!target.__selected_dirty || (header.offset + values[index] >= values.start)) //直接使用上次的位置
                         {
-                            x -= 20;
+                            x = header.offset;
+                        }
+                        else
+                        {
+                            x -= values[index];
                         }
                     }
+                    else if (offset > width)
+                    {
+                        x = width - offset - spacingWidth;
+                    }
+
+                    icon1.set_enabled(x < values.start);
+                    icon1.render();
+
+                    icon2.set_enabled(x + values.last > (values.end = width));
+                    icon2.render();
+
+                    (target.__header_values = values).offset = x;
                 }
                 else
                 {
@@ -1116,10 +1174,12 @@
                     values = [],
                     x = 0,
                     y = 0,
-                    size,
+                    offset,
                     value,
-                    icon;
+                    icon1,
+                    icon2;
 
+                //测量页签
                 for (var i = 0; i < length; i++)
                 {
                     (item = items[i]).__visible = true;
@@ -1133,12 +1193,13 @@
 
                     if (i === index)
                     {
-                        size = y;
+                        offset = y;
                     }
 
                     y += spacingHeight;
                 }
 
+                values.last = y;
                 value = item.__header.offsetWidth;
 
                 if (this.tab === "right")
@@ -1146,27 +1207,41 @@
                     x = width - value;
                 }
 
-                if (y > width) //显示上一页图标
+                if (y > height) //显示上一页图标
                 {
-                    icon = show_icon(target, false, "collapse", value, 20);
-                    icon.locate(x, 0);
-                    icon.render();
+                    icon1 = show_icon(target, "collapse", value, 20, false, true);
+                    icon1.locate(x, 0);
 
-                    y = icon.offsetHeight + spacingHeight;
+                    icon2 = show_icon(target, "expand", value, 20, true, true);
+                    icon2.locate(x, height -= icon2.offsetHeight);
 
-                    icon = show_icon(target, true, "expand", value, 20);
-                    icon.locate(x, height -= icon.offsetHeight);
-                    icon.render();
+                    y = values.start = icon1.offsetHeight + spacingHeight;
 
-                    if (size > height - y)
+                    var header = target.__header_values; //页头渲染数据
+
+                    if (header && (!target.__selected_dirty || header.offset + values[index + 1] <= height)) //计算起始位置
                     {
-                        y = height - size - spacingHeight;
-
-                        if (index < length - 1)
+                        if (!target.__selected_dirty || (header.offset + values[index] >= values.start)) //直接使用上次的位置
                         {
-                            y -= 20;
+                            y = header.offset;
+                        }
+                        else
+                        {
+                            y -= values[index];
                         }
                     }
+                    else if (offset > height)
+                    {
+                        y = height - offset - spacingHeight;
+                    }
+
+                    icon1.set_enabled(y < values.start);
+                    icon1.render();
+
+                    icon2.set_enabled(y + values.last > (values.end = height));
+                    icon2.render();
+
+                    (target.__header_values = values).offset = y;
                 }
                 else
                 {
@@ -1190,7 +1265,85 @@
             };
 
 
-            this.tab1 = this.tab2 = this.tab3 = this.tab4 = this.thumb = flyingon.defineLayout(function (base) {
+            function arrange1_fill(target, items, width, height, data, item, index) {
+
+                var spacingWidth = target.compute_size(target.get_spacingWidth()),
+                    length = items.length,
+                    weight = all_weight(items, "get_weightWidth"),
+                    x = 0,
+                    size = width - spacingWidth * (length - 1);
+
+                if (size < length)
+                {
+                    size += length;
+                    spacingWidth -= 1;
+                }
+
+                for (var i = 0; i < length; i++)
+                {
+                    (item = items[i]).__visible = true;
+
+                    data.x = (item.__arrange_dirty = !(data.only_tab = i !== index)) ? x : 0;
+
+                    size -= (data.size = (size * item.__weight / weight) | 0);
+                    weight -= item.__weight;
+
+                    item.measure(width, height, false, false, false, false, true, true);
+
+                    if (data.only_tab)
+                    {
+                        item.locate(x, this.tab === "top" ? 0 : height - item.offsetHeight);
+                    }
+                    else
+                    {
+                        item.locate(0, 0);
+                    }
+
+                    x += data.size + spacingWidth;
+                }
+
+            };
+
+
+            function arrange2_fill(target, items, width, height, data, item, index) {
+
+                var spacingHeight = target.compute_size(target.get_spacingHeight()),
+                    length = items.length,
+                    weight = all_weight(items, "get_weightHeight"),
+                    y = 0,
+                    size = height - spacingHeight * (length - 1);
+
+                if (size < length)
+                {
+                    size += length;
+                    spacingHeight -= 1;
+                }
+
+                for (var i = 0; i < length; i++)
+                {
+                    (item = items[i]).__visible = true;
+
+                    data.y = (item.__arrange_dirty = !(data.only_tab = i !== index)) ? y : 0;
+                    size -= (data.size = (size * item.__weight / weight) | 0);
+                    weight -= item.__weight;
+
+                    item.measure(width, height, false, false, false, false, true, true);
+
+                    if (data.only_tab)
+                    {
+                        item.locate(this.tab === "left" ? 0 : width - item.offsetWidth, y);
+                    }
+                    else
+                    {
+                        item.locate(0, 0);
+                    }
+
+                    y += data.size + spacingHeight;
+                }
+            };
+
+
+            layouts.tab1 = layouts.tab2 = layouts.tab3 = layouts.tab4 = layouts.thumb = flyingon.defineLayout(function (base) {
 
 
                 function all_weight(items, fn) {
@@ -1204,85 +1357,6 @@
 
                     return value;
                 };
-
-
-                function arrange1_fill(target, items, width, height, data, item, index) {
-
-                    var spacingWidth = target.compute_size(target.get_spacingWidth()),
-                        length = items.length,
-                        weight = all_weight(items, "get_weightWidth"),
-                        x = 0,
-                        size = width - spacingWidth * (length - 1);
-
-                    if (size < length)
-                    {
-                        size += length;
-                        spacingWidth -= 1;
-                    }
-
-                    for (var i = 0; i < length; i++)
-                    {
-                        (item = items[i]).__visible = true;
-
-                        data.x = (item.__arrange_dirty = !(data.only_tab = i !== index)) ? x : 0;
-
-                        size -= (data.size = (size * item.__weight / weight) | 0);
-                        weight -= item.__weight;
-
-                        item.measure(width, height, false, false, false, false, true, true);
-
-                        if (data.only_tab)
-                        {
-                            item.locate(x, this.tab === "top" ? 0 : height - item.offsetHeight);
-                        }
-                        else
-                        {
-                            item.locate(0, 0);
-                        }
-
-                        x += data.size + spacingWidth;
-                    }
-
-                };
-
-
-                function arrange2_fill(target, items, width, height, data, item, index) {
-
-                    var spacingHeight = target.compute_size(target.get_spacingHeight()),
-                        length = items.length,
-                        weight = all_weight(items, "get_weightHeight"),
-                        y = 0,
-                        size = height - spacingHeight * (length - 1);
-
-                    if (size < length)
-                    {
-                        size += length;
-                        spacingHeight -= 1;
-                    }
-
-                    for (var i = 0; i < length; i++)
-                    {
-                        (item = items[i]).__visible = true;
-
-                        data.y = (item.__arrange_dirty = !(data.only_tab = i !== index)) ? y : 0;
-                        size -= (data.size = (size * item.__weight / weight) | 0);
-                        weight -= item.__weight;
-
-                        item.measure(width, height, false, false, false, false, true, true);
-
-                        if (data.only_tab)
-                        {
-                            item.locate(this.tab === "left" ? 0 : width - item.offsetWidth, y);
-                        }
-                        else
-                        {
-                            item.locate(0, 0);
-                        }
-
-                        y += data.size + spacingHeight;
-                    }
-                };
-
 
                 this.arrange = function (target, items, width, height) {
 
@@ -1303,7 +1377,7 @@
             });
 
 
-            layout_collapse = flyingon.defineLayout(function (base) {
+            layouts.collapse = flyingon.defineLayout(function (base) {
 
 
                 this.arrange = function (target, items, width, height) {
@@ -1318,7 +1392,7 @@
             });
 
 
-            this.outlook = flyingon.defineLayout(function (base) {
+            layouts.outlook = flyingon.defineLayout(function (base) {
 
 
                 outlook_base.call(this, base);
@@ -1332,13 +1406,7 @@
             });
 
 
-            return this;
-
-
-        }).call(Object.create(null)),
-            layout_collapse;
-
-
+        })();
 
 
     });
@@ -1376,7 +1444,10 @@
 
         this.arrange = function (width, height) {
 
-            this.__fn_tab_data(false);
+            //取消或设置选中样式
+            this.__fn_selectedIndex_class();
+            this.__fn_tab_values(false);
+
             (this.__layout = layout).__fn_arrange(this, width, height);
         };
 
