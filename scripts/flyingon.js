@@ -8397,6 +8397,11 @@ flyingon.defineClass("Control", function () {
         //刷新控件
         this.update = function (arrange, update_now) {
 
+            if (arrange)
+            {
+                this.__arrange_dirty = true;
+            }
+
             if (this.__boxModel && this.__update_dirty !== 1)
             {
                 var parent = this;
@@ -8406,11 +8411,6 @@ flyingon.defineClass("Control", function () {
                 while ((parent = parent.__parent) && !parent.__update_dirty)
                 {
                     parent.__update_dirty = 1; //标记子控件需要更新
-                }
-
-                if (arrange)
-                {
-                    this.__arrange_dirty = true;
                 }
 
                 (this.__ownerWindow || this.get_ownerWindow()).__fn_registry_update(this, update_now);
@@ -8679,6 +8679,33 @@ flyingon.defineClass("Control", function () {
         //是否可接受拖放
         this.defineProperty("droppable", false);
 
+
+
+    }).call(this, flyingon);
+
+
+
+
+    //弹出
+    (function (flyingon) {
+
+
+        var dom_mask;
+
+
+        function create_mask() {
+
+            dom_mask = document.createElement("div");
+            dom_mask.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background-color:silver;filter:alpha(opacity=1);-moz-opacity:0.01;-khtml-opacity:0.01;opacity:0.01;";
+
+            return dom_mask;
+        };
+
+        //弹出控件
+        this.popup = function () {
+
+
+        };
 
 
     }).call(this, flyingon);
@@ -13195,28 +13222,44 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         header_base.call(this, base, "flyingon-TabPanelHeader-");
 
 
-
         this.__event_bubble_click = function (event) {
 
             var target = this.__parent,
-                parent = target.__parent;
+                parent;
 
-            switch (event.target.name)
+            if (target)
             {
-                case "collapse":
-                    (target = parent.set_collapse ? parent : target).set_collapse(!target.get_collapse());
-                    break;
+                switch (event.target.name)
+                {
+                    case "collapse":
+                        target = (parent = target.__parent) && parent.set_collapse ? parent : target;
+                        target.set_collapse(!target.get_collapse());
+                        break;
 
-                case "close":
-                    target.remove();
-                    break;
+                    case "close":
+                        target.remove();
+                        break;
 
-                default:
-                    if (parent.set_selectedIndex)
-                    {
-                        parent.set_selectedIndex(target.childIndex());
-                    }
-                    break;
+                    default:
+                        if (parent = target.__parent)
+                        {
+                            if (parent.set_selectedIndex)
+                            {
+                                parent.set_selectedIndex(target.childIndex());
+                            }
+
+                            if (parent.set_collapse && parent.__collapse_last)
+                            {
+                                if (parent.__header_values)
+                                {
+                                    parent.__header_values = null;
+                                }
+
+                                parent.set_collapse(false);
+                            }
+                        }
+                        break;
+                }
             }
         };
 
@@ -13745,6 +13788,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                     x = 0,
                     y = 0,
                     offset,
+                    size,
                     value,
                     icon1,
                     icon2;
@@ -13759,11 +13803,14 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
                     values.push(x);
 
-                    x += (i !== index ? item.offsetWidth : item.__header.offsetWidth);
-
-                    if (i === index)
+                    if (i !== index)
+                    {
+                        x += item.offsetWidth;
+                    }
+                    else
                     {
                         offset = x;
+                        x += (size = item.__header.offsetWidth);
                     }
 
                     x += spacingWidth;
@@ -13800,9 +13847,9 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                             x -= values[index];
                         }
                     }
-                    else if (offset > width)
+                    else if (offset + x + size > width)
                     {
-                        x = width - offset - spacingWidth;
+                        x = width - offset - size - spacingWidth;
                     }
 
                     icon1.set_enabled(x < values.start);
@@ -13844,6 +13891,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                     x = 0,
                     y = 0,
                     offset,
+                    size,
                     value,
                     icon1,
                     icon2;
@@ -13858,11 +13906,14 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
                     values.push(y);
 
-                    y += (i !== index ? item.offsetHeight : item.__header.offsetHeight);
-
-                    if (i === index)
+                    if (i !== index)
+                    {
+                        y += item.offsetHeight;
+                    }
+                    else
                     {
                         offset = y;
+                        y += (size = item.__header.offsetHeight);
                     }
 
                     y += spacingHeight;
@@ -13899,9 +13950,9 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                             y -= values[index];
                         }
                     }
-                    else if (offset > height)
+                    else if (y + offset + size > height)
                     {
-                        y = height - offset - spacingHeight;
+                        y = height - offset - size - spacingHeight;
                     }
 
                     icon1.set_enabled(y < values.start);

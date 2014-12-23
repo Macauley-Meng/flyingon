@@ -16,13 +16,9 @@ flyingon基于LGPLv3协议,无论您是个人或公司都可以免费使用!有�
 flyingon主要包含以下内容：
 
 1. 核心库(面向对象开发, 属性, 事件, 序列化及反序列化, 数据绑定)(已完成)
-
 2. 控件基础体系(盒模型, 样式, 拖拉, 调整大小)(已完成)
-
 3. 布局系统(Panel, Splitter, TabPanel, TabControl, OutlookBar)(已完成)
-
 4. 基础控件(Button, TextBox...)(开发中)
-
 5. 高级控件(TreeView, DataGrid, TreeGrid, VerticalGrid, PropertyGrid)(开发中)
 
 

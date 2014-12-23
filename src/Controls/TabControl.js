@@ -526,28 +526,44 @@
         header_base.call(this, base, "flyingon-TabPanelHeader-");
 
 
-
         this.__event_bubble_click = function (event) {
 
             var target = this.__parent,
-                parent = target.__parent;
+                parent;
 
-            switch (event.target.name)
+            if (target)
             {
-                case "collapse":
-                    (target = parent.set_collapse ? parent : target).set_collapse(!target.get_collapse());
-                    break;
+                switch (event.target.name)
+                {
+                    case "collapse":
+                        target = (parent = target.__parent) && parent.set_collapse ? parent : target;
+                        target.set_collapse(!target.get_collapse());
+                        break;
 
-                case "close":
-                    target.remove();
-                    break;
+                    case "close":
+                        target.remove();
+                        break;
 
-                default:
-                    if (parent.set_selectedIndex)
-                    {
-                        parent.set_selectedIndex(target.childIndex());
-                    }
-                    break;
+                    default:
+                        if (parent = target.__parent)
+                        {
+                            if (parent.set_selectedIndex)
+                            {
+                                parent.set_selectedIndex(target.childIndex());
+                            }
+
+                            if (parent.set_collapse && parent.__collapse_last)
+                            {
+                                if (parent.__header_values)
+                                {
+                                    parent.__header_values = null;
+                                }
+
+                                parent.set_collapse(false);
+                            }
+                        }
+                        break;
+                }
             }
         };
 
@@ -1076,6 +1092,7 @@
                     x = 0,
                     y = 0,
                     offset,
+                    size,
                     value,
                     icon1,
                     icon2;
@@ -1090,11 +1107,14 @@
 
                     values.push(x);
 
-                    x += (i !== index ? item.offsetWidth : item.__header.offsetWidth);
-
-                    if (i === index)
+                    if (i !== index)
+                    {
+                        x += item.offsetWidth;
+                    }
+                    else
                     {
                         offset = x;
+                        x += (size = item.__header.offsetWidth);
                     }
 
                     x += spacingWidth;
@@ -1131,9 +1151,9 @@
                             x -= values[index];
                         }
                     }
-                    else if (offset > width)
+                    else if (offset + x + size > width)
                     {
-                        x = width - offset - spacingWidth;
+                        x = width - offset - size - spacingWidth;
                     }
 
                     icon1.set_enabled(x < values.start);
@@ -1175,6 +1195,7 @@
                     x = 0,
                     y = 0,
                     offset,
+                    size,
                     value,
                     icon1,
                     icon2;
@@ -1189,11 +1210,14 @@
 
                     values.push(y);
 
-                    y += (i !== index ? item.offsetHeight : item.__header.offsetHeight);
-
-                    if (i === index)
+                    if (i !== index)
+                    {
+                        y += item.offsetHeight;
+                    }
+                    else
                     {
                         offset = y;
+                        y += (size = item.__header.offsetHeight);
                     }
 
                     y += spacingHeight;
@@ -1230,9 +1254,9 @@
                             y -= values[index];
                         }
                     }
-                    else if (offset > height)
+                    else if (y + offset + size > height)
                     {
-                        y = height - offset - spacingHeight;
+                        y = height - offset - size - spacingHeight;
                     }
 
                     icon1.set_enabled(y < values.start);

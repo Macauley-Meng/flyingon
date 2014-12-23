@@ -1051,6 +1051,11 @@ flyingon.defineClass("Control", function () {
         //刷新控件
         this.update = function (arrange, update_now) {
 
+            if (arrange)
+            {
+                this.__arrange_dirty = true;
+            }
+
             if (this.__boxModel && this.__update_dirty !== 1)
             {
                 var parent = this;
@@ -1060,11 +1065,6 @@ flyingon.defineClass("Control", function () {
                 while ((parent = parent.__parent) && !parent.__update_dirty)
                 {
                     parent.__update_dirty = 1; //标记子控件需要更新
-                }
-
-                if (arrange)
-                {
-                    this.__arrange_dirty = true;
                 }
 
                 (this.__ownerWindow || this.get_ownerWindow()).__fn_registry_update(this, update_now);
@@ -1333,6 +1333,33 @@ flyingon.defineClass("Control", function () {
         //是否可接受拖放
         this.defineProperty("droppable", false);
 
+
+
+    }).call(this, flyingon);
+
+
+
+
+    //弹出
+    (function (flyingon) {
+
+
+        var dom_mask;
+
+
+        function create_mask() {
+
+            dom_mask = document.createElement("div");
+            dom_mask.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background-color:silver;filter:alpha(opacity=1);-moz-opacity:0.01;-khtml-opacity:0.01;opacity:0.01;";
+
+            return dom_mask;
+        };
+
+        //弹出控件
+        this.popup = function () {
+
+
+        };
 
 
     }).call(this, flyingon);
