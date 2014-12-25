@@ -7,7 +7,7 @@ flyingon.defineClass("Control", function () {
 
 
 
-    Class.create = function (dom) {
+    Class.create = function () {
 
         //变量管理器
         this.__fields = Object.create(this.__defaults);
@@ -95,7 +95,7 @@ flyingon.defineClass("Control", function () {
 
         if (value >= 0 && index !== value)
         {
-            this.__parent.change_index(value, index);
+            this.__parent.index(value, index);
         }
 
         return this;
@@ -1375,7 +1375,7 @@ flyingon.defineClass("Control", function () {
         //按css选择器规范查找控件或子控件
         this.query = function (selector) {
 
-            return
+            return new flyingon.Query(selector, this);
         };
 
 
@@ -1591,7 +1591,14 @@ flyingon.defineClass("Control", function () {
 
 
         //dom文本内容属性名
-        this.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+        flyingon.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+
+
+        //创建html文字属性代码(textConent的性能比innerHTML高, 故自动判断是否按innerHTML的方式设置内容)
+        flyingon.__fn_html_property_code = function (name) {
+
+            return "this." + name + "[value && value.indexOf('<') >= 0 && (value.indexOf('</') > 0 || value.indexOf('/>') > 0) && !this.is_html_text ? 'innerHTML' : '" + flyingon.__textContent_name + "'] = value;"
+        };
 
 
 

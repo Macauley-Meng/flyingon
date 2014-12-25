@@ -27,15 +27,10 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-    this.defineProperty("html", "", {
-
-        set_code: "this.dom.innerHTML = value;"
-    });
-
 
     this.defineProperty("text", "", {
 
-        set_code: "this.dom." + this.__textContent_name + " = value;"
+        set_code: flyingon.__fn_html_property_code("dom")
     });
 
 

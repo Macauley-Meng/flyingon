@@ -48,6 +48,7 @@ var flyingon = (function () {
 
 
 //扩展函数
+//注: 不要给Object.prototype扩展任何属性或方法, 否则会造成for in不正确
 (function (flyingon) {
 
 
@@ -102,20 +103,6 @@ var flyingon = (function () {
 
         return names;
 
-    });
-
-
-
-    //扩展hasOwnProperty方法(IE6/7/8不支持此方法, 对于某些类型可能判断不准确)
-    Object.prototype.hasOwnProperty || (Object.prototype.hasOwnProperty = function (name) {
-
-        if (name in this)
-        {
-            var target = this.constructor;
-            return !target || !(target = target.prototype) || !(name in target) || this[name] !== target[name];
-        }
-
-        return false;
     });
 
 
@@ -305,276 +292,12 @@ var flyingon = (function () {
 
 
 
-
-//浏览器支持判断
-//flyingon.browser              当前浏览器名称
-//flyingon.browser_MSIE         当前浏览器是否IE浏览器
-//flyingon.browser_Chrome       当前浏览器是否Chrome浏览器
-//flyingon.browser_Firefox      当前浏览器是否Firefox浏览器
-//flyingon.browser_Safari       当前浏览器是否Safari浏览器
-//flyingon.browser_Opera        当前浏览器是否Opera浏览器
-//flyingon.browser_WebKit       当前浏览器是否WebKit内核浏览器
-(function (flyingon) {
-
-
-    var names = ["MSIE", "Chrome", "Firefox", "Safari", "Opera"],
-        key = navigator.userAgent,
-        value;
-
-
-    if (value = key.match(new RegExp(names.join("|"))))
-    {
-        flyingon.browser = value = value[0];
-
-        for (var i = 0; i < names.length; i++)
-        {
-            flyingon["browser_" + names[i]] = names[i] === value;
-        }
-    }
-
-    //当前浏览器是否WebKit内核浏览器
-    flyingon.browser_WebKit = !!key.match(/WebKit/);
-
-    //当前是否IE怪异模式
-    if (flyingon.browser_MSIE)
-    {
-        flyingon.quirks_mode = document.compatMode === "BackCompat";
-    }
-
-
-})(flyingon);
-
-
-
-
-
 //扩展异常类
 flyingon.Exception = function (message, parameters) {
 
     flyingon.last_error = this; //记录当前异常对象
     this.message = message;
 };
-
-
-
-
-
-//脚本及资源
-(function (flyingon) {
-
-
-
-    var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
-
-
-
-    //加载脚本
-    flyingon.script = (function (head) {
-
-
-        function load(dom, callback, thisArg, error) {
-
-            dom.onload = dom.onerror = dom.onreadystatechange = null;
-
-            if (callback)
-            {
-                callback.call(thisArg, error);
-            }
-
-            if (dom.parentNode)
-            {
-                dom.parentNode.removeChild(dom);
-            }
-        };
-
-
-        return function (url, callback, thisArg) {
-
-            var dom = document.createElement("script");
-
-            dom.type = "text/javascript";
-            dom.src = url;
-
-            dom.onerror = function (error) {
-
-                //alert(error);
-                load(dom, callback, thisArg, error);
-            };
-
-            dom.onload = dom.onreadystatechange = function () {
-
-                var state = dom.readyState;
-
-                if (!state || state === "loaded" || state === "complete")
-                {
-                    load(dom, callback, thisArg);
-                }
-            };
-
-            head.appendChild(dom);
-        };
-
-
-    })(head);
-
-
-
-    //引入样式
-    flyingon.link = function (href, rel, type) {
-
-        var dom = document.createElement("link");
-
-        dom.href = href;
-        dom.rel = rel || "stylesheet";
-        dom.type = type || "text/css";
-
-        head.appendChild(dom);
-
-        return dom;
-    };
-
-
-
-    //jsonp
-    flyingon.jsonp = (function () {
-
-        var id = 0;
-
-        return function (url, callback_name) {
-
-            callback_name = "callback=" + encodeURIComponent(callback_name) + "&unique=" + (++id);
-            flyingon.script((url.indexOf("?") > 0 ? "&" : "?") + callback_name);
-        };
-
-    })();
-
-
-
-    //脚本依赖
-    flyingon.require = (function () {
-
-
-        function load(files, index, callback, thisArg) {
-
-            flyingon.script(files[index++], function () {
-
-                if (index < files.length)
-                {
-                    load(files, index, callback, thisArg);
-                }
-                else
-                {
-                    callback.call(thisArg);
-                }
-            });
-        };
-
-
-        return function (files, callback, thisArg) {
-
-            if (files)
-            {
-                if (files.constructor === String)
-                {
-                    flyingon.script(files, function () {
-
-                        callback.call(thisArg);
-                    });
-                }
-                else if (files.length > 0) //多个文件按顺序加载执行
-                {
-                    load(files, 0, callback, thisArg);
-                }
-            }
-            else if (callback)
-            {
-                callback.call(thisArg);
-            }
-        };
-
-
-    })();
-
-
-
-
-    //动态操作样式
-    //动态添加规则与内容在firefox或chrome中会与直接操作内容的方式优先级冲突
-    if (document.createStyleSheet)
-    {
-
-        //根据样式内容动态创建或添加或清空样式
-        flyingon.style = function (cssText, style) {
-
-            if (style)
-            {
-                if (cssText)
-                {
-                    style.cssText += cssText;
-                }
-                else
-                {
-                    style.cssText = "";
-                }
-            }
-            else
-            {
-                style = document.createStyleSheet();
-
-                if (cssText)
-                {
-                    style.cssText = cssText;
-                }
-            }
-
-            return style;
-        };
-
-
-    }
-    else
-    {
-
-        //根据样式内容动态创建或添加或清空样式
-        flyingon.style = function (cssText, style) {
-
-            if (style)
-            {
-                if (cssText)
-                {
-                    style.dom.textContent += cssText;
-                }
-                else
-                {
-                    style.dom.textContent = "";
-                }
-            }
-            else
-            {
-                var dom = document.createElement("style");//w3c
-                dom.setAttribute("type", "text/css");
-
-                if (cssText)
-                {
-                    dom.textContent = cssText;
-                }
-
-                head.appendChild(dom);
-
-                style = document.styleSheets[document.styleSheets.length - 1];
-                style.dom = dom;
-            }
-
-            return style;
-        };
-
-
-    }
-
-
-
-})(flyingon);
-
 
 
 
@@ -669,7 +392,6 @@ flyingon.Exception = function (message, parameters) {
 
 
 })(flyingon);
-
 
 
 
@@ -1021,6 +743,48 @@ flyingon.Exception = function (message, parameters) {
 
 
 
+﻿
+
+//浏览器支持判断
+//flyingon.browser              当前浏览器名称
+//flyingon.browser_MSIE         当前浏览器是否IE浏览器
+//flyingon.browser_Chrome       当前浏览器是否Chrome浏览器
+//flyingon.browser_Firefox      当前浏览器是否Firefox浏览器
+//flyingon.browser_Safari       当前浏览器是否Safari浏览器
+//flyingon.browser_Opera        当前浏览器是否Opera浏览器
+//flyingon.browser_WebKit       当前浏览器是否WebKit内核浏览器
+(function (flyingon) {
+
+
+    var names = ["MSIE", "Chrome", "Firefox", "Safari", "Opera"],
+        key = navigator.userAgent,
+        value;
+
+
+    if (value = key.match(new RegExp(names.join("|"))))
+    {
+        flyingon.browser = value = value[0];
+
+        for (var i = 0; i < names.length; i++)
+        {
+            flyingon["browser_" + names[i]] = names[i] === value;
+        }
+    }
+
+    //当前浏览器是否WebKit内核浏览器
+    flyingon.browser_WebKit = !!key.match(/WebKit/);
+
+    //当前是否IE怪异模式
+    if (flyingon.browser_MSIE)
+    {
+        flyingon.quirks_mode = document.compatMode === "BackCompat";
+    }
+
+
+})(flyingon);
+
+
+
 
 //通用事件扩展(IE8以下浏览器不支持addEventListener)
 (function (flyingon) {
@@ -1134,400 +898,481 @@ flyingon.Exception = function (message, parameters) {
 
 
 
-
-//事件接口
-flyingon.IEvent = function () {
-
-
-
-    //定义事件 name为不带on的事件名
-    //注:只有支持定义属性的浏览器才支持以on的方式注册事件,否则只能以addEventListener的方式注册事件
-    this.defineEvent = function (type) {
-
-        flyingon.defineProperty(this, "on" + type,
-
-            function () {
-
-                return this.__events_data && this.__events_data[type] || null;
-            },
-
-            function (value) {
-
-                (this.__events_data || (this.__events_data = {}))[type] = [value];
-
-                //清除事件缓存
-                if (this.__events_cache)
-                {
-                    this.__events_cache[type] = null;
-                }
-            });
-
-        return this;
-    };
-
-
-    //定义多个事件
-    this.defineEvents = function () {
-
-        for (var i = 0, _ = arguments.length; i < _; i++)
-        {
-            this.defineEvent(arguments[i]);
-        }
-
-        return this;
-    };
-
-
-    //绑定事件处理 注:type不带on
-    this.addEventListener = this.on = function (type, listener, useCapture) {
-
-        if (listener)
-        {
-            var events = (this.__events_data || (this.__events_data = {}));
-
-            listener.useCapture = useCapture;
-            (events[type] || (events[type] = [])).push(listener);
-
-            //清除事件缓存
-            if (this.__events_cache)
-            {
-                this.__events_cache[type] = null;
-            }
-        }
-
-        return this;
-    };
-
-
-    //移除事件处理
-    this.removeEventListener = this.off = function (type, listener) {
-
-        var events = this.__events_data;
-
-        if (events && (events = events[type]))
-        {
-            if (listener == null)
-            {
-                events.length = 0;
-            }
-            else if (events.indexOf(listener) >= 0)
-            {
-                events.splice(listener, 1);
-            }
-
-            //清除事件缓存
-            this.__events_cache[type] = null;
-        }
-
-        return this;
-    };
-
-
-    //分发事件
-    //event     要分发的事件
-    this.dispatchEvent = function (event) {
-
-        var type = event.type || (event = new flyingon.Event(event)).type,
-            events = this.__events_cache,
-            length;
-
-        event.target = this;
-        events = events && events[type] || cache_events(this, type);
-
-        //获取相关事件
-        if ((length = events.length) > 0)
-        {
-            //循环处理相关事件
-            for (var i = 0; i < length; i++)
-            {
-                var target = events[i++];
-
-                if (events[i].call(target, event) === false)
-                {
-                    event.preventDefault();
-                }
-
-                if (event.cancelBubble)
-                {
-                    break;
-                }
-            }
-
-            return !event.defaultPrevented;
-        }
-    };
-
-
-    //是否绑定了指定名称(不带on)的事件
-    this.hasEvent = function (type) {
-
-        var events = this.__events_cache;
-        return (events && events[type] || cache_events(this, type)).length > 0;
-    };
-
-
-    //缓存事件
-    function cache_events(target, type) {
-
-        var result = (target.__events_cache || (target.__events_cache = {}))[type] = [],
-            events,
-            event,
-            name;
-
-        while (target)
-        {
-            //插入默认捕获事件
-            if ((name = "__event_capture_" + type) in target)
-            {
-                result.unshift(target, target[name]);
-            }
-
-            //循环处理注册的事件
-            if ((events = target.__events_data) && (events = events[type]))
-            {
-                for (var i = 0, _ = events.length; i < _; i++)
-                {
-                    if ((event = events[i]).useCapture) //插入捕获事件
-                    {
-                        result.unshift(target, event);
-                    }
-                    else //添加冒泡事件
-                    {
-                        result.push(target, event);
-                    }
-                }
-            }
-
-            //添加默认冒泡事件
-            if ((name = "__event_bubble_" + type) in target)
-            {
-                result.push(target, target[name]);
-            }
-
-            //继续处理父控件
-            target = target.__parent;
-        }
-
-        return result;
-    };
-
-
-
-};
-
-
-
-
-
-
-﻿/// <reference path="Core.js" />
-
-
-/*
-
-Xml解析实现
-
-
-
-XH中的js操作dom原属差不多,不过没有getElementById,只有getElementsByTagName
-
-xmlDoc.documentElement.childNodes(0).nodeName,可以得到这个节点的名称
-xmlDoc.documentElement.childNodes(0).nodeValue,可以得到这个节点的值
-xmlDoc.documentElement.childNodes(0).hasChild,可以判断是否有子节点
-
-可通过使用getElementsByTagName(xPath)的方法对节点进行访问
-
-*/
+//脚本及资源
 (function (flyingon) {
 
 
 
+    var head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
 
-    flyingon.Xml = flyingon.defineClass(function () {
 
 
-        Class.create = function (xml_string) {
+    //加载脚本
+    flyingon.script = (function (head) {
 
-            if (xml_string)
+
+        function load(dom, callback, thisArg, error) {
+
+            dom.onload = dom.onerror = dom.onreadystatechange = null;
+
+            if (callback)
             {
-                this.parse(xml_string);
+                callback.call(thisArg, error);
+            }
+
+            if (dom.parentNode)
+            {
+                dom.parentNode.removeChild(dom);
             }
         };
 
 
+        return function (url, callback, thisArg) {
 
-        //如果支持W3C DOM 则使用此方式创建
-        if (document.implementation && document.implementation.createDocument)
-        {
+            var dom = document.createElement("script");
 
-            this.parse = function (xml_string) {
+            dom.type = "text/javascript";
+            dom.src = url;
 
-                this.document = new DOMParser().parseFromString(xml_string, "text/xml");
-                this.dom = this.document.documentElement;
+            dom.onerror = function (error) {
+
+                //alert(error);
+                load(dom, callback, thisArg, error);
             };
 
-            this.load = function (xml_file, async) {
+            dom.onload = dom.onreadystatechange = function () {
 
-                this.document = document.implementation.createDocument('', '', null);
-                this.document.load(xml_file);
-                this.dom = this.document.documentElement;
+                var state = dom.readyState;
+
+                if (!state || state === "loaded" || state === "complete")
+                {
+                    load(dom, callback, thisArg);
+                }
             };
 
-            this.serialize = function () {
-
-                return new XMLSerializer().serializeToString(this.document);
-            };
-
-        }
-        else  //否则使用ActiveX方式创建
-        {
-
-            this.parse = function (xml_string) {
-
-                this.document = new ActiveXObject("Microsoft.XMLDOM");
-                this.document.async = "false";
-                this.document.loadXML(xml_string);
-                this.dom = this.document.documentElement;
-            };
-
-            this.load = function (xml_file, async) {
-
-                this.document = new ActiveXObject('Microsoft.XMLDOM');
-                this.document.async = !!async;
-                this.document.load(xml_file);
-                this.dom = this.document.documentElement;
-            };
-
-            this.serialize = function () {
-
-                return this.document.xml;
-            };
-
-        }
-
-    });
-
-
-
-
-
-
-    /* *************************扩展Xml解析方法*************************** */
-
-
-    var regex_encode = /[\<\>\"\'\&]/g,
-        regex_decode = /&lt;|&gt;|&quot;|&apos;|&amp;/g,
-
-        encode_keys = {
-
-            "<": "&lt;",
-            ">": "&gt;",
-            "\"": "&quot;",
-            "'": "&apos;",
-            "&": "&amp;"
-        },
-
-        decode_keys = {
-
-            "&lt;": "<",
-            "&gt;": ">",
-            "&quot;": "\"",
-            "&apos;": "'",
-            "&nbsp;": " ",
-            "&amp;": "&"
+            head.appendChild(dom);
         };
 
 
+    })(head);
 
-    //编码
-    flyingon.encode_xml = function (data) {
 
-        return data.replace(regex_encode, function (key) {
 
-            return encode_keys[key];
-        });
+    //引入样式
+    flyingon.link = function (href, rel, type) {
+
+        var dom = document.createElement("link");
+
+        dom.href = href;
+        dom.rel = rel || "stylesheet";
+        dom.type = type || "text/css";
+
+        head.appendChild(dom);
+
+        return dom;
     };
 
 
-    //解码
-    flyingon.decode_xml = function (data) {
 
-        return data.replace(regex_decode, function (key) {
+    //jsonp
+    flyingon.jsonp = (function () {
 
-            return decode_keys[key];
-        });
-    };
+        var id = 0;
 
+        return function (url, callback_name) {
 
+            callback_name = "callback=" + encodeURIComponent(callback_name) + "&unique=" + (++id);
+            flyingon.script((url.indexOf("?") > 0 ? "&" : "?") + callback_name);
+        };
 
-    //解析xml字符串为JSON对象
-    flyingon.parseXml = function (xml_string) {
-
-        if (xml_string)
-        {
-            xml_string = xml_string.replace(/\>\s+/g, ">").replace(/\s+\</g, "<"); //处理空格
-            return parse_xml(new flyingon.Xml(xml_string).dom);
-        }
-
-        return null;
-    };
+    })();
 
 
-    function parse_xml(node) {
 
-        var type = node.getAttribute("t") || "s",
-            target,
-            items,
-            item;
+    //脚本依赖
+    flyingon.require = (function () {
 
-        switch (type)
-        {
-            case "u": //undefined
-                return undefined;
 
-            case "n": //null
-                return null;
+        function load(files, index, callback, thisArg) {
 
-            case "b": //boolean
-                return node.getAttribute("v") === "1";
+            flyingon.script(files[index++], function () {
 
-            case "d": //number
-                return +node.getAttribute("v") || 0;
-
-            case "s": //string
-                return node.getAttribute("v") || "";
-
-            case "f": //function
-                return eval("(function(){return " + (node.getAttribute("v") || "") + "})()");
-
-            case "a": //array
-                target = [];
-                items = node.childNodes;
-
-                for (var i = 0, _ = items.length; i < _; i++)
+                if (index < files.length)
                 {
-                    target.push(parse_xml(items[i]));
+                    load(files, index, callback, thisArg);
+                }
+                else
+                {
+                    callback.call(thisArg);
+                }
+            });
+        };
+
+
+        return function (files, callback, thisArg) {
+
+            if (files)
+            {
+                if (files.constructor === String)
+                {
+                    flyingon.script(files, function () {
+
+                        callback.call(thisArg);
+                    });
+                }
+                else if (files.length > 0) //多个文件按顺序加载执行
+                {
+                    load(files, 0, callback, thisArg);
+                }
+            }
+            else if (callback)
+            {
+                callback.call(thisArg);
+            }
+        };
+
+
+    })();
+
+
+
+
+    //动态操作样式
+    //动态添加规则与内容在firefox或chrome中会与直接操作内容的方式优先级冲突
+    if (document.createStyleSheet)
+    {
+
+        //根据样式内容动态创建或添加或清空样式
+        flyingon.style = function (cssText, style) {
+
+            if (style)
+            {
+                if (cssText)
+                {
+                    style.cssText += cssText;
+                }
+                else
+                {
+                    style.cssText = "";
+                }
+            }
+            else
+            {
+                style = document.createStyleSheet();
+
+                if (cssText)
+                {
+                    style.cssText = cssText;
+                }
+            }
+
+            return style;
+        };
+
+
+    }
+    else
+    {
+
+        //根据样式内容动态创建或添加或清空样式
+        flyingon.style = function (cssText, style) {
+
+            if (style)
+            {
+                if (cssText)
+                {
+                    style.dom.textContent += cssText;
+                }
+                else
+                {
+                    style.dom.textContent = "";
+                }
+            }
+            else
+            {
+                var dom = document.createElement("style");//w3c
+                dom.setAttribute("type", "text/css");
+
+                if (cssText)
+                {
+                    dom.textContent = cssText;
                 }
 
-                return target;
+                head.appendChild(dom);
 
-            default:
-                target = type === "o" ? {} : { xtype: type };
-                items = node.childNodes;
+                style = document.styleSheets[document.styleSheets.length - 1];
+                style.dom = dom;
+            }
 
-                for (var i = 0, _ = items.length; i < _; i++)
-                {
-                    target[(item = items[i]).tagName] = parse_xml(item);
-                }
+            return style;
+        };
 
-                return target;
-        }
-    };
+
+    }
 
 
 
 })(flyingon);
 
+
+
+
+//dom操作
+(function (flyingon) {
+
+
+
+    //转换url为绝对路径
+    flyingon.absolute_url = (function () {
+
+        var dom = document.createElement("a"),
+            regex;
+
+        function fn(url) {
+
+            dom.href = url;
+            return dom.href;
+        };
+
+        if (fn(""))
+        {
+            return fn;
+        }
+
+        dom = document.createElement("div");
+        regex = /"/g;
+
+        return function (url) {
+
+            dom.innerHTML = "<a href='" + url.replace(regex, "%22") + "'/>";
+            return dom.firstChild.href;
+        };
+
+    })();
+
+
+
+    //文档树创建完毕
+    flyingon.ready = (function () {
+
+
+        var list;
+
+
+        function execute() {
+
+            var body = document.body;
+
+            if (body)
+            {
+                if (list)
+                {
+                    for (var i = 0; i < list.length; i++) //执行过程中可能会加入函数，故不能缓存length
+                    {
+                        list[i++].call(list[i], body);
+                    }
+
+                    list.length = 0;
+                    list = null;
+                }
+            }
+            else
+            {
+                setTimeout(execute, 0);
+            }
+        };
+
+
+        if (!document.body)
+        {
+            list = [];
+
+            if (document.addEventListener)
+            {
+                document.addEventListener("DOMContentLoaded", function (event) {
+
+                    execute();
+
+                }, false);
+            }
+
+            if (flyingon.browser_MSIE)
+            {
+                document.write("<" + "script id='__flyingon_ready__' src='//:' defer='defer'></" + "script>");
+                document.getElementById("__flyingon_ready__").onreadystatechange = function () {
+
+                    if (this.readyState === "complete")
+                    {
+                        execute();
+                        this.parentNode.removeChild(this);
+                    }
+                };
+            }
+
+            flyingon.addEventListener(window, "load", function (event) {
+
+                execute();
+            });
+
+            setTimeout(execute, 0);
+        }
+
+
+        return function (fn, thisArg) {
+
+            if (fn && fn.constructor === Function)
+            {
+                if (list)
+                {
+                    list.push(fn, thisArg || null);
+                }
+                else
+                {
+                    fn.call(thisArg, document.body);
+                }
+            }
+        };
+
+
+    })();
+
+
+
+    //获取视口坐标偏移
+    //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
+    //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
+    //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
+    flyingon.ready(function () {
+
+        var fn = !document.body.getBoundingClientRect && function (dom) {
+
+            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
+            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
+            //问题2: 在table或iframe中offsetParent取值可能不准确
+            var x = 0,
+                y = 0,
+                width = dom.offsetWidth,
+                height = dom.offsetHeight;
+
+            while (dom)
+            {
+                x += dom.offsetLeft;
+                y += dom.offsetTop;
+
+                if (dom = dom.offsetParent)
+                {
+                    x += dom.clientLeft;
+                    y += dom.clientTop;
+                }
+            }
+
+            dom = flyingon.dom_view;
+
+            x -= dom.scrollLeft;
+            y -= dom.scrollTop;
+
+            return {
+
+                left: x,
+                top: y,
+                right: x + width,
+                bottom: y + height
+            };
+        };
+
+
+        //获取指定dom相对指定视口坐标的偏移
+        flyingon.dom_offset = function (dom, x, y) {
+
+            var offset = fn ? fn.call(dom) : dom.getBoundingClientRect(); //IE6不能使用offset_fn.call的方式调用
+
+            return x === undefined ? offset : {
+
+                x: x - offset.left,
+                y: y - offset.top
+            };
+        };
+
+    });
+
+
+
+    ////最低支持IE7
+    //!window.XMLHttpRequest && flyingon.ready(function () {
+
+    //    var body = document.body,
+    //        div = document.createElement("div");
+
+    //    div.style.cssText = "position:absolute;z-index:1000;background-color:white;left:0;top:0;width:100%;height:" + (body.clientHeight || 100) + "px";
+    //    div.innerHTML = "您的浏览器版本太低,请升级浏览器!";
+
+    //    body.appendChild(div);
+
+    //    div.onclick = function () {
+
+    //        body.removeChild(div);
+    //    };
+
+    //});
+
+
+
+    //打印指定dom
+    flyingon.dom_print = (function () {
+
+        var iframe;
+
+        return function (dom, children_only) {
+
+            iframe = iframe || (iframe = document.createElement("iframe"));
+            iframe.style.cssText = "position:absolute;width:0px;height:0px;";
+
+            document.body.appendChild(iframe);
+
+            var target = iframe.contentWindow;
+
+            target.document.write(children_only ? dom.innerHTML : "");
+            target.document.close();
+
+            if (!children_only)
+            {
+                target.document.body.appendChild(dom.cloneNode(true));
+            }
+
+            target.focus();
+            target.print();
+
+            document.body.removeChild(iframe);
+            target.document.write("");  //清空iframe的内容
+        };
+
+    })();
+
+
+    //销毁dom节点
+    //注:IE6/7/8使用removeChild方法无法回收内存及清空parentNode
+    flyingon.dom_dispose = (function () {
+
+        var div = document.createElement("div");
+
+        return function (dom) {
+
+            if (dom)
+            {
+                if (dom.parentNode)
+                {
+                    div.appendChild(dom);
+                }
+
+                div.innerHTML = "";
+            }
+        };
+
+    })();
+
+
+
+})(flyingon);
 
 
 
@@ -2005,1155 +1850,6 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-﻿//表达式
-(function (flyingon) {
-
-
-
-
-})(flyingon);
-
-
-
-﻿
-//数据绑定
-flyingon.defineClass("DataBinding", function () {
-
-
-
-    var regex = /(source\s*.\s*(\w+))|(target\s*.\s*(\w+))|\"(\\\"|[^\"])*\"|\'(\\\'|[^\'])*\'/g;
-
-
-
-    Class.create = function (target, name) {
-
-        var bindings = target.__bindings;
-
-        //缓存目标
-        if (bindings)
-        {
-            //一个目标属性只能绑定一个
-            if (bindings[name])
-            {
-                bindings[name].dispose();
-            }
-
-            bindings[name] = this;
-        }
-        else
-        {
-            (target.__bindings = {})[name] = this;
-        }
-
-        //记录变量
-        if (!(this.target = target).__bindings_fn)
-        {
-            target.__bindings_fn = {};
-        }
-
-        (this.__target_names = {})[this.name = name] = true;
-    };
-
-
-
-    ////绑定源
-    //this.source = null;
-
-    ////绑定目标对象
-    //this.target = null;
-
-    ////绑定目标属性名
-    //this.name = null;
-
-    ////表达式字符串
-    //this.expression = null;
-
-    ////值变更表达式字符串
-    //this.setter = null;
-
-
-
-
-    //解析取值表达式
-    function getter_fn(source, target, value) {
-
-        var names1 = this.__source_names,  //源属性名集合
-            names2 = this.__target_names,  //目标属性名集合
-            fn;
-
-        value = ("" + value).replace(regex, function (_, x, x1, y, y1) {
-
-            if (x1)
-            {
-                if (!names1[x1])
-                {
-                    names1[x1] = true;
-                }
-
-                return source.get ? "source.get('" + x1 + "')" : x;
-            }
-
-            if (y1)
-            {
-                if (!names2[y1])
-                {
-                    names2[y1] = true;
-                }
-
-                return "target.get('" + y1 + "')";
-            }
-
-            return _;
-        });
-
-        return new Function("source", "target", "target.set('" + this.name + "', " + value + ");");
-    };
-
-
-
-    this.init = function (source, expression, setter) {
-
-        var target = this.target,
-            bindings,
-            fn;
-
-        this.source = source;
-        this.setter = setter;
-
-        this.__source_names = {};
-
-        //设置了表达式
-        if (this.expression = expression)
-        {
-            //绑定源
-            bindings = source.__bindings_fn || (source.__bindings_fn = {});
-
-            //以数字开头或包含字母数字下划线外的字符则作表达式处理
-            if (expression.match(/^\d|[^\w]/))
-            {
-                this.__fn_getter = fn = getter_fn.call(this, source, target, expression);
-            }
-            else if (source) //否则当作名字处理
-            {
-                this.__source_names[expression] = true;
-
-                if (setter === undefined)
-                {
-                    setter = "target.get('" + this.name + "')";
-                    setter = source.set ? "source.set('" + expression + "', " + setter + ");" : "source['" + expression + "'] = " + setter + ";";
-                }
-
-                expression = source.get ? "source.get('" + expression + "')" : "source['" + expression + "']";
-                this.__fn_getter = fn = new Function("source", "target", "target.set('" + this.name + "', " + expression + ");");
-            }
-
-            //记录函数参数值
-            fn.__source = source;
-            fn.__target = target;
-
-            //添加进源绑定表集合
-            for (var name in this.__source_names)
-            {
-                (bindings[name] || (bindings[name] = [])).push(fn);
-            }
-        }
-
-        //更新函数
-        if (setter)
-        {
-            this.__fn_setter = fn = new Function("source", "target", setter);
-
-            //记录函数参数值
-            fn.__source = source;
-            fn.__target = target;
-
-            bindings = target.__bindings_fn;
-
-            //添加进目标绑定表集合
-            for (var name in this.__target_names)
-            {
-                (bindings[name] || (bindings[name] = [])).push(fn);
-            }
-        }
-    };
-
-
-    //销毁绑定
-    this.dispose = function () {
-
-        var source = this.source,
-            target = this.target,
-            bindings,
-            names,
-            fn;
-
-        if (bindings = target.__bindings)
-        {
-            delete bindings[this.name];
-
-            if ((fn = this.__fn_setter) && (bindings = target.__bindings_fn))
-            {
-                remove(bindings, this.__target_names, fn);
-            }
-
-            if (source && (fn = this.__fn_getter) && (bindings = source.__bindings_fn))
-            {
-                remove(bindings, this.__source_names, fn);
-            }
-        }
-
-        this.source = null;
-        this.target = null;
-    };
-
-
-    function remove(bindings, names, fn) {
-
-        var list, index;
-
-        for (var name in names)
-        {
-            if ((list = bindings[name]) && (index = list.indexOf(fn)) >= 0)
-            {
-                list.splice(index, 1);
-            }
-        }
-
-        fn.__source = null;
-        fn.__target = null;
-    };
-
-
-
-});
-
-
-
-
-//同步绑定数据至目标对象
-flyingon.binding = function (source, name) {
-
-    var bindings = source.__bindings_fn,
-        list,
-        fn;
-
-    if (name)
-    {
-        if (list = bindings[name])
-        {
-            for (var i = 0, _ = list.length; i < _; i++)
-            {
-                (fn = list[i])(fn.__source, fn.__target);
-            }
-        }
-    }
-    else
-    {
-        for (var name in bindings)
-        {
-            list = bindings[name];
-
-            for (var i = 0, _ = list.length; i < _; i++)
-            {
-                (fn = list[i])(fn.__source, fn.__target);
-            }
-        }
-    }
-};
-
-
-
-
-
-﻿
-flyingon.defineClass("SerializeReader", function () {
-
-
-
-    var class_list = flyingon.__registry_class_list;
-
-
-
-
-    this.parse = function (data, xml) {
-
-        if (typeof data === "string")
-        {
-            if (xml == null && (data.charAt(0) === "<"))
-            {
-                xml = true;
-            }
-
-            //使用JSON.parse解析json时属性名必须有引号且不能解析function
-            return xml ? flyingon.parseXml(data) : eval("(" + data + ")");
-        }
-
-        return data;
-    };
-
-
-    this.deserialize = function (data, xml) {
-
-        if (data = this.parse(data, xml))
-        {
-            data = this[data.constructor === Array ? "read_array" : "read_object"](data);
-            this.complete();
-        }
-
-        return data;
-    };
-
-
-    //序列化完毕后执行方法(处理绑定关系)
-    this.complete = function () {
-
-        var source_list = this.__source_list,
-            bindings = this.__binding_list,
-            length,
-            value;
-
-        if (source_list)
-        {
-            this.__source_list = null;
-        }
-        else
-        {
-            source_list = {}
-        }
-
-        if (bindings && (length = bindings.length) > 0)
-        {
-            this.__binding_list = null;
-
-            for (var i = 0; i < length; i++)
-            {
-                value = bindings[i];
-                new flyingon.DataBinding(value.target, value.name).init(source_list[value.source] || null, value.expression, value.setter);
-            }
-        }
-    };
-
-
-
-
-    this.read_value = function (value) {
-
-        if (value != null && typeof value === "object")
-        {
-            //复制对象(不使用原有对象以防止多重引用)
-            return this[value.constructor === Array ? "read_array" : "read_object"](value);
-        }
-
-        return value;
-    };
-
-
-    this.read_bool = function (value) {
-
-        return !!value;
-    };
-
-
-    this.read_number = function (value) {
-
-        return +value || 0;
-    };
-
-
-    this.read_string = function (value) {
-
-        return value == null ? "" : "" + value;
-    };
-
-
-    this.read_function = function (value) {
-
-        return value && value.constructor === Function ? value : eval("(function(){return " + value + "})()");
-    };
-
-
-    this.read_object = function (value) {
-
-        if (value != null)
-        {
-            var result, cache;
-
-            if (value.xtype && (cache = class_list[value.xtype]))
-            {
-                result = new cache();
-                delete value.xtype;
-            }
-            else
-            {
-                result = {};
-            }
-
-            if (cache = value.__id__) //记录绑定源
-            {
-                (this.__source_list || (this.__source_list = {}))[cache] = result;
-                delete value.__id__;
-            }
-
-            if (result.deserialize)
-            {
-                result.deserialize(this, value);
-            }
-            else
-            {
-                this.read_properties(result, value);
-            }
-
-            return result;
-        }
-
-        return value;
-    };
-
-
-    this.read_properties = function (target, value) {
-
-        var names = Object.getOwnPropertyNames(value);
-
-        for (var i = 0, _ = names.length; i < _; i++)
-        {
-            target[name = names[i]] = this.read_value(value[name]);
-        }
-    };
-
-
-    this.read_array = function (value) {
-
-        if (value != null)
-        {
-            var result = [];
-
-            for (var i = 0, _ = value.length; i < _; i++)
-            {
-                result.push(this.read_value(value[i]));
-            }
-
-            return result;
-        }
-
-        return value;
-    };
-
-
-    this.read_bindings = function (target, data) {
-
-        var result = target.__bindings = {};
-
-        for (var name in data)
-        {
-            var value = data[name];
-
-            if (this.__source_list && value.source in this.__source_list) //找到源则直接生成数据绑定
-            {
-                new flyingon.DataBinding(target, name).init(this.__source_list[value.source], value.expression, value.setter);
-            }
-            else //否则先记录绑定信息待以后处理
-            {
-                value.target = target;
-                value.name = name;
-                (this.__binding_list || (this.__binding_list = [])).push(value);
-            }
-        }
-
-        return result;
-    };
-
-
-});
-
-
-
-
-
-
-
-﻿
-flyingon.defineClass("SerializeWriter", function () {
-
-
-
-    this.length = 0;
-
-
-
-    this.serialize = function (target) {
-
-        this[target.constructor === Array ? "write_array" : "write_object"](null, target);
-        return this.toString();
-    };
-
-
-
-
-    function write_name(name) {
-
-        if (this[this.length - 1] !== "{")
-        {
-            this[this.length++] = ",";
-        }
-
-        this[this.length++] = "\"" + name + "\":";
-    };
-
-
-    this.write_value = function (name, value) {
-
-        if (value == null)
-        {
-            this.write_null(name, value);
-        }
-        else
-        {
-            switch (typeof value)
-            {
-                case "boolean":
-                    this.write_bool(name, value);
-                    break;
-
-                case "number":
-                    this.write_number(name, value);
-                    break;
-
-                case "string":
-                    this.write_string(name, value);
-                    break;
-
-                case "function":
-                    this.write_function(name, value);
-                    break;
-
-                case "object":
-                    switch (typeof value)
-                    {
-                        case "boolean":
-                            this.write_bool(name, value);
-                            break;
-
-                        case "number":
-                            this.write_number(name, value);
-                            break;
-
-                        case "string":
-                            this.write_string(name, value);
-                            break;
-
-                        default:
-                            if (value.constructor === Array)
-                            {
-                                this.write_array(name, value);
-                            }
-                            else
-                            {
-                                this.write_object(name, value);
-                            }
-                            break;
-                    }
-                    break;
-            }
-        }
-    };
-
-
-    this.write_null = function (name, value) {
-
-        if (name)
-        {
-            write_name.call(this, name);
-        }
-
-        this[this.length++] = "" + value;
-    };
-
-
-    this.write_bool = function (name, value) {
-
-        if (name)
-        {
-            write_name.call(this, name);
-        }
-
-        this[this.length++] = value ? "true" : "false";
-    };
-
-
-    this.write_number = function (name, value) {
-
-        if (name)
-        {
-            write_name.call(this, name);
-        }
-
-        this[this.length++] = "" + (+value || 0);
-    };
-
-
-    this.write_string = function (name, value) {
-
-        if (name)
-        {
-            write_name.call(this, name);
-        }
-
-        this[this.length++] = "\"" + ("" + value).replace(/\"/g, "\\\"") + "\"";
-    };
-
-
-    this.write_function = function (name, fn) {
-
-        if (name)
-        {
-            write_name.call(this, name);
-        }
-
-        this[this.length++] = "" + fn;
-    };
-
-
-    this.write_object = function (name, target) {
-
-        if (name)
-        {
-            write_name.call(this, name);
-        }
-
-        if (target != null)
-        {
-            this[this.length++] = "{";
-
-            name = target.xtype;
-
-            if ("__bindings_fn" in target) //如果是数据绑定源则序列化对象标记
-            {
-                this[this.length++] = "\"__id__\":" + (target.__id__ || (target.__id__ = this.length));
-
-                if (name)
-                {
-                    this[this.length++] = ",";
-                }
-            }
-
-            if (name)
-            {
-                this[this.length++] = "\"xtype\":\"" + name + "\"";
-            }
-
-            if ("serialize" in target)
-            {
-                target.serialize(this);
-            }
-            else
-            {
-                this.write_properties(target);
-            }
-
-            this[this.length++] = "}";
-        }
-        else
-        {
-            this[this.length++] = "" + target;
-        }
-    };
-
-
-    //序列化对象属性(默认不序列化原型的属性)
-    this.write_properties = function (target, names) {
-
-        var name;
-
-        names = names || Object.getOwnPropertyNames(target);
-
-        for (var i = 0, _ = names.length; i < _; i++)
-        {
-            this.write_value(name = names[i], target[name]);
-        }
-    };
-
-
-    this.write_array = function (name, array) {
-
-        if (name)
-        {
-            write_name.call(this, name);
-        }
-
-        if (array != null)
-        {
-            this[this.length++] = "[";
-
-            for (var i = 0, _ = array.length; i < _; i++)
-            {
-                if (i > 0)
-                {
-                    this[this.length++] = ",";
-                }
-
-                this.write_value(null, array[i]);
-            }
-
-            this[this.length++] = "]";
-        }
-        else
-        {
-            this[this.length++] = "" + value;
-        }
-    };
-
-
-    this.write_bindings = function (bindings) {
-
-        if (bindings)
-        {
-            write_name.call(this, "bindings");
-
-            this[this.length++] = "{";
-
-            for (var name in bindings)
-            {
-                var binding = bindings[name];
-
-                write_name.call(this, name);
-
-                this[this.length++] = "{";
-
-                binding.source && this.write_number("source", binding.source.__id__ || (binding.source.__id__ = this.length));
-                binding.expression && this.write_string("expression", binding.expression);
-                binding.setter && this.write_string("setter", binding.setter);
-
-                this[this.length++] = "}";
-            }
-
-            this[this.length++] = "}";
-        }
-    };
-
-
-    this.write_events = function (events) {
-
-        if (events)
-        {
-            write_name.call(this, "events");
-
-            this[this.length++] = "{";
-
-            for (var name in events)
-            {
-                this.write_function(name, events[name]);
-            }
-
-            this[this.length++] = "}";
-        }
-    };
-
-
-
-    this.toString = function () {
-
-        return [].join.call(this, "");
-    };
-
-
-});
-
-
-
-
-flyingon.defineClass("XmlSerializeWriter", flyingon.SerializeWriter, function (base) {
-
-
-
-    var encode = flyingon.encode_xml;
-
-
-
-    this.write_null = function (name, value) {
-
-        this[this.length++] = "<" + name + " t=\"" + (value === null ? "n" : "u") + "\"/>";
-    };
-
-
-    this.write_bool = function (name, value) {
-
-        this[this.length++] = "<" + name + " t=\"b\" v=\"" + (value ? "1" : "0") + "\"/>";
-    };
-
-
-    this.write_number = function (name, value) {
-
-        this[this.length++] = "<" + name + " t=\"d\" v=\"" + (+value || 0) + "\"/>";
-    };
-
-
-    this.write_string = function (name, value) {
-
-        this[this.length++] = "<" + name + " t=\"s\" v=\"" + encode("" + value) + "\"/>";
-    };
-
-
-    this.write_function = function (name, fn) {
-
-        this[this.length++] = "<" + name + " t=\"f\" v=\"" + encode("" + fn) + "\"/>";
-    };
-
-
-    this.write_object = function (name, target) {
-
-        if (target != null)
-        {
-            this[this.length++] = "<" + (name = name || "xml") + " t=\"" + (target.xtype || "o") + "\">";
-
-            if ("__bindings_fn" in target) //如果是数据绑定源则序列化对象标记
-            {
-                this[this.length++] = "<__id__ t=\"d\" v=\"" + (target.__id__ || (target.__id__ = this.length)) + "\"/>";
-            }
-
-            if ("serialize" in target)
-            {
-                target.serialize(this);
-            }
-            else
-            {
-                this.write_properties(target);
-            }
-
-            this[this.length++] = "</" + name + ">";
-        }
-        else
-        {
-            this.write_null(name, target);
-        }
-    };
-
-
-    this.write_array = function (name, array) {
-
-        if (array != null)
-        {
-            this[this.length++] = "<" + (name || "xml") + " t=\"a\">";
-
-            for (var i = 0, _ = array.length; i < _; i++)
-            {
-                this.write_value("item", array[i]);
-            }
-
-            this[this.length++] = "</" + name + ">";
-        }
-        else
-        {
-            this.write_null(name, array);
-        }
-    };
-
-
-    this.write_bindings = function (bindings) {
-
-        if (bindings)
-        {
-            this[this.length++] = "<bindings t=\"o\">";
-
-            for (var name in bindings)
-            {
-                var binding = bindings[name];
-
-                this[this.length++] = "<" + name + " t=\"o\">";
-
-                binding.source && this.write_number("source", binding.source.__id__ || (binding.source.__id__ = this.length));
-                binding.expression && this.write_string("expression", binding.expression);
-                binding.setter && this.write_string("setter", binding.setter);
-
-                this[this.length++] = "</" + name + ">";
-            }
-
-            this[this.length++] = "</bindings>";
-        }
-    };
-
-
-    this.write_events = function (events) {
-
-        if (events)
-        {
-            this[this.length++] = "<events t=\"o\">";
-
-            for (var name in events)
-            {
-                this.write_function(name, events[name]);
-            }
-
-            this[this.length++] = "</events>";
-        }
-    };
-
-
-});
-
-
-
-
-﻿
-//dom操作
-(function (flyingon) {
-
-
-
-    //转换url为绝对路径
-    flyingon.absolute_url = (function () {
-
-        var dom = document.createElement("a"),
-            regex;
-
-        function fn(url) {
-
-            dom.href = url;
-            return dom.href;
-        };
-
-        if (fn(""))
-        {
-            return fn;
-        }
-
-        dom = document.createElement("div");
-        regex = /"/g;
-
-        return function (url) {
-
-            dom.innerHTML = "<a href='" + url.replace(regex, "%22") + "'/>";
-            return dom.firstChild.href;
-        };
-
-    })();
-
-
-
-    //文档树创建完毕
-    flyingon.ready = (function () {
-
-
-        var list;
-
-
-        function execute() {
-
-            var body = document.body;
-
-            if (body)
-            {
-                if (list)
-                {
-                    for (var i = 0; i < list.length; i++) //执行过程中可能会加入函数，故不能缓存length
-                    {
-                        list[i++].call(list[i], body);
-                    }
-
-                    list.length = 0;
-                    list = null;
-                }
-            }
-            else
-            {
-                setTimeout(execute, 0);
-            }
-        };
-
-
-        if (!document.body)
-        {
-            list = [];
-
-            if (document.addEventListener)
-            {
-                document.addEventListener("DOMContentLoaded", function (event) {
-
-                    execute();
-
-                }, false);
-            }
-
-            if (flyingon.browser_MSIE)
-            {
-                document.write("<" + "script id='__flyingon_ready__' src='//:' defer='defer'></" + "script>");
-                document.getElementById("__flyingon_ready__").onreadystatechange = function () {
-
-                    if (this.readyState === "complete")
-                    {
-                        execute();
-                        this.parentNode.removeChild(this);
-                    }
-                };
-            }
-
-            flyingon.addEventListener(window, "load", function (event) {
-
-                execute();
-            });
-
-            setTimeout(execute, 0);
-        }
-
-
-        return function (fn, thisArg) {
-
-            if (fn && fn.constructor === Function)
-            {
-                if (list)
-                {
-                    list.push(fn, thisArg || null);
-                }
-                else
-                {
-                    fn.call(thisArg, document.body);
-                }
-            }
-        };
-
-
-    })();
-
-
-
-    //获取视口坐标偏移
-    //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
-    //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
-    //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
-    flyingon.ready(function () {
-
-        var fn = !document.body.getBoundingClientRect && function (dom) {
-
-            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
-            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
-            //问题2: 在table或iframe中offsetParent取值可能不准确
-            var x = 0,
-                y = 0,
-                width = dom.offsetWidth,
-                height = dom.offsetHeight;
-
-            while (dom)
-            {
-                x += dom.offsetLeft;
-                y += dom.offsetTop;
-
-                if (dom = dom.offsetParent)
-                {
-                    x += dom.clientLeft;
-                    y += dom.clientTop;
-                }
-            }
-
-            dom = flyingon.dom_view;
-
-            x -= dom.scrollLeft;
-            y -= dom.scrollTop;
-
-            return {
-
-                left: x,
-                top: y,
-                right: x + width,
-                bottom: y + height
-            };
-        };
-
-
-        //获取指定dom相对指定视口坐标的偏移
-        flyingon.dom_offset = function (dom, x, y) {
-
-            var offset = fn ? fn.call(dom) : dom.getBoundingClientRect(); //IE6不能使用offset_fn.call的方式调用
-
-            return x === undefined ? offset : {
-
-                x: x - offset.left,
-                y: y - offset.top
-            };
-        };
-
-    });
-
-
-
-    ////最低支持IE7
-    //!window.XMLHttpRequest && flyingon.ready(function () {
-
-    //    var body = document.body,
-    //        div = document.createElement("div");
-
-    //    div.style.cssText = "position:absolute;z-index:1000;background-color:white;left:0;top:0;width:100%;height:" + (body.clientHeight || 100) + "px";
-    //    div.innerHTML = "您的浏览器版本太低,请升级浏览器!";
-
-    //    body.appendChild(div);
-
-    //    div.onclick = function () {
-
-    //        body.removeChild(div);
-    //    };
-
-    //});
-
-
-
-    //打印指定dom
-    flyingon.dom_print = (function () {
-
-        var iframe;
-
-        return function (dom, children_only) {
-
-            iframe = iframe || (iframe = document.createElement("iframe"));
-            iframe.style.cssText = "position:absolute;width:0px;height:0px;";
-
-            document.body.appendChild(iframe);
-
-            var target = iframe.contentWindow;
-
-            target.document.write(children_only ? dom.innerHTML : "");
-            target.document.close();
-
-            if (!children_only)
-            {
-                target.document.body.appendChild(dom.cloneNode(true));
-            }
-
-            target.focus();
-            target.print();
-
-            document.body.removeChild(iframe);
-            target.document.write("");  //清空iframe的内容
-        };
-
-    })();
-
-
-    //销毁dom节点
-    //注:IE6/7/8使用removeChild方法无法回收内存及清空parentNode
-    flyingon.dom_dispose = (function () {
-
-        var div = document.createElement("div");
-
-        return function (dom) {
-
-            if (dom)
-            {
-                if (dom.parentNode)
-                {
-                    div.appendChild(dom);
-                }
-
-                div.innerHTML = "";
-            }
-        };
-
-    })();
-
-
-
-})(flyingon);
-
-
-
-
 ﻿
 
 //事件类型基类
@@ -3526,39 +2222,40 @@ flyingon.defineClass("PropertyChangeEvent", flyingon.Event, function (base) {
 
 ﻿
 
+//可序列化接口
+flyingon.ISerializable = function () {
 
-//组件基类(此类开始支持属性,事件,序列化及反序列化)
-flyingon.IComponent = function () {
 
+    //自定义序列化
+    this.serialize = function (writer) {
 
-    var id = 1;
-
-    flyingon.newId = function () {
-
-        return id++;
+        writer.write_properties(this);
     };
 
 
-    //扩展事件支持
-    flyingon.extend(this, flyingon.IEvent);
+    //自定义反序列化
+    this.deserialize = function (reader, data) {
 
+        reader.read_properties(this, data);
+    };
 
-    //定义属性值变更事件
-    this.defineEvent("propertychange");
-
-
-
-
-
-    //唯一Id
-    flyingon.defineProperty(this, "uniqueId", function () {
-
-        return this.__uniqueId || (this.__uniqueId = flyingon.newId());
-    });
+};
 
 
 
+//属性接口
+//子类必须创建"this.__fields"对象存储数据
+flyingon.IProperty = function () {
 
+
+
+    //上次使用的属性(如attributes传入"last-value"则使用上次传入的属性)
+    var previous_attributes = null,
+        regex_name = /\W/;
+
+
+
+    //定义setter函数
     this.__fn_define_setter = function (name, data_type, attributes) {
 
         var body = ["\n"], cache;
@@ -3699,11 +2396,6 @@ flyingon.IComponent = function () {
     };
 
 
-
-    //上次使用的属性(如attributes传入"last-value"则使用上次传入的属性)
-    var previous_attributes = null,
-        regex_name = /\W/;
-
     //解析属性
     this.__fn_parse_attributes = function (attributes) {
 
@@ -3791,6 +2483,7 @@ flyingon.IComponent = function () {
         return this;
     };
 
+
     //定义多个属性
     this.defineProperties = function (names, defaultValue, attributes) {
 
@@ -3801,11 +2494,6 @@ flyingon.IComponent = function () {
 
         return this;
     };
-
-
-
-    //名称
-    this.defineProperty("name", "");
 
 
 
@@ -3823,20 +2511,6 @@ flyingon.IComponent = function () {
         return this;
     };
 
-
-
-
-
-    //初始化控件
-    this.init = function (values) {
-
-        var reader = new flyingon.SerializeReader();
-
-        this.deserialize(reader, values);
-        reader.complete(); //执行反序列化完毕方法进行后述处理
-
-        return this;
-    };
 
 
     //获取指定名称的值
@@ -3876,6 +2550,332 @@ flyingon.IComponent = function () {
         return this;
     };
 
+
+
+    //复制生成新控件
+    this.copy = function () {
+
+        var result = new this.Class(),
+            fields1 = result.__fields,
+            fields2 = this.__fields,
+            names = Object.getOwnPropertyNames(fields2),
+            name;
+
+        for (var i = 0, _ = names.length; i < _; i++)
+        {
+            fields1[name = names[i]] = fields2[name];
+        }
+
+        return result;
+    };
+
+
+    //获取对象字符串表示
+    //xml == true:  Xml字符串表示
+    //xml == false: JSON字符串表示
+    this.stringify = function (xml) {
+
+        return new flyingon[xml ? "XmlSerializeWriter" : "SerializeWriter"]().serialize(this);
+    };
+
+
+    //初始化控件
+    this.init = function (values) {
+
+        var reader = new flyingon.SerializeReader();
+
+        this.deserialize(reader, values);
+        reader.complete(); //执行反序列化完毕方法进行后述处理
+
+        return this;
+    };
+
+
+
+    //扩展序列化支持
+    flyingon.ISerializable.call(this);
+
+
+    //自定义序列化
+    this.serialize = function (writer) {
+
+        var fields = this.__fields,
+            defaults = this.__defaults,
+            names = Object.getOwnPropertyNames(fields),
+            name,
+            value;
+
+        //序列化属性
+        for (var i = 0, _ = names.length; i < _; i++)
+        {
+            if ((value = fields[name = names[i]]) !== defaults[name])
+            {
+                writer.write_value(name, value);
+            }
+        }
+
+        return this;
+    };
+
+
+    //自定义反序列化
+    this.deserialize = function (reader, data) {
+
+        var names = Object.getOwnPropertyNames(data),
+            name;
+
+        //反序列化属性
+        for (var i = 0, _ = names.length; i < _; i++)
+        {
+            this.deserialize_property(reader, name = names[i], data[name]);
+        }
+
+        return this;
+    };
+
+
+    //序列化属性
+    this.deserialize_property = function (reader, name, value) {
+
+        var fn = this["set_" + name];
+
+        if (fn)
+        {
+            fn.call(this, value, true);
+        }
+        else
+        {
+            this[name] = value;
+        }
+    };
+
+
+};
+
+
+
+
+//事件接口
+flyingon.IEvent = function () {
+
+
+    //定义事件 name为不带on的事件名
+    //注:只有支持定义属性的浏览器才支持以on的方式注册事件,否则只能以addEventListener的方式注册事件
+    this.defineEvent = function (type) {
+
+        flyingon.defineProperty(this, "on" + type,
+
+            function () {
+
+                return this.__events_data && this.__events_data[type] || null;
+            },
+
+            function (value) {
+
+                (this.__events_data || (this.__events_data = {}))[type] = [value];
+
+                //清除事件缓存
+                if (this.__events_cache)
+                {
+                    this.__events_cache[type] = null;
+                }
+            });
+
+        return this;
+    };
+
+
+    //定义多个事件
+    this.defineEvents = function () {
+
+        for (var i = 0, _ = arguments.length; i < _; i++)
+        {
+            this.defineEvent(arguments[i]);
+        }
+
+        return this;
+    };
+
+
+    //绑定事件处理 注:type不带on
+    this.addEventListener = this.on = function (type, listener, useCapture) {
+
+        if (listener)
+        {
+            var events = (this.__events_data || (this.__events_data = {}));
+
+            listener.useCapture = useCapture;
+            (events[type] || (events[type] = [])).push(listener);
+
+            //清除事件缓存
+            if (this.__events_cache)
+            {
+                this.__events_cache[type] = null;
+            }
+        }
+
+        return this;
+    };
+
+
+    //移除事件处理
+    this.removeEventListener = this.off = function (type, listener) {
+
+        var events = this.__events_data;
+
+        if (events && (events = events[type]))
+        {
+            if (listener == null)
+            {
+                events.length = 0;
+            }
+            else if (events.indexOf(listener) >= 0)
+            {
+                events.splice(listener, 1);
+            }
+
+            //清除事件缓存
+            this.__events_cache[type] = null;
+        }
+
+        return this;
+    };
+
+
+    //分发事件
+    //event     要分发的事件
+    this.dispatchEvent = function (event) {
+
+        var type = event.type || (event = new flyingon.Event(event)).type,
+            events = this.__events_cache,
+            length;
+
+        event.target = this;
+        events = events && events[type] || cache_events(this, type);
+
+        //获取相关事件
+        if ((length = events.length) > 0)
+        {
+            //循环处理相关事件
+            for (var i = 0; i < length; i++)
+            {
+                var target = events[i++];
+
+                if (events[i].call(target, event) === false)
+                {
+                    event.preventDefault();
+                }
+
+                if (event.cancelBubble)
+                {
+                    break;
+                }
+            }
+
+            return !event.defaultPrevented;
+        }
+    };
+
+
+    //是否绑定了指定名称(不带on)的事件
+    this.hasEvent = function (type) {
+
+        var events = this.__events_cache;
+        return (events && events[type] || cache_events(this, type)).length > 0;
+    };
+
+
+    //缓存事件
+    function cache_events(target, type) {
+
+        var result = (target.__events_cache || (target.__events_cache = {}))[type] = [],
+            events,
+            event,
+            name;
+
+        while (target)
+        {
+            //插入默认捕获事件
+            if ((name = "__event_capture_" + type) in target)
+            {
+                result.unshift(target, target[name]);
+            }
+
+            //循环处理注册的事件
+            if ((events = target.__events_data) && (events = events[type]))
+            {
+                for (var i = 0, _ = events.length; i < _; i++)
+                {
+                    if ((event = events[i]).useCapture) //插入捕获事件
+                    {
+                        result.unshift(target, event);
+                    }
+                    else //添加冒泡事件
+                    {
+                        result.push(target, event);
+                    }
+                }
+            }
+
+            //添加默认冒泡事件
+            if ((name = "__event_bubble_" + type) in target)
+            {
+                result.push(target, target[name]);
+            }
+
+            //继续处理父控件
+            target = target.__parent;
+        }
+
+        return result;
+    };
+
+
+};
+
+
+
+
+//组件接口
+//子类必须创建"this.__fields"对象存储数据
+flyingon.IComponent = function () {
+
+
+    var id = 1;
+
+    flyingon.newId = function () {
+
+        return id++;
+    };
+
+
+
+    //扩展属性支持
+    flyingon.extend(this, flyingon.IProperty);
+
+
+    //扩展事件支持
+    flyingon.extend(this, flyingon.IEvent);
+
+
+
+    //定义属性值变更事件
+    this.defineEvent("propertychange");
+
+
+
+
+
+    //唯一Id
+    flyingon.defineProperty(this, "uniqueId", function () {
+
+        return this.__uniqueId || (this.__uniqueId = flyingon.newId());
+    });
+
+
+
+    //名称
+    this.defineProperty("name", "");
 
 
 
@@ -3930,51 +2930,15 @@ flyingon.IComponent = function () {
 
 
 
-    //复制生成新控件
-    this.copy = function () {
-
-        var result = new this.Class(),
-            fields1 = result.__fields,
-            fields2 = this.__fields,
-            names = Object.getOwnPropertyNames(fields2),
-            name;
-
-        for (var i = 0, _ = names.length; i < _; i++)
-        {
-            fields1[name = names[i]] = fields2[name];
-        }
-
-        return result;
-    };
-
-
-    //获取对象字符串表示
-    //xml == true:  Xml字符串表示
-    //xml == false: JSON字符串表示
-    this.stringify = function (xml) {
-
-        return new flyingon[xml ? "XmlSerializeWriter" : "SerializeWriter"]().serialize(this);
-    };
-
+    //记录IProperty的序列化及反序列化方法
+    var serialize = this.serialize,
+        deserialize = this.deserialize;
 
 
     //自定义序列化
     this.serialize = function (writer) {
 
-        var fields = this.__fields,
-            defaults = this.__defaults,
-            names = Object.getOwnPropertyNames(fields),
-            name,
-            value;
-
-        //序列化属性
-        for (var i = 0, _ = names.length; i < _; i++)
-        {
-            if ((value = fields[name = names[i]]) !== defaults[name])
-            {
-                writer.write_value(name, value);
-            }
-        }
+        serialize.call(this, writer);
 
         //序列化绑定
         if (this.__bindings)
@@ -3995,33 +2959,7 @@ flyingon.IComponent = function () {
     //自定义反序列化
     this.deserialize = function (reader, data) {
 
-        var names = Object.getOwnPropertyNames(data),
-            name,
-            fn;
-
-        //反序列化属性
-        for (var i = 0, _ = names.length; i < _; i++)
-        {
-            switch (name = names[i])
-            {
-                case "bindings":
-                    reader.read_bindings(this, data.bindings);
-                    break;
-
-                case "events":
-                    excludes.events = this.__events = data.events;
-
-                    for (var name in data.events)
-                    {
-                        this.on(name, data.events[name]);
-                    }
-                    break;
-
-                default:
-                    this.deserialize_property(reader, name, data[name]);
-                    break;
-            }
-        }
+        deserialize.call(this, reader, data);
 
         //同步绑定源
         if (this.__binding_source)
@@ -4036,15 +2974,33 @@ flyingon.IComponent = function () {
     //序列化属性
     this.deserialize_property = function (reader, name, value) {
 
-        var fn = this["set_" + name];
+        switch (name)
+        {
+            case "bindings":
+                reader.read_bindings(this, data.bindings);
+                break;
 
-        if (fn)
-        {
-            fn.call(this, value, true);
-        }
-        else
-        {
-            this[name] = value;
+            case "events":
+                excludes.events = this.__events = data.events;
+
+                for (var name in data.events)
+                {
+                    this.on(name, data.events[name]);
+                }
+                break;
+
+            default:
+                var fn = this["set_" + name];
+
+                if (fn)
+                {
+                    fn.call(this, value, true);
+                }
+                else
+                {
+                    this[name] = value;
+                }
+                bre;
         }
     };
 
@@ -4067,13 +3023,12 @@ flyingon.IComponent = function () {
     };
 
 
-
 };
 
 
 
 
-//组件基类(支持属性,事件,序列化及反序列化)
+//组件基类(支持属性,事件,序列化及反序列化,数据绑定)
 flyingon.defineClass("Component", function () {
 
 
@@ -4089,7 +3044,165 @@ flyingon.defineClass("Component", function () {
     //扩展组件接口
     flyingon.IComponent.call(this);
 
+
 });
+
+
+
+
+//集合类接口
+flyingon.ICollection = function () {
+
+
+
+    //引入数组的方法
+    var push, splice, slice;
+
+
+    //子项数
+    this.length = 0;
+
+
+    //引入数组方法
+    (function (Array) {
+
+
+        push = Array.push;
+
+        splice = Array.splice;
+
+        slice = Array.slice;
+
+        this.forEach = Array.forEach;
+
+        this.indexOf = Array.indexOf;
+
+        this.lastIndexOf = Array.lastIndexOf;
+
+
+    }).call(this, Array.prototype);
+
+
+
+    //修改子项索引
+    this.change_index = function (old_index, new_index) {
+
+        var item;
+
+        if (old_index !== new_index && (item = this[old_index]))
+        {
+            splice.call(this, old_index, 1);
+
+            if (new_index > this.length)
+            {
+                new_index = this.length;
+            }
+
+            splice.call(this, new_index, 0, item);
+        }
+    };
+
+
+    //添加子项
+    this.append = function (item) {
+
+        if (arguments.length > 0 && this.__fn_append.apply(this, arguments) !== false)
+        {
+            push.apply(this, arguments);
+        }
+    };
+
+
+    //在指定位置插入子项
+    this.insert = function (index, item) {
+
+        var length = arguments.length;
+
+        if (length > 1)
+        {
+            if (index < 0)
+            {
+                index = 0;
+            }
+            else if (index >= this.length)
+            {
+                index = this.length;
+            }
+
+            if (this.__fn_insert.apply(this, arguments) !== false)
+            {
+                if (length === 2)
+                {
+                    splice.call(this, index, 0, item);
+                }
+                else
+                {
+                    for (var i = 1; i < length; i++)
+                    {
+                        splice.call(this, index++, 0, arguments[i]);
+                    }
+                }
+            }
+        }
+    };
+
+
+    //移除指定子项
+    this.remove = function (item) {
+
+        var index;
+
+        if ((index = this.indexOf(item)) >= 0 && this.__fn_remove(item) !== false)
+        {
+            splice.call(this, index, 1);
+        }
+    };
+
+
+    //移除指定位置的子项
+    this.removeAt = function (index, length) {
+
+        if (this.length > index)
+        {
+            if (!(length > 0))
+            {
+                length = this.length - index;
+            }
+
+            if (this.__fn_removeAt(index, length) !== false)
+            {
+                splice.call(this, index, length);
+            }
+        }
+    };
+
+
+    //清除
+    this.clear = function () {
+
+        var length = this.length;
+
+        if (length > 0 && this.__fn_clear() !== false)
+        {
+            splice.call(this, 0, length);
+        }
+    };
+
+
+
+    //默认处理
+    this.__fn_append = this.__fn_insert = this.__fn_remove = this.__fn_removeAt = this.__fn_clear = function () {
+
+        if (this.change)
+        {
+            this.change.apply(this, arguments);
+        }
+    };
+
+
+};
+
+
 
 
 
@@ -7270,9 +6383,14 @@ flyingon.defineClass("Query", function () {
     //循环调用指定名称的方法
     this.call = function (name) {
 
-        var parameters = arguments.length > 1 ? this.slice.call(arguments, 1) : null,
-            item,
-            fn;
+        return arguments.length > 1 ? this.apply(name, this.slice.call(arguments, 1)) : this.apply(name);
+    };
+
+
+    //循环调用指定数组参数的方法
+    this.apply = function (name, parameters) {
+
+        var item, fn;
 
         for (var i = 0, _ = this.length; i < _; i++)
         {
@@ -7284,7 +6402,6 @@ flyingon.defineClass("Query", function () {
 
         return this;
     };
-
 
 
 
@@ -7353,7 +6470,7 @@ flyingon.defineClass("Control", function () {
 
 
 
-    Class.create = function (dom) {
+    Class.create = function () {
 
         //变量管理器
         this.__fields = Object.create(this.__defaults);
@@ -7441,7 +6558,7 @@ flyingon.defineClass("Control", function () {
 
         if (value >= 0 && index !== value)
         {
-            this.__parent.change_index(value, index);
+            this.__parent.index(value, index);
         }
 
         return this;
@@ -8721,7 +7838,7 @@ flyingon.defineClass("Control", function () {
         //按css选择器规范查找控件或子控件
         this.query = function (selector) {
 
-            return
+            return new flyingon.Query(selector, this);
         };
 
 
@@ -8937,7 +8054,14 @@ flyingon.defineClass("Control", function () {
 
 
         //dom文本内容属性名
-        this.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+        flyingon.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+
+
+        //创建html文字属性代码(textConent的性能比innerHTML高, 故自动判断是否按innerHTML的方式设置内容)
+        flyingon.__fn_html_property_code = function (name) {
+
+            return "this." + name + "[value && value.indexOf('<') >= 0 && (value.indexOf('</') > 0 || value.indexOf('/>') > 0) && !this.is_html_text ? 'innerHTML' : '" + flyingon.__textContent_name + "'] = value;"
+        };
 
 
 
@@ -9013,177 +8137,101 @@ flyingon.defineClass("Control", function () {
 
 
 
-﻿/*
-
-控件集合
-
-*/
-flyingon.defineClass("ControlCollection", function (base) {
+﻿
+//控件集合接口
+flyingon.IControlCollection = function (type) {
 
 
 
-    Class.create = function (target, control_type) {
+    Class.create = function (owner) {
 
-        this.target = target;
-        this.control_type = control_type || flyingon.Control;
+        this.owner = owner;
     };
 
 
 
-    //引入数组的方法
-    var push, splice;
+    //扩展集合接口
+    flyingon.ICollection.call(this);
 
-
-    //子项数
-    this.length = 0;
-
-
-    //引入数组方法
-    (function (Array) {
-
-
-        push = Array.push;
-
-        splice = Array.splice;
-
-        this.forEach = Array.forEach;
-
-        this.indexOf = Array.indexOf;
-
-        this.lastIndexOf = Array.lastIndexOf;
-
-
-    }).call(this, Array.prototype);
-
-
-
-    //修改子项索引
-    this.change_index = function (old_index, new_index) {
-
-        var item;
-
-        if (old_index !== new_index && (item = this[old_index]))
-        {
-            splice.call(this, old_index, 1);
-
-            if (new_index > this.length)
-            {
-                new_index = this.length;
-            }
-
-            splice.call(this, new_index, 0, item);
-        }
-    };
 
 
     //添加子项
-    this.append = function (item) {
+    this.__fn_append = function () {
 
-        var length = arguments.length,
-            change;
+        var change = !flyingon.__initializing;
 
-        if (length > 0)
+        for (var i = 0, _ = arguments.length; i < _; i++)
         {
-            change = !flyingon.__initializing;
-
-            for (var i = 0; i < length; i++)
-            {
-                validate(this, arguments[i], change);
-            }
-
-            push.apply(this, arguments);
-
-            this.target.__dom_dirty = true; //标记需要重排dom
+            validate(this, arguments[i], change);
         }
+
+        this.owner.__dom_dirty = true; //标记需要重排dom
     };
 
 
     //在指定位置插入子项
-    this.insert = function (index, item) {
+    this.__fn_insert = function (index, item) {
 
-        var length = arguments.length,
-            change;
+        var change = !flyingon.__initializing;
 
-        if (length > 1)
+        for (var i = 1, _ = arguments.length; i < _; i++)
         {
-            change = !flyingon.__initializing;
-
-            if (index < 0)
-            {
-                index = 0;
-            }
-            else if (index >= this.length)
-            {
-                index = this.length;
-            }
-
-            for (var i = 1; i < length; i++)
-            {
-                validate(this, item = arguments[i], change);
-                splice.call(this, index++, 0, item);
-            }
-
-            this.target.__dom_dirty = true; //标记需要重排dom
+            validate(this, item = arguments[i], change);
         }
+
+        this.owner.__dom_dirty = true; //标记需要重排dom
     };
 
 
     //移除指定子项
-    this.remove = function (item) {
+    this.__fn_remove = function (item) {
 
-        var parent, index;
+        var parent = this.parent;
 
-        for (var i = 0, _ = arguments.length; i < _; i++)
-        {
-            if ((item = arguments[i]) && (index = this.indexOf(item)) >= 0)
-            {
-                remove_item(parent || (parent = this.target), item);
-                splice.call(this, index, 1);
-            }
-        }
-
-        if (parent)
-        {
-            parent.update(true);
-        }
+        remove_item(parent, item);
+        parent.update(true);
     };
 
 
     //移除指定位置的子项
-    this.removeAt = function (index, length) {
+    this.__fn_removeAt = function (index, length) {
 
-        if (this.length > index)
+        var owner = this.owner;
+
+        for (var i = 0; i < length; i++)
         {
-            var parent = this.target;
-
-            if (!(length > 0))
-            {
-                length = 1;
-            }
-
-            for (var i = 0; i < length; i++)
-            {
-                remove_item(parent, this[index + i]);
-            }
-
-            splice.call(this, index, length);
-
-            parent.update(true);
+            remove_item(owner, this[index + i]);
         }
+
+        owner.update(true);
+    };
+
+
+    //清除
+    this.__fn_clear = function () {
+
+        var owner = this.owner;
+
+        for (var i = 0, _ = this.length; i < _; i++)
+        {
+            remove_item(owner, this[i]);
+        }
+
+        owner.update(true);
     };
 
 
     //添加进集合时进行验证
     function validate(target, item, change) {
 
-        if (item instanceof target.control_type)
+        if (item instanceof type)
         {
-            var parent = target.target,
+            var owner = target.owner,
                 oldValue = item.__parent;
 
             if (oldValue) //从原有父控件中删除
             {
-                if (oldValue !== parent)
+                if (oldValue !== owner)
                 {
                     item.remove();
                 }
@@ -9194,36 +8242,20 @@ flyingon.defineClass("ControlCollection", function (base) {
             }
 
             //添加上下级关系
-            item.__parent = parent;
-            item.__ownerWindow = parent.__ownerWindow;
+            item.__parent = owner;
+            item.__ownerWindow = owner.__ownerWindow;
 
             //非初始化状态则触发事件
             if (change)
             {
-                item.dispatchEvent(new flyingon.PropertyChangeEvent("parent", parent, oldValue));
-                parent.update(true);
+                item.dispatchEvent(new flyingon.PropertyChangeEvent("parent", owner, oldValue));
+                owner.update(true);
             }
 
             return true;
         }
 
-        throw new flyingon.Exception("只能添加" + target.control_type.xtype + "类型的子控件!");
-    };
-
-
-    //清除
-    this.clear = function () {
-
-        var parent = this.target,
-            length = this.length;
-
-        for (var i = 0; i < length; i++)
-        {
-            remove_item(parent, this[i]);
-        }
-
-        splice.call(this, 0, length);
-        parent.update(true);
+        throw new flyingon.Exception("只能添加" + type.xtype + "类型的子控件!");
     };
 
 
@@ -9264,6 +8296,18 @@ flyingon.defineClass("ControlCollection", function (base) {
         }
     };
 
+
+};
+
+
+
+//控件集合
+flyingon.defineClass("ControlCollection", function () {
+
+
+
+    //扩展控件集合接口
+    flyingon.IControlCollection.call(this, flyingon.Control);
 
 
 });
@@ -11995,7 +11039,7 @@ flyingon.IChildren = function (base) {
     //子控件集合
     flyingon.defineProperty(this, "children", function () {
 
-        return this.__children || (this.__children = new flyingon.ControlCollection());
+        return this.__children || (this.__children = new flyingon.ControlCollection(this));
     });
 
 
@@ -12005,6 +11049,7 @@ flyingon.IChildren = function (base) {
     this.appendChild = function (item) {
 
         var children = this.__children || this.get_children();
+
         children.append.apply(children, arguments);
 
         return this;
@@ -12015,6 +11060,7 @@ flyingon.IChildren = function (base) {
     this.insertChild = function (index, item) {
 
         var children = this.__children || this.get_children();
+
         children.insert.apply(children, arguments);
 
         return this;
@@ -12024,11 +11070,11 @@ flyingon.IChildren = function (base) {
     //移除子控件
     this.removeChild = function (item) {
 
-        var children = this.__children;
+        var children;
 
-        if (children)
+        if (children = this.__children)
         {
-            children.remove.apply(children, arguments);
+            children.remove.call(children, item);
         }
 
         return this;
@@ -12038,11 +11084,11 @@ flyingon.IChildren = function (base) {
     //移除指定位置的子控件
     this.removeAt = function (index, length) {
 
-        var children = this.__children;
+        var children;
 
-        if (children)
+        if (children = this.__children)
         {
-            children.removeAt.apply(children, index, length);
+            children.removeAt.call(children, index, length);
         }
 
         return this;
@@ -12173,35 +11219,6 @@ flyingon.IChildren = function (base) {
 
 
 
-    //this.focus = function () {
-
-
-    //    if (this.containsFocused)
-    //    {
-    //        return true;
-    //    }
-
-
-    //    var items = this.__children;
-
-    //    for (var i = 0, _ = items.length; i < _; i++)
-    //    {
-    //        if (items[i].focus(event))
-    //        {
-    //            return true;
-    //        }
-    //    }
-
-    //    return base.focus.call(this, event);
-    //};
-
-    //this.blur = function () {
-
-    //    return this.containsFocused ? base.blur.call(this, event) : false;
-    //};
-
-
-
 
     //隐藏dom暂存器
     var hide_dom = document.createDocumentFragment();
@@ -12249,7 +11266,7 @@ flyingon.IChildren = function (base) {
 
         if (items && (length = items.length) > 0)
         {
-            var children = result.__children;
+            var children = result.get_children();
 
             for (var i = 0; i < length; i++)
             {
@@ -12265,11 +11282,13 @@ flyingon.IChildren = function (base) {
     //自定义序列化
     this.serialize = function (writer) {
 
+        var children = this.__children;
+
         base.serialize.call(this, writer);
 
-        if (this.__children.length > 0)
+        if (children && children.length > 0)
         {
-            writer.write_array("children", this.__children);
+            writer.write_array("children", children);
         }
     };
 
@@ -12278,9 +11297,11 @@ flyingon.IChildren = function (base) {
 
         if (value && name === "children")
         {
+            var children = this.get_children();
+
             for (var i = 0, _ = value.length; i < _; i++)
             {
-                this.__children.append(reader.read_object(value[i]));
+                children.append(reader.read_object(value[i]));
             }
         }
         else
@@ -12295,9 +11316,12 @@ flyingon.IChildren = function (base) {
 
         var children = this.__children;
 
-        for (var i = 0, _ = children.length; i < _; i++)
+        if (children)
         {
-            children[i].dispose();
+            for (var i = 0, _ = children.length; i < _; i++)
+            {
+                children[i].dispose();
+            }
         }
 
         base.dispose.call(this);
@@ -12899,14 +11923,14 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
         //获取创建图标代码
-        this.__fn_show_icon = function (visible, name, icon, column3, index) {
+        this.__fn_show_icon = function (visible, name, image, column3, index) {
 
             var key = "__" + name,
                 target = this[key];
 
             if (visible)
             {
-                (target || (this[key] = this.__fn_create_icon(name, column3, index))).set_icon(icon);
+                (target || (this[key] = this.__fn_create_icon(name, column3, index))).set_image(image);
             }
             else if (this[key])
             {
@@ -13102,15 +12126,6 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         });
 
 
-        //html标题
-        this.defineProperty("html", "", {
-
-            attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__text.set_html(value);"
-        });
-
-
-
 
         //获取页签头指定属性值
         this.header_get = function (name) {
@@ -13191,7 +12206,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
                 if (data.collapse && header.__collapse)
                 {
-                    header.__collapse.set_icon("expand");
+                    header.__collapse.set_image("expand");
                 }
 
                 header.render();
@@ -13201,7 +12216,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
             if (header.__collapse)
             {
-                header.__collapse.set_icon(data.direction === "top" || data.direction === "bottom" ? "collapse" : "collapse");
+                header.__collapse.set_image(data.direction === "top" || data.direction === "bottom" ? "collapse" : "collapse");
             }
 
             header.render();
@@ -13494,6 +12509,20 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
+    //页签面板控件集合
+    flyingon.defineClass("TabPanelCollection", function () {
+
+
+
+        //扩展控件集合接口
+        flyingon.IControlCollection.call(this, flyingon.TabPanel);
+
+
+    });
+
+
+
+
     //页签头控件
     flyingon.defineClass("TabControlHeader", flyingon.Control, function (base) {
 
@@ -13538,7 +12567,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             this.__fields = Object.create(this.__defaults);
 
             //页签控件只能添加TabPanel子控件
-            this.__children = new flyingon.ControlCollection(this, flyingon.TabPanel);
+            this.__children = new flyingon.TabPanelCollection(this);
 
             //根据dom模板创建关联的dom元素
             (this.dom = this.dom_template.cloneNode(true)).flyingon = this;
@@ -13714,7 +12743,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         (function () {
 
 
-            function show_icon(target, icon, width, height, next, vertical) {
+            function show_icon(target, image, width, height, next, vertical) {
 
                 var name = next ? "next" : "previous",
                     key = "__icon_" + name,
@@ -13724,7 +12753,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
                 {
                     item = target[key] = new flyingon.Icon();
                     item.addClass("flyingon-TabControl-" + name);
-                    item.set_icon(icon);
+                    item.set_image(image);
                     item.__parent = target;
                     item.__vertical = vertical;
 
@@ -14147,7 +13176,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             this.__fields = Object.create(this.__defaults);
 
             //页签控件只能添加TabPanel子控件
-            this.__children = new flyingon.ControlCollection(this, flyingon.TabPanel);
+            this.__children = new flyingon.TabPanelCollection(this);
 
             //根据dom模板创建关联的dom元素
             (this.dom = this.dom_template.cloneNode(true)).flyingon = this;
@@ -14223,15 +13252,8 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         this.defineProperty("text", "", {
 
-            set_code: "this.dom_span." + this.__textContent_name + " = value;",
-            change_code: "this.__fn_change_text(value, false);"
-        });
-
-
-        this.defineProperty("html", "", {
-
-            set_code: "this.dom_span.innerHTML = value;",
-            change_code: "this.__fn_change_text(value, true);"
+            set_code: flyingon.__fn_html_property_code("dom_span"),
+            change_code: "this.__fn_change_text(value);"
         });
 
 
@@ -14279,7 +13301,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         text_base.call(this, base);
 
 
-        this.__fn_change_text = function (text, is_html) {
+        this.__fn_change_text = function (text) {
 
             var box = this.__boxModel;
 
@@ -14311,7 +13333,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-        this.__fn_change_text = function (text, is_html) {
+        this.__fn_change_text = function (text) {
 
             var box = this.__boxModel;
 
@@ -14400,45 +13422,16 @@ flyingon.defineClass("Button", flyingon.Control, function (base) {
 
 
 ﻿
-/*
 
-*/
-flyingon.defineClass("Icon", flyingon.Control, function (base) {
-
-
-
-
-    //设置默认大小
-    this.defaultWidth = this.defaultHeight = 24;
-
-
-    //创建dom元素模板
-    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;user-select:none;-webkit-user-select:none;-moz-user-select:none;");
-
-
-
-
-    //字库名
-    this.defineProperty("fontFamily", "", {
-
-        set_code: "this.__fn_fontFamily(value || 'flyingon');"
-    });
-
-
-    //图标名称
-    this.defineProperty("icon", "", {
-
-        set_code: "this.__fn_font_icon(value);"
-    });
+//字体图标
+(function (flyingon) {
 
 
 
 
     var font_list = {},    //字体图标库
 
-        regex0 = /0/g,
-
-        regex1 = /1/g,
+        textContent_name = flyingon.__textContent_name,
 
         css_template = "@font-face {\n"
             + "font-family: \"0\";\n"
@@ -14460,59 +13453,28 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
         if (name && icons)
         {
             var list = font_list[name],
-                item;
+                items,
+                length;
 
             font_list[name] = icons;
 
-            if (list && list.constructor === Array) //设置未处理图标
+            if (list && (length = list.length) > 0)
             {
-                for (var i = 0, _ = list.length; i < _; i++)
+                name = textContent_name;
+
+                for (var i = 0; i < length; i++)
                 {
-                    (item = list[i]).__fn_font_icon(item.__fields.icon);
+                    (items = list[i])[0][name] = icons[items[1]] || items[1];
                 }
             }
-        }
-    };
-
-
-    //设置字体库
-    this.__fn_fontFamily = function (name) {
-
-        var cache = font_list[name];
-
-        this.dom.style.fontFamily = name;
-
-        if (cache)
-        {
-            if (this.__fields.icon)
-            {
-                if (cache.constructor === Array)
-                {
-                    cache.push(this);
-                }
-                else
-                {
-                    this.__fn_font_icon(this.__fields.icon);
-                }
-            }
-        }
-        else
-        {
-            font_list[name] = [this];
-            cache = flyingon.icons_path + name;
-
-            flyingon.script(cache + ".js");
-            //flyingon.link(cache + ".css");
-
-            flyingon.style(css_template.replace(regex0, name).replace(regex1, cache));
         }
     };
 
 
     //设置字体图标
-    this.__fn_font_icon = (function (name) {
+    flyingon.__fn_font_icon = (function (name) {
 
-        return function (icon) {
+        return function (dom, icon) {
 
             if (icon)
             {
@@ -14522,44 +13484,95 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
                 {
                     if (++cache === icon.length)
                     {
-                        this.dom.style.backgroundImage = icon;
+                        dom.style.backgroundImage = icon;
                     }
                     else
                     {
-                        this.dom.style.backgroundImage = icon.substring(0, cache);
-                        this.dom.style.backgroundPosition = icon.substring(cache + 1);
-                    }
-                }
-                else if (cache = this.__fields.fontFamily)
-                {
-                    if (cache = font_list[cache])
-                    {
-                        this.dom[name] = cache[icon] || "";
+                        dom.style.backgroundImage = icon.substring(0, cache);
+                        dom.style.backgroundPosition = icon.substring(cache + 1);
                     }
                 }
                 else
                 {
-                    this.set_fontFamily("flyingon");
+                    var value = icon.indexOf(":");
+
+                    if (value >= 0)
+                    {
+                        cache = icon.substring(0, value) || "flyingon";
+                        icon = icon.substring(value + 1);
+                    }
+                    else
+                    {
+                        cache = "flyingon";
+                    }
+
+                    dom.style.fontFamily = cache;
+
+                    if (value = font_list[cache])
+                    {
+                        if (value.__icon_cache__) //暂存
+                        {
+                            value.push([dom, icon]);
+                        }
+                        else
+                        {
+                            dom[name] = value[icon] || icon;
+                        }
+                    }
+                    else
+                    {
+                        (font_list[cache] = [[dom, icon]]).__icon_cache__ = true; //暂存
+
+                        flyingon.script(flyingon.icons_path + cache + ".js");
+                        flyingon.style(css_template.replace(/0/g, cache).replace(/1/g, flyingon.icons_path + cache));
+                    }
                 }
             }
             else
             {
-                this.dom[name] = "";
+                dom[name] = "";
             }
         };
 
-    })(this.__textContent_name);
+    })(textContent_name);
 
 
 
-    //渲染控件
-    this.render = function () {
+})(flyingon);
 
-        if (this.__update_dirty === 1)
-        {
-            flyingon.__fn_compute_css(this);
-            this.dom.style.lineHeight = this.clientHeight + "px";
-        }
+
+
+//图标
+flyingon.defineClass("Icon", flyingon.Control, function (base) {
+
+
+
+
+    //设置默认大小
+    this.defaultWidth = this.defaultHeight = 24;
+
+
+    //创建dom元素模板
+    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;user-select:none;-webkit-user-select:none;-moz-user-select:none;");
+
+
+
+
+    //图像
+    //name:             字体图标名(系统字库)
+    //library:name      指定字库的字体图标名
+    //url(...)[x, y]    图片路径及位置
+    this.defineProperty("image", "", {
+
+        set_code: "flyingon.__fn_font_icon(this.dom, value);"
+    });
+
+
+
+
+    this.after_measure = function (box) {
+
+        this.dom.style.lineHeight = this.clientHeight + "px";
     };
 
 
@@ -14574,10 +13587,10 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
             };
         };
 
-        //this.__event_capture_mouseup = function (event) {
+        this.__event_capture_mouseup = function (event) {
 
-        //    this.dom.onselectstart = null;
-        //};
+            this.dom.onselectstart = null;
+        };
     }
 
 
@@ -14675,15 +13688,10 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-    this.defineProperty("html", "", {
-
-        set_code: "this.dom.innerHTML = value;"
-    });
-
 
     this.defineProperty("text", "", {
 
-        set_code: "this.dom." + this.__textContent_name + " = value;"
+        set_code: flyingon.__fn_html_property_code("dom")
     });
 
 
@@ -14711,6 +13719,408 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 });
+
+
+
+﻿
+//TreeView
+(function (flyingon) {
+
+
+
+    //节点基础服务
+    var node_base = function (base, serialize, deserialize_property) {
+
+
+        //是否使用ajax的方式异步加载子节点
+        this.defineProperty("async", false);
+
+
+        //ajax异步加载子节点地址
+        this.defineProperty("ajax", "");
+
+
+
+        //子节点集合
+        flyingon.defineProperty(this, "nodes", function () {
+
+            return this.__nodes || (this.__nodes = new flyingon.TreeNodeCollection(this));
+        });
+
+
+
+        //添加子节点
+        this.appendChild = function (node) {
+
+            var nodes = this.__nodes || this.get_nodes();
+
+            nodes.append.apply(nodes, arguments);
+
+            return this;
+        };
+
+
+        //在指定位置插入子节点
+        this.insertChild = function (index, node) {
+
+            var nodes = this.__nodes || this.get_nodes();
+
+            nodes.insert.apply(nodes, arguments);
+
+            return this;
+        };
+
+
+        //移除子节点
+        this.removeChild = function (node) {
+
+            var nodes;
+
+            if (nodes = this.__nodes)
+            {
+                nodes.remove.call(nodes, node);
+            }
+
+            return this;
+        };
+
+
+        //移除指定位置的子节点
+        this.removeAt = function (index, length) {
+
+            var nodes;
+
+            if (nodes = this.__nodes)
+            {
+                nodes.removeAt.call(nodes, index, length);
+            }
+
+            return this;
+        };
+
+
+
+
+
+        //自定义序列化
+        this.serialize = function (writer) {
+
+            var nodes = this.__nodes;
+
+            serialize.call(this, writer);
+
+            if (nodes && nodes.length > 0)
+            {
+                writer.write_array("nodes", nodes);
+            }
+        };
+
+
+        this.deserialize_property = function (reader, name, value) {
+
+            if (value && name === "nodes")
+            {
+                var nodes = this.get_nodes();
+
+                for (var i = 0, _ = value.length; i < _; i++)
+                {
+                    nodes.append(reader.read_object(value[i]));
+                }
+            }
+            else
+            {
+                deserialize_property.call(this, reader, name, value);
+            }
+        };
+
+
+    };
+
+
+
+    //树节点
+    flyingon.defineClass("TreeNode", function () {
+
+
+
+        Class.create = function (text) {
+
+            (this.__fields = Object.create(this.__defaults)).text = text || "";
+            this.dom = this.dom_template.cloneNode(true);
+        };
+
+
+
+        //创建dom模板
+        this.dom_template = (function () {
+
+            var div = document.createElement("div");
+
+            div.innerHTML = "<div class='flyingon-TreeNode' style='overflow:hidden;'><div class='flyingon-TreeNode-collapse' style='position:absolute;'></div><div class='flyingon-TreeNode-image' style='position:absolute;'></div><div class='flyingon-TreeNode-text' style='position:absolute;'></div></div><div class='flyingon-TreeNode-nodes'></div>";
+
+            return div;
+
+        })();
+
+
+        //扩展属性支持
+        flyingon.IProperty.call(this);
+
+
+
+        //节点文字
+        this.defineProperty("text", "", {
+
+            change_code: "if (this.dom_text) " + flyingon.__fn_html_property_code("dom_text")
+        });
+
+
+        //节点图像
+        this.defineProperty("image", "", {
+
+            change_code: "if (this.dom_image) flyingon.__fn_font_icon(this.dom_image, value);"
+        });
+
+
+        //无子节点时图像
+        this.defineProperty("no_child_image", "");
+
+
+        //节点展开时图像
+        this.defineProperty("expanded_image", "");
+
+
+        //是否展开
+        this.defineProperty("expanded", false, {
+
+        });
+
+
+
+        //父节点
+        flyingon.defineProperty(this, "parent", function () {
+
+            return this.__parent;
+        });
+
+
+        //根节点
+        flyingon.defineProperty(this, "root", function () {
+
+            var node = this;
+
+            while (node.__parent)
+            {
+                node = node.__parent;
+            }
+
+            return node;
+        });
+
+
+
+        //扩展节点基础服务
+        node_base.call(this, this.serialize, this.deserialize_property);
+
+
+    });
+
+
+
+    //树节点集合
+    flyingon.defineClass("TreeNodeCollection", function () {
+
+
+
+        var TreeNode = flyingon.TreeNode;
+
+
+
+        Class.create = function (owner) {
+
+            this.owner = owner;
+        };
+
+
+
+        //扩展集合接口
+        flyingon.ICollection.call(this);
+
+
+
+        //添加子项
+        this.__fn_append = function () {
+
+            var change = !flyingon.__initializing;
+
+            for (var i = 0, _ = arguments.length; i < _; i++)
+            {
+                validate(this, arguments[i], change);
+            }
+
+            update(this.owner);
+        };
+
+
+        //在指定位置插入子节点
+        this.__fn_insert = function (index) {
+
+            var change = !flyingon.__initializing;
+
+            for (var i = 1, _ = arguments.length; i < _; i++)
+            {
+                validate(this, item = arguments[i], change);
+            }
+
+            update(this.owner);
+        };
+
+
+        //移除指定子节点
+        this.__fn_remove = function (item) {
+
+            remove_item(item);
+            update(this.owner);
+        };
+
+
+        //移除指定位置的子节点
+        this.__fn_removeAt = function (index, length) {
+
+            for (var i = 0; i < length; i++)
+            {
+                remove_item(this[index + i]);
+            }
+
+            update(this.owner);
+        };
+
+
+        //清除子节点
+        this.__fn_clear = function () {
+
+            for (var i = 0, _ = this.length; i < _; i++)
+            {
+                remove_item(this[i]);
+            }
+
+            update(this.owner);
+        };
+
+
+        //添加进集合时进行验证
+        function validate(target, item, change) {
+
+            if (item instanceof TreeNode)
+            {
+                var owner = target.owner,
+                    oldValue = item.__parent;
+
+                if (oldValue) //从原有父控件中删除
+                {
+                    if (oldValue !== owner)
+                    {
+                        item.remove();
+                    }
+                    else
+                    {
+                        splice.call(target, target.indexOf(item), 1);
+                    }
+                }
+
+                item.__parent = owner;
+                return true;
+            }
+
+            throw new flyingon.Exception("只能添加TreeNode类型的对象!");
+        };
+
+
+        //移除子项
+        function remove_item(item) {
+
+            var dom = item.dom;
+
+            item.__parent = null;
+
+            if (dom && dom.parentNode)
+            {
+                dom.parentNode.removeChild(dom); //IE无法清除dom.parentNode对象,存在内存泄漏
+            }
+        };
+
+
+        function update(owner, empty) {
+
+        };
+
+
+    });
+
+
+
+
+    //树控件
+    flyingon.defineClass("TreeView", flyingon.Control, function (base) {
+
+
+
+        //Class.create_mode = "merge";
+
+        //Class.create = function () {
+
+        //    this.dom_children = this.dom.children[0];
+        //}
+
+
+
+        ////dom元素模板
+        //this.create_dom_template("div", null, "<div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div>");
+
+
+
+        //扩展节点基础服务
+        node_base.call(this, base.serialize, base.deserialize_property);
+
+
+
+        ////获取可视节点数
+        //function visible_count(nodes) {
+
+        //    var count = nodes.length,
+        //        node;
+
+        //    for (var i = 0, _ = count; i < _; i++)
+        //    {
+        //        if ((node = nodes[i]).__fields.expanded && node.__nodes)
+        //        {
+        //            count += visible_count(node.__nodes);
+        //        }
+        //    }
+
+        //    return count;
+        //};
+
+
+        ////渲染控件
+        //this.render = function () {
+
+        //    if (this.__update_dirty === 1)
+        //    {
+        //        flyingon.__fn_compute_css(this);
+        //    }
+
+
+        //};
+
+
+
+    });
+
+
+
+
+})(flyingon);
 
 
 
@@ -15739,7 +15149,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
     //窗口图标
     this.defineProperty("icon", "", {
 
-        wrapper: "this.__header_icon.set_icon(value);"
+        wrapper: "this.__header_icon.set_image(value);"
     });
 
 
@@ -15764,7 +15174,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         target = this.__header_icon = new flyingon.Icon()
             .set_column3("before")
-            .set_icon("dialog")
+            .set_image("dialog")
             .addClass("flyingon-Dialog-icon");
 
         target = this.__header_text = new flyingon.Label()
@@ -15773,7 +15183,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         target = this.__header_close = new flyingon.Icon()
             .set_column3("after")
-            .set_icon("close")
+            .set_image("close")
             .addClass("flyingon-Dialog-close")
 
             .on("click", function (event) {

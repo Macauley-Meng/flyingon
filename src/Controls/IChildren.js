@@ -35,7 +35,7 @@ flyingon.IChildren = function (base) {
     //子控件集合
     flyingon.defineProperty(this, "children", function () {
 
-        return this.__children || (this.__children = new flyingon.ControlCollection());
+        return this.__children || (this.__children = new flyingon.ControlCollection(this));
     });
 
 
@@ -45,6 +45,7 @@ flyingon.IChildren = function (base) {
     this.appendChild = function (item) {
 
         var children = this.__children || this.get_children();
+
         children.append.apply(children, arguments);
 
         return this;
@@ -55,6 +56,7 @@ flyingon.IChildren = function (base) {
     this.insertChild = function (index, item) {
 
         var children = this.__children || this.get_children();
+
         children.insert.apply(children, arguments);
 
         return this;
@@ -64,11 +66,11 @@ flyingon.IChildren = function (base) {
     //移除子控件
     this.removeChild = function (item) {
 
-        var children = this.__children;
+        var children;
 
-        if (children)
+        if (children = this.__children)
         {
-            children.remove.apply(children, arguments);
+            children.remove.call(children, item);
         }
 
         return this;
@@ -78,11 +80,11 @@ flyingon.IChildren = function (base) {
     //移除指定位置的子控件
     this.removeAt = function (index, length) {
 
-        var children = this.__children;
+        var children;
 
-        if (children)
+        if (children = this.__children)
         {
-            children.removeAt.apply(children, index, length);
+            children.removeAt.call(children, index, length);
         }
 
         return this;
@@ -213,35 +215,6 @@ flyingon.IChildren = function (base) {
 
 
 
-    //this.focus = function () {
-
-
-    //    if (this.containsFocused)
-    //    {
-    //        return true;
-    //    }
-
-
-    //    var items = this.__children;
-
-    //    for (var i = 0, _ = items.length; i < _; i++)
-    //    {
-    //        if (items[i].focus(event))
-    //        {
-    //            return true;
-    //        }
-    //    }
-
-    //    return base.focus.call(this, event);
-    //};
-
-    //this.blur = function () {
-
-    //    return this.containsFocused ? base.blur.call(this, event) : false;
-    //};
-
-
-
 
     //隐藏dom暂存器
     var hide_dom = document.createDocumentFragment();
@@ -289,7 +262,7 @@ flyingon.IChildren = function (base) {
 
         if (items && (length = items.length) > 0)
         {
-            var children = result.__children;
+            var children = result.get_children();
 
             for (var i = 0; i < length; i++)
             {
@@ -305,11 +278,13 @@ flyingon.IChildren = function (base) {
     //自定义序列化
     this.serialize = function (writer) {
 
+        var children = this.__children;
+
         base.serialize.call(this, writer);
 
-        if (this.__children.length > 0)
+        if (children && children.length > 0)
         {
-            writer.write_array("children", this.__children);
+            writer.write_array("children", children);
         }
     };
 
@@ -318,9 +293,11 @@ flyingon.IChildren = function (base) {
 
         if (value && name === "children")
         {
+            var children = this.get_children();
+
             for (var i = 0, _ = value.length; i < _; i++)
             {
-                this.__children.append(reader.read_object(value[i]));
+                children.append(reader.read_object(value[i]));
             }
         }
         else
@@ -335,9 +312,12 @@ flyingon.IChildren = function (base) {
 
         var children = this.__children;
 
-        for (var i = 0, _ = children.length; i < _; i++)
+        if (children)
         {
-            children[i].dispose();
+            for (var i = 0, _ = children.length; i < _; i++)
+            {
+                children[i].dispose();
+            }
         }
 
         base.dispose.call(this);

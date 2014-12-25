@@ -209,8 +209,8 @@
             type = options.type || defaults.type,
             data = options.data,
             request = ajax_fn ? ajax_fn() : ajax(),
-            async = options.async !== false;
-
+            async = options.async !== false,
+            post;
 
         if (options.timeout > 0)
         {
@@ -226,13 +226,10 @@
             }, options.timeout);
         }
 
-
         request.onreadystatechange = function (event) {
 
             response(request, options);
         };
-
-        var post;
 
         switch (type)
         {
@@ -251,7 +248,6 @@
                 }
                 break;
         }
-
 
         request.open(type, url, async, options.user, options.password);
 

@@ -1,43 +1,14 @@
 ﻿
-/*
 
-*/
-flyingon.defineClass("Icon", flyingon.Control, function (base) {
-
-
-
-
-    //设置默认大小
-    this.defaultWidth = this.defaultHeight = 24;
-
-
-    //创建dom元素模板
-    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;user-select:none;-webkit-user-select:none;-moz-user-select:none;");
-
-
-
-
-    //字库名
-    this.defineProperty("fontFamily", "", {
-
-        set_code: "this.__fn_fontFamily(value || 'flyingon');"
-    });
-
-
-    //图标名称
-    this.defineProperty("icon", "", {
-
-        set_code: "this.__fn_font_icon(value);"
-    });
+//字体图标
+(function (flyingon) {
 
 
 
 
     var font_list = {},    //字体图标库
 
-        regex0 = /0/g,
-
-        regex1 = /1/g,
+        textContent_name = flyingon.__textContent_name,
 
         css_template = "@font-face {\n"
             + "font-family: \"0\";\n"
@@ -59,59 +30,28 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
         if (name && icons)
         {
             var list = font_list[name],
-                item;
+                items,
+                length;
 
             font_list[name] = icons;
 
-            if (list && list.constructor === Array) //设置未处理图标
+            if (list && (length = list.length) > 0)
             {
-                for (var i = 0, _ = list.length; i < _; i++)
+                name = textContent_name;
+
+                for (var i = 0; i < length; i++)
                 {
-                    (item = list[i]).__fn_font_icon(item.__fields.icon);
+                    (items = list[i])[0][name] = icons[items[1]] || items[1];
                 }
             }
-        }
-    };
-
-
-    //设置字体库
-    this.__fn_fontFamily = function (name) {
-
-        var cache = font_list[name];
-
-        this.dom.style.fontFamily = name;
-
-        if (cache)
-        {
-            if (this.__fields.icon)
-            {
-                if (cache.constructor === Array)
-                {
-                    cache.push(this);
-                }
-                else
-                {
-                    this.__fn_font_icon(this.__fields.icon);
-                }
-            }
-        }
-        else
-        {
-            font_list[name] = [this];
-            cache = flyingon.icons_path + name;
-
-            flyingon.script(cache + ".js");
-            //flyingon.link(cache + ".css");
-
-            flyingon.style(css_template.replace(regex0, name).replace(regex1, cache));
         }
     };
 
 
     //设置字体图标
-    this.__fn_font_icon = (function (name) {
+    flyingon.__fn_font_icon = (function (name) {
 
-        return function (icon) {
+        return function (dom, icon) {
 
             if (icon)
             {
@@ -121,44 +61,95 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
                 {
                     if (++cache === icon.length)
                     {
-                        this.dom.style.backgroundImage = icon;
+                        dom.style.backgroundImage = icon;
                     }
                     else
                     {
-                        this.dom.style.backgroundImage = icon.substring(0, cache);
-                        this.dom.style.backgroundPosition = icon.substring(cache + 1);
-                    }
-                }
-                else if (cache = this.__fields.fontFamily)
-                {
-                    if (cache = font_list[cache])
-                    {
-                        this.dom[name] = cache[icon] || "";
+                        dom.style.backgroundImage = icon.substring(0, cache);
+                        dom.style.backgroundPosition = icon.substring(cache + 1);
                     }
                 }
                 else
                 {
-                    this.set_fontFamily("flyingon");
+                    var value = icon.indexOf(":");
+
+                    if (value >= 0)
+                    {
+                        cache = icon.substring(0, value) || "flyingon";
+                        icon = icon.substring(value + 1);
+                    }
+                    else
+                    {
+                        cache = "flyingon";
+                    }
+
+                    dom.style.fontFamily = cache;
+
+                    if (value = font_list[cache])
+                    {
+                        if (value.__icon_cache__) //暂存
+                        {
+                            value.push([dom, icon]);
+                        }
+                        else
+                        {
+                            dom[name] = value[icon] || icon;
+                        }
+                    }
+                    else
+                    {
+                        (font_list[cache] = [[dom, icon]]).__icon_cache__ = true; //暂存
+
+                        flyingon.script(flyingon.icons_path + cache + ".js");
+                        flyingon.style(css_template.replace(/0/g, cache).replace(/1/g, flyingon.icons_path + cache));
+                    }
                 }
             }
             else
             {
-                this.dom[name] = "";
+                dom[name] = "";
             }
         };
 
-    })(this.__textContent_name);
+    })(textContent_name);
 
 
 
-    //渲染控件
-    this.render = function () {
+})(flyingon);
 
-        if (this.__update_dirty === 1)
-        {
-            flyingon.__fn_compute_css(this);
-            this.dom.style.lineHeight = this.clientHeight + "px";
-        }
+
+
+//图标
+flyingon.defineClass("Icon", flyingon.Control, function (base) {
+
+
+
+
+    //设置默认大小
+    this.defaultWidth = this.defaultHeight = 24;
+
+
+    //创建dom元素模板
+    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;user-select:none;-webkit-user-select:none;-moz-user-select:none;");
+
+
+
+
+    //图像
+    //name:             字体图标名(系统字库)
+    //library:name      指定字库的字体图标名
+    //url(...)[x, y]    图片路径及位置
+    this.defineProperty("image", "", {
+
+        set_code: "flyingon.__fn_font_icon(this.dom, value);"
+    });
+
+
+
+
+    this.after_measure = function (box) {
+
+        this.dom.style.lineHeight = this.clientHeight + "px";
     };
 
 
@@ -173,10 +164,10 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
             };
         };
 
-        //this.__event_capture_mouseup = function (event) {
+        this.__event_capture_mouseup = function (event) {
 
-        //    this.dom.onselectstart = null;
-        //};
+            this.dom.onselectstart = null;
+        };
     }
 
 

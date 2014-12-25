@@ -23,15 +23,8 @@
 
         this.defineProperty("text", "", {
 
-            set_code: "this.dom_span." + this.__textContent_name + " = value;",
-            change_code: "this.__fn_change_text(value, false);"
-        });
-
-
-        this.defineProperty("html", "", {
-
-            set_code: "this.dom_span.innerHTML = value;",
-            change_code: "this.__fn_change_text(value, true);"
+            set_code: flyingon.__fn_html_property_code("dom_span"),
+            change_code: "this.__fn_change_text(value);"
         });
 
 
@@ -79,7 +72,7 @@
         text_base.call(this, base);
 
 
-        this.__fn_change_text = function (text, is_html) {
+        this.__fn_change_text = function (text) {
 
             var box = this.__boxModel;
 
@@ -111,7 +104,7 @@
 
 
 
-        this.__fn_change_text = function (text, is_html) {
+        this.__fn_change_text = function (text) {
 
             var box = this.__boxModel;
 

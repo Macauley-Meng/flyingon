@@ -203,14 +203,14 @@
 
 
         //获取创建图标代码
-        this.__fn_show_icon = function (visible, name, icon, column3, index) {
+        this.__fn_show_icon = function (visible, name, image, column3, index) {
 
             var key = "__" + name,
                 target = this[key];
 
             if (visible)
             {
-                (target || (this[key] = this.__fn_create_icon(name, column3, index))).set_icon(icon);
+                (target || (this[key] = this.__fn_create_icon(name, column3, index))).set_image(image);
             }
             else if (this[key])
             {
@@ -406,15 +406,6 @@
         });
 
 
-        //html标题
-        this.defineProperty("html", "", {
-
-            attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__text.set_html(value);"
-        });
-
-
-
 
         //获取页签头指定属性值
         this.header_get = function (name) {
@@ -495,7 +486,7 @@
 
                 if (data.collapse && header.__collapse)
                 {
-                    header.__collapse.set_icon("expand");
+                    header.__collapse.set_image("expand");
                 }
 
                 header.render();
@@ -505,7 +496,7 @@
 
             if (header.__collapse)
             {
-                header.__collapse.set_icon(data.direction === "top" || data.direction === "bottom" ? "collapse" : "collapse");
+                header.__collapse.set_image(data.direction === "top" || data.direction === "bottom" ? "collapse" : "collapse");
             }
 
             header.render();
@@ -798,6 +789,20 @@
 
 
 
+    //页签面板控件集合
+    flyingon.defineClass("TabPanelCollection", function () {
+
+
+
+        //扩展控件集合接口
+        flyingon.IControlCollection.call(this, flyingon.TabPanel);
+
+
+    });
+
+
+
+
     //页签头控件
     flyingon.defineClass("TabControlHeader", flyingon.Control, function (base) {
 
@@ -842,7 +847,7 @@
             this.__fields = Object.create(this.__defaults);
 
             //页签控件只能添加TabPanel子控件
-            this.__children = new flyingon.ControlCollection(this, flyingon.TabPanel);
+            this.__children = new flyingon.TabPanelCollection(this);
 
             //根据dom模板创建关联的dom元素
             (this.dom = this.dom_template.cloneNode(true)).flyingon = this;
@@ -1018,7 +1023,7 @@
         (function () {
 
 
-            function show_icon(target, icon, width, height, next, vertical) {
+            function show_icon(target, image, width, height, next, vertical) {
 
                 var name = next ? "next" : "previous",
                     key = "__icon_" + name,
@@ -1028,7 +1033,7 @@
                 {
                     item = target[key] = new flyingon.Icon();
                     item.addClass("flyingon-TabControl-" + name);
-                    item.set_icon(icon);
+                    item.set_image(image);
                     item.__parent = target;
                     item.__vertical = vertical;
 
@@ -1451,7 +1456,7 @@
             this.__fields = Object.create(this.__defaults);
 
             //页签控件只能添加TabPanel子控件
-            this.__children = new flyingon.ControlCollection(this, flyingon.TabPanel);
+            this.__children = new flyingon.TabPanelCollection(this);
 
             //根据dom模板创建关联的dom元素
             (this.dom = this.dom_template.cloneNode(true)).flyingon = this;

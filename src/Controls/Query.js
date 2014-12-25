@@ -788,9 +788,14 @@ flyingon.defineClass("Query", function () {
     //循环调用指定名称的方法
     this.call = function (name) {
 
-        var parameters = arguments.length > 1 ? this.slice.call(arguments, 1) : null,
-            item,
-            fn;
+        return arguments.length > 1 ? this.apply(name, this.slice.call(arguments, 1)) : this.apply(name);
+    };
+
+
+    //循环调用指定数组参数的方法
+    this.apply = function (name, parameters) {
+
+        var item, fn;
 
         for (var i = 0, _ = this.length; i < _; i++)
         {
@@ -802,7 +807,6 @@ flyingon.defineClass("Query", function () {
 
         return this;
     };
-
 
 
 

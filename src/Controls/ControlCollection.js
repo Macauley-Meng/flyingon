@@ -1,174 +1,98 @@
-﻿/*
-
-控件集合
-
-*/
-flyingon.defineClass("ControlCollection", function (base) {
+﻿
+//控件集合接口
+flyingon.IControlCollection = function (type) {
 
 
 
-    Class.create = function (target, control_type) {
+    Class.create = function (owner) {
 
-        this.target = target;
-        this.control_type = control_type || flyingon.Control;
+        this.owner = owner;
     };
 
 
 
-    //引入数组的方法
-    var push, splice;
+    //扩展集合接口
+    flyingon.ICollection.call(this);
 
-
-    //子项数
-    this.length = 0;
-
-
-    //引入数组方法
-    (function (Array) {
-
-
-        push = Array.push;
-
-        splice = Array.splice;
-
-        this.forEach = Array.forEach;
-
-        this.indexOf = Array.indexOf;
-
-        this.lastIndexOf = Array.lastIndexOf;
-
-
-    }).call(this, Array.prototype);
-
-
-
-    //修改子项索引
-    this.change_index = function (old_index, new_index) {
-
-        var item;
-
-        if (old_index !== new_index && (item = this[old_index]))
-        {
-            splice.call(this, old_index, 1);
-
-            if (new_index > this.length)
-            {
-                new_index = this.length;
-            }
-
-            splice.call(this, new_index, 0, item);
-        }
-    };
 
 
     //添加子项
-    this.append = function (item) {
+    this.__fn_append = function () {
 
-        var length = arguments.length,
-            change;
+        var change = !flyingon.__initializing;
 
-        if (length > 0)
+        for (var i = 0, _ = arguments.length; i < _; i++)
         {
-            change = !flyingon.__initializing;
-
-            for (var i = 0; i < length; i++)
-            {
-                validate(this, arguments[i], change);
-            }
-
-            push.apply(this, arguments);
-
-            this.target.__dom_dirty = true; //标记需要重排dom
+            validate(this, arguments[i], change);
         }
+
+        this.owner.__dom_dirty = true; //标记需要重排dom
     };
 
 
     //在指定位置插入子项
-    this.insert = function (index, item) {
+    this.__fn_insert = function (index, item) {
 
-        var length = arguments.length,
-            change;
+        var change = !flyingon.__initializing;
 
-        if (length > 1)
+        for (var i = 1, _ = arguments.length; i < _; i++)
         {
-            change = !flyingon.__initializing;
-
-            if (index < 0)
-            {
-                index = 0;
-            }
-            else if (index >= this.length)
-            {
-                index = this.length;
-            }
-
-            for (var i = 1; i < length; i++)
-            {
-                validate(this, item = arguments[i], change);
-                splice.call(this, index++, 0, item);
-            }
-
-            this.target.__dom_dirty = true; //标记需要重排dom
+            validate(this, item = arguments[i], change);
         }
+
+        this.owner.__dom_dirty = true; //标记需要重排dom
     };
 
 
     //移除指定子项
-    this.remove = function (item) {
+    this.__fn_remove = function (item) {
 
-        var parent, index;
+        var parent = this.parent;
 
-        for (var i = 0, _ = arguments.length; i < _; i++)
-        {
-            if ((item = arguments[i]) && (index = this.indexOf(item)) >= 0)
-            {
-                remove_item(parent || (parent = this.target), item);
-                splice.call(this, index, 1);
-            }
-        }
-
-        if (parent)
-        {
-            parent.update(true);
-        }
+        remove_item(parent, item);
+        parent.update(true);
     };
 
 
     //移除指定位置的子项
-    this.removeAt = function (index, length) {
+    this.__fn_removeAt = function (index, length) {
 
-        if (this.length > index)
+        var owner = this.owner;
+
+        for (var i = 0; i < length; i++)
         {
-            var parent = this.target;
-
-            if (!(length > 0))
-            {
-                length = 1;
-            }
-
-            for (var i = 0; i < length; i++)
-            {
-                remove_item(parent, this[index + i]);
-            }
-
-            splice.call(this, index, length);
-
-            parent.update(true);
+            remove_item(owner, this[index + i]);
         }
+
+        owner.update(true);
+    };
+
+
+    //清除
+    this.__fn_clear = function () {
+
+        var owner = this.owner;
+
+        for (var i = 0, _ = this.length; i < _; i++)
+        {
+            remove_item(owner, this[i]);
+        }
+
+        owner.update(true);
     };
 
 
     //添加进集合时进行验证
     function validate(target, item, change) {
 
-        if (item instanceof target.control_type)
+        if (item instanceof type)
         {
-            var parent = target.target,
+            var owner = target.owner,
                 oldValue = item.__parent;
 
             if (oldValue) //从原有父控件中删除
             {
-                if (oldValue !== parent)
+                if (oldValue !== owner)
                 {
                     item.remove();
                 }
@@ -179,36 +103,20 @@ flyingon.defineClass("ControlCollection", function (base) {
             }
 
             //添加上下级关系
-            item.__parent = parent;
-            item.__ownerWindow = parent.__ownerWindow;
+            item.__parent = owner;
+            item.__ownerWindow = owner.__ownerWindow;
 
             //非初始化状态则触发事件
             if (change)
             {
-                item.dispatchEvent(new flyingon.PropertyChangeEvent("parent", parent, oldValue));
-                parent.update(true);
+                item.dispatchEvent(new flyingon.PropertyChangeEvent("parent", owner, oldValue));
+                owner.update(true);
             }
 
             return true;
         }
 
-        throw new flyingon.Exception("只能添加" + target.control_type.xtype + "类型的子控件!");
-    };
-
-
-    //清除
-    this.clear = function () {
-
-        var parent = this.target,
-            length = this.length;
-
-        for (var i = 0; i < length; i++)
-        {
-            remove_item(parent, this[i]);
-        }
-
-        splice.call(this, 0, length);
-        parent.update(true);
+        throw new flyingon.Exception("只能添加" + type.xtype + "类型的子控件!");
     };
 
 
@@ -249,6 +157,18 @@ flyingon.defineClass("ControlCollection", function (base) {
         }
     };
 
+
+};
+
+
+
+//控件集合
+flyingon.defineClass("ControlCollection", function () {
+
+
+
+    //扩展控件集合接口
+    flyingon.IControlCollection.call(this, flyingon.Control);
 
 
 });
