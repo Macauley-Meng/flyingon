@@ -4,6 +4,10 @@ flyingon.IControlCollection = function (type) {
 
 
 
+    var splice = Array.prototype.splice;
+
+
+
     Class.create = function (owner) {
 
         this.owner = owner;
@@ -47,10 +51,10 @@ flyingon.IControlCollection = function (type) {
     //移除指定子项
     this.__fn_remove = function (item) {
 
-        var parent = this.parent;
+        var owner = this.owner;
 
-        remove_item(parent, item);
-        parent.update(true);
+        remove_item(owner, item);
+        owner.update(true);
     };
 
 

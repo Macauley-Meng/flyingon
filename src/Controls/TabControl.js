@@ -44,7 +44,7 @@
 
         function arrange1(target, items, width, height, data) {
 
-            var spacingHeight = target.compute_size(target.get_spacingHeight()),
+            var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 index = this.selectedIndex,
                 y = 0,
                 bottom = height,
@@ -1194,7 +1194,7 @@
 
             function arrange2(target, items, width, height, data, item, index, only_tab) {
 
-                var spacingHeight = target.compute_size(target.get_spacingHeight()),
+                var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                     length = items.length,
                     values = [],
                     x = 0,
@@ -1336,7 +1336,7 @@
 
             function arrange2_fill(target, items, width, height, data, item, index) {
 
-                var spacingHeight = target.compute_size(target.get_spacingHeight()),
+                var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                     length = items.length,
                     weight = all_weight(items, "get_weightHeight"),
                     y = 0,

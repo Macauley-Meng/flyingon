@@ -361,10 +361,10 @@
         function arrange1(target, items, width, height, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 contentWidth = 0,
                 contentHeight = 0,
-                align_height = target.compute_size(target.get_flowHeight()),
+                align_height = target.compute_size(target.get_flowHeight(), true),
                 x = 0,
                 y = 0,
                 item,
@@ -431,10 +431,10 @@
         function arrange2(target, items, width, height, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 x = 0,
                 y = 0,
-                align_width = target.compute_size(target.get_flowWidth()),
+                align_width = target.compute_size(target.get_flowWidth(), true),
                 contentWidth = 0,
                 contentHeight = 0,
                 item,
@@ -589,7 +589,7 @@
 
         function arrange2(target, items, width, height, fixed) {
 
-            var spacingHeight = target.compute_size(target.get_spacingHeight()),
+            var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 x = width,
                 y = 0,
                 item,
@@ -746,7 +746,7 @@
 
         function arrange2(target, items, width, height) {
 
-            var spacingHeight = target.compute_size(target.get_spacingHeight()),
+            var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 length = items.length,
                 x = width,
                 y = 0,
@@ -886,7 +886,7 @@
         this.arrange = function (target, items, width, height) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 length = items.length,
                 x = 0,
                 y = 0,
@@ -1075,7 +1075,7 @@
             {
                 (item = items[i]).measure(+item.get_width() || item.defaultWidth, +item.get_height() || item.defaultHeight, true, true);
 
-                offset = item.locate(item.compute_size(item.get_left()) || 0, item.compute_size(item.get_top()) || 0);
+                offset = item.locate(item.compute_size(item.get_left()) || 0, item.compute_size(item.get_top(), true) || 0);
 
                 if (offset.x > contentWidth)
                 {
@@ -1437,7 +1437,7 @@
                 columns = this.columns,
                 rows = this.rows,
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 keys = [width, height, spacingWidth, spacingHeight].join(" "),
                 fixed;
 
@@ -2323,7 +2323,7 @@
 
             var table = target.__x_layoutTable,
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 value,
                 cache;
 

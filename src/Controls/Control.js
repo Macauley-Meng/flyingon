@@ -580,7 +580,10 @@ flyingon.defineClass("Control", function () {
 
             compute_style2 = compute_dom2.style,
 
-            cssText = "position:absolute;left:0;top:0;height:0;overflow:hidden;visibility:hidden;";
+            cssText = "position:absolute;left:0;top:0;height:0;overflow:hidden;visibility:hidden;",
+
+            regex_compute = /[\d\.]+|\S+/g;
+
 
         compute_style1.cssText = cssText + "width:1000px;";
         compute_style2.cssText = cssText + "width:0;";
@@ -595,12 +598,24 @@ flyingon.defineClass("Control", function () {
 
 
         //计算css单位值为实际大小
-        this.compute_size = function (value) {
+        this.compute_size = function (value, vertical) {
 
-            if (value != 0 && value !== "0px")
+            if (value && value !== "0px")
             {
-                compute_style2.left = value;
-                return compute_dom2.offsetLeft;
+                value = value.match(regex_compute);
+
+                switch (value[1])
+                {
+                    case "px":
+                        return value[0] | 0;
+
+                    case "%":
+                        return (value[0] * (vertical ? this.clientHeight : this.clientWidth) / 100) | 0;
+
+                    default:
+                        compute_style2.left = value;
+                        return compute_dom2.offsetLeft;
+                }
             }
 
             return 0;
@@ -642,13 +657,13 @@ flyingon.defineClass("Control", function () {
 
             //计算盒模型
             box.margin_width = (box.marginLeft = fn(this.get_marginLeft())) + (box.marginRight = fn(this.get_marginRight()));
-            box.margin_height = (box.marginTop = fn(this.get_marginTop())) + (box.marginBottom = fn(this.get_marginBottom()));
+            box.margin_height = (box.marginTop = fn(this.get_marginTop(), true)) + (box.marginBottom = fn(this.get_marginBottom(), true));
 
             box.border_width = (box.borderLeft = dom.clientLeft) + (box.borderRight = fn(this.get_borderRightWidth()));
             box.border_height = (box.borderTop = dom.clientTop) + (box.borderBottom = fn(this.get_borderBottomWidth()));
 
             box.padding_width = (box.paddingLeft = fn(this.get_paddingLeft())) + (box.paddingRight = fn(this.get_paddingRight()));
-            box.padding_height = (box.paddingTop = fn(this.get_paddingTop())) + (box.paddingBottom = fn(this.get_paddingBottom()));
+            box.padding_height = (box.paddingTop = fn(this.get_paddingTop(), true)) + (box.paddingBottom = fn(this.get_paddingBottom(), true));
 
             box.client_width = box.border_width + box.padding_width;
             box.client_height = box.border_height + box.padding_height;
@@ -656,11 +671,11 @@ flyingon.defineClass("Control", function () {
             box.minWidth = fn(this.get_minWidth());
             box.maxWidth = fn(this.get_maxWidth());
 
-            box.minHeight = fn(this.get_minHeight());
-            box.maxHeight = fn(this.get_maxHeight());
+            box.minHeight = fn(this.get_minHeight(), true);
+            box.maxHeight = fn(this.get_maxHeight(), true);
 
             box.offsetX = fn(this.get_offsetX());
-            box.offsetY = fn(this.get_offsetY());
+            box.offsetY = fn(this.get_offsetY(), true);
 
 
             //处理宽度

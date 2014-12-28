@@ -7043,7 +7043,10 @@ flyingon.defineClass("Control", function () {
 
             compute_style2 = compute_dom2.style,
 
-            cssText = "position:absolute;left:0;top:0;height:0;overflow:hidden;visibility:hidden;";
+            cssText = "position:absolute;left:0;top:0;height:0;overflow:hidden;visibility:hidden;",
+
+            regex_compute = /[\d\.]+|\S+/g;
+
 
         compute_style1.cssText = cssText + "width:1000px;";
         compute_style2.cssText = cssText + "width:0;";
@@ -7058,12 +7061,24 @@ flyingon.defineClass("Control", function () {
 
 
         //计算css单位值为实际大小
-        this.compute_size = function (value) {
+        this.compute_size = function (value, vertical) {
 
-            if (value != 0 && value !== "0px")
+            if (value && value !== "0px")
             {
-                compute_style2.left = value;
-                return compute_dom2.offsetLeft;
+                value = value.match(regex_compute);
+
+                switch (value[1])
+                {
+                    case "px":
+                        return value[0] | 0;
+
+                    case "%":
+                        return (value[0] * (vertical ? this.clientHeight : this.clientWidth) / 100) | 0;
+
+                    default:
+                        compute_style2.left = value;
+                        return compute_dom2.offsetLeft;
+                }
             }
 
             return 0;
@@ -7105,13 +7120,13 @@ flyingon.defineClass("Control", function () {
 
             //计算盒模型
             box.margin_width = (box.marginLeft = fn(this.get_marginLeft())) + (box.marginRight = fn(this.get_marginRight()));
-            box.margin_height = (box.marginTop = fn(this.get_marginTop())) + (box.marginBottom = fn(this.get_marginBottom()));
+            box.margin_height = (box.marginTop = fn(this.get_marginTop(), true)) + (box.marginBottom = fn(this.get_marginBottom(), true));
 
             box.border_width = (box.borderLeft = dom.clientLeft) + (box.borderRight = fn(this.get_borderRightWidth()));
             box.border_height = (box.borderTop = dom.clientTop) + (box.borderBottom = fn(this.get_borderBottomWidth()));
 
             box.padding_width = (box.paddingLeft = fn(this.get_paddingLeft())) + (box.paddingRight = fn(this.get_paddingRight()));
-            box.padding_height = (box.paddingTop = fn(this.get_paddingTop())) + (box.paddingBottom = fn(this.get_paddingBottom()));
+            box.padding_height = (box.paddingTop = fn(this.get_paddingTop(), true)) + (box.paddingBottom = fn(this.get_paddingBottom(), true));
 
             box.client_width = box.border_width + box.padding_width;
             box.client_height = box.border_height + box.padding_height;
@@ -7119,11 +7134,11 @@ flyingon.defineClass("Control", function () {
             box.minWidth = fn(this.get_minWidth());
             box.maxWidth = fn(this.get_maxWidth());
 
-            box.minHeight = fn(this.get_minHeight());
-            box.maxHeight = fn(this.get_maxHeight());
+            box.minHeight = fn(this.get_minHeight(), true);
+            box.maxHeight = fn(this.get_maxHeight(), true);
 
             box.offsetX = fn(this.get_offsetX());
-            box.offsetY = fn(this.get_offsetY());
+            box.offsetY = fn(this.get_offsetY(), true);
 
 
             //处理宽度
@@ -8143,6 +8158,10 @@ flyingon.IControlCollection = function (type) {
 
 
 
+    var splice = Array.prototype.splice;
+
+
+
     Class.create = function (owner) {
 
         this.owner = owner;
@@ -8186,10 +8205,10 @@ flyingon.IControlCollection = function (type) {
     //移除指定子项
     this.__fn_remove = function (item) {
 
-        var parent = this.parent;
+        var owner = this.owner;
 
-        remove_item(parent, item);
-        parent.update(true);
+        remove_item(owner, item);
+        owner.update(true);
     };
 
 
@@ -8679,10 +8698,10 @@ flyingon.defineClass("ControlCollection", function () {
         function arrange1(target, items, width, height, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 contentWidth = 0,
                 contentHeight = 0,
-                align_height = target.compute_size(target.get_flowHeight()),
+                align_height = target.compute_size(target.get_flowHeight(), true),
                 x = 0,
                 y = 0,
                 item,
@@ -8749,10 +8768,10 @@ flyingon.defineClass("ControlCollection", function () {
         function arrange2(target, items, width, height, fixed) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 x = 0,
                 y = 0,
-                align_width = target.compute_size(target.get_flowWidth()),
+                align_width = target.compute_size(target.get_flowWidth(), true),
                 contentWidth = 0,
                 contentHeight = 0,
                 item,
@@ -8907,7 +8926,7 @@ flyingon.defineClass("ControlCollection", function () {
 
         function arrange2(target, items, width, height, fixed) {
 
-            var spacingHeight = target.compute_size(target.get_spacingHeight()),
+            var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 x = width,
                 y = 0,
                 item,
@@ -9064,7 +9083,7 @@ flyingon.defineClass("ControlCollection", function () {
 
         function arrange2(target, items, width, height) {
 
-            var spacingHeight = target.compute_size(target.get_spacingHeight()),
+            var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 length = items.length,
                 x = width,
                 y = 0,
@@ -9204,7 +9223,7 @@ flyingon.defineClass("ControlCollection", function () {
         this.arrange = function (target, items, width, height) {
 
             var spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 length = items.length,
                 x = 0,
                 y = 0,
@@ -9393,7 +9412,7 @@ flyingon.defineClass("ControlCollection", function () {
             {
                 (item = items[i]).measure(+item.get_width() || item.defaultWidth, +item.get_height() || item.defaultHeight, true, true);
 
-                offset = item.locate(item.compute_size(item.get_left()) || 0, item.compute_size(item.get_top()) || 0);
+                offset = item.locate(item.compute_size(item.get_left()) || 0, item.compute_size(item.get_top(), true) || 0);
 
                 if (offset.x > contentWidth)
                 {
@@ -9755,7 +9774,7 @@ flyingon.defineClass("ControlCollection", function () {
                 columns = this.columns,
                 rows = this.rows,
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 keys = [width, height, spacingWidth, spacingHeight].join(" "),
                 fixed;
 
@@ -10641,7 +10660,7 @@ flyingon.defineClass("ControlCollection", function () {
 
             var table = target.__x_layoutTable,
                 spacingWidth = target.compute_size(target.get_spacingWidth()),
-                spacingHeight = target.compute_size(target.get_spacingHeight()),
+                spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 value,
                 cache;
 
@@ -11764,7 +11783,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         function arrange1(target, items, width, height, data) {
 
-            var spacingHeight = target.compute_size(target.get_spacingHeight()),
+            var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                 index = this.selectedIndex,
                 y = 0,
                 bottom = height,
@@ -12914,7 +12933,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
             function arrange2(target, items, width, height, data, item, index, only_tab) {
 
-                var spacingHeight = target.compute_size(target.get_spacingHeight()),
+                var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                     length = items.length,
                     values = [],
                     x = 0,
@@ -13056,7 +13075,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
             function arrange2_fill(target, items, width, height, data, item, index) {
 
-                var spacingHeight = target.compute_size(target.get_spacingHeight()),
+                var spacingHeight = target.compute_size(target.get_spacingHeight(), true),
                     length = items.length,
                     weight = all_weight(items, "get_weightHeight"),
                     y = 0,
@@ -13741,14 +13760,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-        //子节点集合
-        flyingon.defineProperty(this, "nodes", function () {
-
-            return this.__nodes || (this.__nodes = new flyingon.TreeNodeCollection(this));
-        });
-
-
-
         //添加子节点
         this.appendChild = function (node) {
 
@@ -13919,6 +13930,15 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
+        //子节点集合
+        flyingon.defineProperty(this, "nodes", function () {
+
+            return this.__nodes || (this.__nodes = new flyingon.TreeNodeCollection(this, this));
+        });
+
+
+
+
         //扩展节点基础服务
         node_base.call(this, this.serialize, this.deserialize_property);
 
@@ -13932,13 +13952,15 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-        var TreeNode = flyingon.TreeNode;
+        var TreeNode = flyingon.TreeNode,
+            splice = Array.prototype.splice;
 
 
 
-        Class.create = function (owner) {
+        Class.create = function (owner, parent) {
 
             this.owner = owner;
+            this.parent = parent;
         };
 
 
@@ -14014,7 +14036,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             if (item instanceof TreeNode)
             {
                 var owner = target.owner,
-                    oldValue = item.__parent;
+                    oldValue = item.__owner;
 
                 if (oldValue) //从原有父控件中删除
                 {
@@ -14028,7 +14050,9 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                     }
                 }
 
-                item.__parent = owner;
+                item.__owner = owner;
+                item.__parent = target.parent;
+
                 return true;
             }
 
@@ -14041,6 +14065,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
             var dom = item.dom;
 
+            item.__owner = null;
             item.__parent = null;
 
             if (dom && dom.parentNode)
@@ -14050,8 +14075,15 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         };
 
 
-        function update(owner, empty) {
+        //标记更新
+        function update(target) {
 
+            target.__arrange_dirty = true;
+
+            while ((target = target.__owner) && !target.__arrange_dirty)
+            {
+                target.__arrange_dirty = true;
+            }
         };
 
 
@@ -14079,6 +14111,14 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
+
+        //子节点集合
+        flyingon.defineProperty(this, "nodes", function () {
+
+            return this.__nodes || (this.__nodes = new flyingon.TreeNodeCollection(this));
+        });
+
+
         //扩展节点基础服务
         node_base.call(this, base.serialize, base.deserialize_property);
 
@@ -14102,16 +14142,19 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         //};
 
 
-        ////渲染控件
-        //this.render = function () {
+        //渲染控件
+        this.render = function () {
 
-        //    if (this.__update_dirty === 1)
-        //    {
-        //        flyingon.__fn_compute_css(this);
-        //    }
+            if (this.__update_dirty === 1)
+            {
+                flyingon.__fn_compute_css(this);
+            }
 
+            if (this.__arrange_dirty)
+            {
 
-        //};
+            }
+        };
 
 
 
@@ -14344,6 +14387,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 pressdown = {
 
                     dom: event.target, //按下时触发事件的dom
+                    event: event,
                     which: event.which,
                     clientX: event.clientX,
                     clientY: event.clientY
@@ -14527,6 +14571,29 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 if (dragdrop.stop(event, pressdown, cancel)) //如果拖动过则取消相关鼠标事件
                 {
                     flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
+                }
+                else //补上mousedown事件
+                {
+                    target = dom_target(event, false);
+
+                    //获取enabled控件
+                    while (!target.get_enabled())
+                    {
+                        if (!(target = target.__parent))
+                        {
+                            target = ownerWindow;
+                            break;
+                        }
+                    }
+
+                    //设置捕获目标
+                    pressdown.capture = target;
+
+                    //分发mousedown事件
+                    target.dispatchEvent(new MouseEvent("mousedown", event));
+
+                    //设置活动状态
+                    target.__fn_to_active(true);
                 }
             }
 

@@ -218,6 +218,7 @@
                 pressdown = {
 
                     dom: event.target, //按下时触发事件的dom
+                    event: event,
                     which: event.which,
                     clientX: event.clientX,
                     clientY: event.clientY
@@ -401,6 +402,29 @@
                 if (dragdrop.stop(event, pressdown, cancel)) //如果拖动过则取消相关鼠标事件
                 {
                     flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
+                }
+                else //补上mousedown事件
+                {
+                    target = dom_target(event, false);
+
+                    //获取enabled控件
+                    while (!target.get_enabled())
+                    {
+                        if (!(target = target.__parent))
+                        {
+                            target = ownerWindow;
+                            break;
+                        }
+                    }
+
+                    //设置捕获目标
+                    pressdown.capture = target;
+
+                    //分发mousedown事件
+                    target.dispatchEvent(new MouseEvent("mousedown", event));
+
+                    //设置活动状态
+                    target.__fn_to_active(true);
                 }
             }
 

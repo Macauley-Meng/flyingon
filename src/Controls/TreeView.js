@@ -209,7 +209,8 @@
 
 
 
-        var TreeNode = flyingon.TreeNode;
+        var TreeNode = flyingon.TreeNode,
+            splice = Array.prototype.splice;
 
 
 
