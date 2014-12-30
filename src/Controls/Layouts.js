@@ -2536,7 +2536,8 @@
             var control = new flyingon.Window(),
                 cache = document.createDocumentFragment(),
                 children = dom.children,
-                length = children.length;
+                length = children.length,
+                item;
 
             dom_to(dom, control);
 
@@ -2547,12 +2548,15 @@
 
             dom.innerHTML = "";
             children = cache.childNodes;
+            cache = document.createDocumentFragment();
 
             for (var i = 0; i < length; i++)
             {
-                control.appendChild(dom_wrapper(children[i]));
+                control.appendChild(item = dom_wrapper(children[i]));
+                cache.appendChild(item.dom);
             }
 
+            control.dom_children.appendChild(cache);
             dom.appendChild(control.dom_window);
 
             flyingon.ready(function () {

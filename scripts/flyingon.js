@@ -11173,7 +11173,8 @@ flyingon.IChildren = function (base) {
             var control = new flyingon.Window(),
                 cache = document.createDocumentFragment(),
                 children = dom.children,
-                length = children.length;
+                length = children.length,
+                item;
 
             dom_to(dom, control);
 
@@ -11184,12 +11185,15 @@ flyingon.IChildren = function (base) {
 
             dom.innerHTML = "";
             children = cache.childNodes;
+            cache = document.createDocumentFragment();
 
             for (var i = 0; i < length; i++)
             {
-                control.appendChild(dom_wrapper(children[i]));
+                control.appendChild(item = dom_wrapper(children[i]));
+                cache.appendChild(item.dom);
             }
 
+            control.dom_children.appendChild(cache);
             dom.appendChild(control.dom_window);
 
             flyingon.ready(function () {
@@ -11592,6 +11596,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             (target = this.__parent) && (layout = target.__layout) &&
             (target = target.__children[index]))
         {
+            start.capture_dom = true;
             start = start.start || (start.start = layout.__fn_resize_start(target, layout.vertical, this));
             value = start.vertical ? event.distanceY : event.distanceX;
 
@@ -14083,7 +14088,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         if (document.createElement("div").setCapture)
         {
 
-            setCapture = function (dom, event) {
+            setCapture = function (dom) {
 
                 if (user_select)
                 {
@@ -14120,7 +14125,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         {
 
             //设置捕获
-            setCapture = function (dom, event) {
+            setCapture = function (dom) {
 
                 if (user_select)
                 {
@@ -14218,14 +14223,11 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 //记录鼠标按下位置
                 pressdown = {
 
-                    dom: event.target, //按下时触发事件的dom
+                    dom: event.target,  //按下时触发事件的dom
                     which: event.which,
                     clientX: event.clientX,
                     clientY: event.clientY
                 };
-
-                //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
-                setCapture(capture_dom = event.target, event);
 
                 //获取enabled控件
                 while (!cache.get_enabled())
@@ -14266,6 +14268,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                             {
                                 //设置捕获目标
                                 pressdown.target = cache;
+
                                 return;
                             }
                         }
@@ -14307,16 +14310,22 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 {
                     dragdrop.move(event, pressdown);
                 }
-                else  //启用捕获
+                else if (target = pressdown.capture)  //启用捕获
                 {
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
+                }
+
+                //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
+                if (!capture_dom && pressdown.capture_dom)
+                {
+                    setCapture(capture_dom = pressdown.dom);
                 }
 
                 //window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty(); //清除选区
             }
             else if (cache = target = dom_target(event, false))
             {
-                ownerWindow = target.__ownerWindow || target.get_ownerWindow();
+                ownerWindow = this.flyingon;
 
                 //调整大小状态不触发相关事件
                 while (cache)
@@ -14389,8 +14398,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             if (resizable)
             {
                 resizable = null;
-                pressdown = null;
-                return;
             }
 
             event || (event = fix_event(window.event));

@@ -50,6 +50,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             (target = this.__parent) && (layout = target.__layout) &&
             (target = target.__children[index]))
         {
+            start.capture_dom = true;
             start = start.start || (start.start = layout.__fn_resize_start(target, layout.vertical, this));
             value = start.vertical ? event.distanceY : event.distanceX;
 
