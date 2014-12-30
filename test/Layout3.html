@@ -13,102 +13,43 @@
             overflow: hidden;
         }
     </style>
+
+    <script type="text/javascript">
+
+        var date = new Date();
+
+    </script>
+
     <script src="../scripts/flyingon.js"></script>
     <script src="../themes/default/flyingon.js"></script>
 </head>
 <body>
 
 
-    <!--
+    <div layout-type="dock" padding="0">
 
-
-    //布局容器相关的attribute
-
-    layout-control          //布局控件 Panel|Splitter|TabPanel|TabControl
-    layout-type             //布局类型 flow|line|column3|dock|cascade|grid|table|absolute
-    layout-vertical         //是否竖排 true|false
-    layout-mirror           //镜向 x|y|center
-    layout-spacing-width    //控件横向间隔
-    layout-spacing-height   //控件纵向间隔
-    layout-flow-width       //流式布局列宽
-    layout-flow-height      //流式布局行高
-    layout-rows             //网格布局行数 数字|自定义布局语法
-    layout-columns          //网格布局列数 数字|自定义布局语法
-    layout-table            //table布局定义 自定义布局语法
-    layout-tables           //table布局组   [width, height, 自定义布局语法][, ...]
-
-
-    //布局控件相关的attribute
-
-    layout-align-x          //横向对齐方式 left|center|right
-    layout-align-y          //纵向对齐方式 top|middle|bottom
-    layout-newline          //流式布局时是否强制换行 true|false
-    layout-column3          //3栏布局类型 before|center|after
-    layout-dock             //停靠布局方式 left|top|right|bottom|fill
-    layout-row-span         //网格布局跨行数 整数
-    layout-column-span      //网格布局跨列数 整数
-    layout-column-index     //网格布局固定列位置 整数
-    layout-spacing-cells    //网格布局与前一控件是最小空格数 整数
-    layout-offset-x         //x偏移距离
-    layout-offset-y         //y偏移距离
-
-
-    //布局相关的style
-    left
-    top
-    width   //default|fill|auto
-    height  //default|fill|auto
-    min-width
-    max-width
-    min-height
-    max-height
-    margin-left
-    margin-top
-    margin-right
-    margin-bottom
-    border-left-width
-    border-top-width
-    border-right-width
-    border-bottom-width
-    padding-left
-    padding-top
-    padding-right
-    padding-bottom
-    overflow-x
-    overflow-y
-
-
-    -->
-     
-
-    <div layout-type="flow" style="padding:0;">
-
-        <div layout-dock="before" style="background-color:silver;"></div>
-        <div layout-dock="center" style="background-color: red;"></div>
-        <div layout-dock="after" style="background-color: silver; "></div>
-
-        <!--<div class="class" layout-dock="top" style="height:50px;border:1px solid blue;margin-bottom:2px;background-color:silver;">
+        <div dock="top" height="50px" class="class" style="border:1px solid blue;margin-bottom:2px;background-color:silver;">
             <span style="color:red;">top</span>
             <span style="color:red;">top</span>
             <span style="color:red;">top</span>
             <span style="color:red;">top</span>
         </div>
-        <div layout-dock="bottom" style="height: 50px; border: 1px solid blue; margin-top: 2px; background-color: silver;">bottom</div>
-        <div id="id" layout-dock="left" layout-control="TabPanel" layout-type="line" layout-vertical="1" tab-icon="dialog" tab-text="功能树" tab-show-collapse="1" style="width:200px;padding:8px;">
+        <div dock="bottom" height="50px" style="border:1px solid blue; margin-top:2px; background-color:silver;">bottom</div>
+        <div xtype="flyingon.TabPanel" id="id" dock="left" layout-type="line" vertical="1" icon="dialog" text="功能树" show-collapse="1" width="200px" style="padding:8px;">
             <div>left 1</div>
             <div>left 2</div>
             <div>left 3</div>
             <div>left 4</div>
         </div>
-        <div layout-control="Splitter"></div>
-        <div layout-dock="right" layout-control="TabPanel" layout-type="line" layout-vertical="1" tab-icon="dialog" tab-text="操作指引" tab-show-collapse="1" style="width:200px;">
+        <div xtype="flyingon.Splitter"></div>
+        <div xtype="flyingon.TabPanel" dock="right" layout-type="line" vertical="1" icon="dialog" text="操作指引" show-collapse="1" width="200px">
             <div>right 1</div>
             <div>right 2</div>
             <div>right 3</div>
             <div>right 4</div>
         </div>
-        <div layout-control="Splitter" layout-dock="right"></div>
-        <div layout-dock="fill" style="border: 1px solid blue;">fill</div>-->
+        <div xtype="flyingon.Splitter" dock="right"></div>
+        <div dock="fill" style="border:1px solid blue;">fill</div>
 
     </div>
 
@@ -116,27 +57,30 @@
     <script type="text/javascript">
 
 
-        ////选择器示例
-        //flyingon.ready(function () {
+        //选择器示例
+        flyingon.ready(function () {
+
+            //alert(new Date() - date);
+
+            //    //选择指定id的控件
+            //    var items = flyingon(".class");
+
+            //    //设置控件背景变成黄色
+            //    items.backgroundColor("yellow");
+
+            //    //获取控件背景
+            //    var color = items.backgroundColor();
 
 
-        //    //选择指定id的控件
-        //    var items = flyingon(".class");
+            //    //获取左面板并设置为收拢状态
+            //    //flyingon.query_id("id").set_collapse(true);
 
-        //    //设置控件背景变成黄色
-        //    items.backgroundColor("yellow");
+            //    ////设置所有标签面板为收拢状态
+            //    //flyingon.query_xtype("flyingon.TabPanel").call("set_collapse", true);
 
-        //    //获取控件背景
-        //    var color = items.backgroundColor();
+        });
 
 
-        //    //获取左面板并设置为收拢状态
-        //    //flyingon.query_id("id").set_collapse(true);
-
-        //    ////设置所有标签面板为收拢状态
-        //    //flyingon.query_xtype("flyingon.TabPanel").call("set_collapse", true);
-
-        //});
 
 
     </script>

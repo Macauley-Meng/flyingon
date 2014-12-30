@@ -154,21 +154,4 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
 
 
-    if (flyingon.browser_MSIE)
-    {
-        this.__event_capture_mousedown = function (event) {
-
-            this.dom.onselectstart = function (event) {
-
-                return false;
-            };
-        };
-
-        this.__event_capture_mouseup = function (event) {
-
-            this.dom.onselectstart = null;
-        };
-    }
-
-
 });

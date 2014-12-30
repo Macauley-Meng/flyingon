@@ -2422,135 +2422,51 @@
 
 
 
-    var regex_name = /[-_](\w)/g,   //名称转换规则 例: margin-left || margin_left -> marginLeft
+    var class_list = flyingon.__registry_class_list, //注册类型集合
 
-        properties = { //dom布局属性集
+        IChildren = flyingon.IChildren,
 
-            "layout-type": 0,
-            "layout-vertical": 1,
-            "layout-mirror": 1,
-            "layout-spacing-width": 1,
-            "layout-spacing-height": 1,
-            "layout-flow-width": 1,
-            "layout-flow-height": 1,
-            "layout-column3": 0,
-            "layout-rows": 0,
-            "layout-columns": 0,
-            "layout-table": 0,
-            "layout-tables": 0,
+        regex_name = /[-_](\w)/g,
 
-            "layout-align-x": 1,
-            "layout-align-y": 1,
-            "layout-newline": 1,
-            "layout-dock": 1,
-            "layout-row-span": 1,
-            "layout-column-span": 1,
-            "layout-column-index": 1,
-            "layout-spacing-cells": 1,
-            "layout-offset-x": 1,
-            "layout-offset-y": 1
-        },
+        regex_style = /([\w-]+)\s*\:\s*([^\;\:]+)/g,
 
-        tab_properties = {
-
-            "tab-icon": 1,
-            "tab-text": 1,
-            "tab-show-close": 1,
-            "tab-show-collapse": 1,
-            "tab-collapse": 1
-        },
-
-        styles = { //需转换的样式名
-
-            left: 1,
-            top: 1,
-            width: 1,
-            height: 1,
-            minWidth: 1,
-            maxWidth: 1,
-            minHeight: 1,
-            maxHeight: 1,
-            marginLeft: 1,
-            marginTop: 1,
-            marginRight: 1,
-            marginBottom: 1,
-            borderLeftWidth: 0,
-            borderTopWidth: 0,
-            borderRightWidth: 0,
-            borderBottomWidth: 0,
-            paddingLeft: 1,
-            paddingTop: 1,
-            paddingRight: 1,
-            paddingBottom: 1,
-            overflowX: 1,
-            overflowY: 1
-        };
+        regex_trim = /\s+$/;
 
 
-    for (var name in properties)
-    {
-        properties[name] = (properties[name] ? name.substring(7) : name).replace(regex_name, function (_, x) {
+    function to_name(_, x) {
 
-            return x.toUpperCase();
-        });
-    }
-
-
-    for (var name in tab_properties)
-    {
-        tab_properties[name] = name.substring(4).replace(regex_name, function (_, x) {
-
-            return x.toUpperCase();
-        });
-    }
+        return x.toUpperCase();
+    };
 
 
     function dom_wrapper(dom) {
 
-        var control, children, name, cache1, cache2;
+        var control, children, cache1, cache2;
 
-        switch (dom.getAttribute("layout-control")) //指定布局控件
+        if ((cache1 = dom.getAttribute("xtype")) && (cache1 = class_list[cache1])) //指定布局控件
         {
-            case "Splitter":
-                control = new flyingon.Splitter(dom);
-                break;
-
-            case "TabPanel":
-                control = new flyingon.TabPanel();
-                children = true;
-
-                for (var i = 0, _ = (cache1 = dom.attributes).length; i < _; i++)
-                {
-                    if ((name = (cache2 = cache1[i]).name) in tab_properties)
-                    {
-                        control["set_" + tab_properties[name]](cache2.value);
-                    }
-                }
-                break;
-
-            case "TabControl":
-                control = new flyingon.TabControl();
-                children = true;
-                break;
-
-            default:
-                if (dom.getAttribute("layout-type")) //有layout-type解析为面板
-                {
-                    control = new flyingon.Panel();
-                    children = true;
-                }
-                else //否则解析成html控件
-                {
-                    control = new flyingon.HtmlControl(dom);
-                }
-                break;
+            if (!(cache2 = IChildren.__is_xtype in (control = new cache1())))
+            {
+                control.dom.innerHTML = dom.innerHTML;
+            }
+        }
+        else if (dom.getAttribute("layout-type")) //有layout-type解析为面板
+        {
+            control = new flyingon.Panel();
+            cache2 = true;
+        }
+        else //否则解析成html控件
+        {
+            control = new flyingon.HtmlControl(dom);
+            control.dom.innerHTML = dom.innerHTML;
+            cache2 = false;
         }
 
-        //同步属性及控件
+        //同步属性
         dom_to(dom, control);
 
         //处理子控件
-        if (children)
+        if (cache2)
         {
             children = dom.children;
             cache1 = document.createDocumentFragment();
@@ -2563,9 +2479,6 @@
 
             control.dom_children.appendChild(cache1);
             control.__dom_dirty = false;
-
-            //需最后处理dom 否则可能会出现循环添加错误
-            control.__fn_from_dom(dom);
         }
 
         return control;
@@ -2574,30 +2487,41 @@
 
     function dom_to(dom, control) {
 
-        var name, value, cache1, cache2;
+        var attributes = dom.attributes,
+            cssText,
+            value,
+            fn,
+            cache;
 
-        //同步dom属性至控件
-        for (var i = 0, _ = (cache1 = dom.attributes).length; i < _; i++)
+        //同步样式
+        if (cssText = dom.getAttribute("style"))
         {
-            if ((name = (cache2 = cache1[i]).name) in properties)
+            regex_style.lastIndex = 0;
+
+            while (cache = regex_style.exec(cssText))
             {
-                control["set_" + properties[name]](cache2.value);
+                if (value = cache[1])
+                {
+                    value = value.replace(regex_name, to_name);
+
+                    if (fn = control["set_" + value])
+                    {
+                        fn.call(control, cache[2].replace(regex_trim, ""));
+                    }
+                    else
+                    {
+                        control.dom.style[value] = cache[2]; //.replace(regex_trim, "");
+                    }
+                }
             }
         }
 
-        //同步样式
-        cache1 = dom.style;
-
-        for (var name in styles)
+        //同步dom属性至控件
+        for (var i = 0, _ = attributes.length; i < _; i++)
         {
-            if ((value = cache1[name]) !== "")
+            if (control[cache = "set_" + (value = attributes[i]).name.replace(regex_name, to_name)])
             {
-                (control.__styles || (control.__styles = {}))[name] = value;
-
-                if (styles[name]) //清除样式
-                {
-                    cache1[name] = "";;
-                }
+                control[cache](value.value);
             }
         }
     };
@@ -2609,37 +2533,34 @@
 
         if (dom)
         {
-            var result = new flyingon.Window(),
-                items = dom.children,
-                length = items.length,
-                item,
-                name;
+            var control = new flyingon.Window(),
+                cache = document.createDocumentFragment(),
+                children = dom.children,
+                length = children.length;
 
-            dom.style.visibility = "hidden";
-
-            dom_to(dom, result);
+            dom_to(dom, control);
 
             for (var i = 0; i < length; i++)
             {
-                result.appendChild(dom_wrapper(items[i]));
+                cache.appendChild(children[0]);
             }
 
-            for (var i = 0, _ = (items = dom.attributes).length; i < _; i++)
+            dom.innerHTML = "";
+            children = cache.childNodes;
+
+            for (var i = 0; i < length; i++)
             {
-                if ((name = (item = items[i]).name) in properties)
-                {
-                    result["set_" + properties[name]](item.value);
-                }
+                control.appendChild(dom_wrapper(children[i]));
             }
 
-            dom.appendChild(result.dom_window);
+            dom.appendChild(control.dom_window);
 
             flyingon.ready(function () {
 
-                result.render();
+                control.render();
             });
 
-            return result;
+            return control;
         }
     };
 

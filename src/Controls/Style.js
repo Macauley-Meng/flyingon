@@ -44,15 +44,16 @@
 
 
 
+    function to_name(_, x) {
+
+        return x.toUpperCase();
+    };
+
 
     //转换名字为驼峰写法
     function convert_name(name) {
 
-        return name ? name.replace(regex_name, function (_, x) {
-
-            return x.toUpperCase();
-
-        }) : "";
+        return name ? name.replace(regex_name, to_name) : "";
     };
 
 
@@ -1787,7 +1788,7 @@
                 switch (style_data_types[name])
                 {
                     case "boolean": //布尔型
-                        value = !!value;
+                        value = value && value !== "false" && value !== "0";
                         break;
 
                     case "int":

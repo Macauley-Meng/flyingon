@@ -146,6 +146,10 @@ flyingon.defineClass("Control", function () {
         });
 
 
+        //增加set_class方法以便于同步dom class属性
+        this.set_class = this.set_className;
+
+
 
         //系统class
         this.__className0 = "";
@@ -1638,44 +1642,6 @@ flyingon.defineClass("Control", function () {
             };
 
         })();
-
-
-        //从dom初始化对象
-        this.__fn_from_dom = function (dom) {
-
-            var cache;
-
-            dom.style.position = "absolute";
-
-            if (this.dom && this.dom.firstChild)
-            {
-                cache = this.dom.children;
-
-                for (var i = 0, _ = cache.length; i < _; i++)
-                {
-                    dom.appendChild(cache[0]);
-                }
-            }
-
-            this.dom = dom;
-
-            if (dom.id)
-            {
-                this.__fields.id = dom.id;
-            }
-
-            if (dom.className)
-            {
-                this.__fn_className(dom.className);
-            }
-            else
-            {
-                dom.className = this.__className0;
-            }
-
-            return dom.flyingon = this;
-        };
-
 
 
 

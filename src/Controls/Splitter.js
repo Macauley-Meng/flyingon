@@ -5,25 +5,6 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
 
 
-    Class.create_mode = "replace";
-
-    Class.create = function (dom) {
-
-        //变量管理器
-        this.__fields = Object.create(this.__defaults);
-
-        if (dom)
-        {
-            this.__fn_from_dom(dom);
-        }
-        else
-        {
-            (this.dom = this.dom_template.cloneNode(false)).flyingon = this;
-        }
-    };
-
-
-
 
     this.defaultWidth = this.defaultHeight = 4;
 

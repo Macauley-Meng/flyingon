@@ -31,7 +31,7 @@ flyingon.IProperty = function () {
     var previous_attributes = null,
         regex_name = /\W/;
 
-
+    
 
     //定义setter函数
     this.__fn_define_setter = function (name, data_type, attributes) {
@@ -54,7 +54,7 @@ flyingon.IProperty = function () {
             switch (data_type)
             {
                 case "boolean":
-                    cache += "!!value;";
+                    cache += "value && value !== 'false' && value !== '0';";
                     break;
 
                 case "int":
@@ -436,6 +436,7 @@ flyingon.IProperty = function () {
 //事件接口
 flyingon.IEvent = function () {
 
+    
 
     //定义事件 name为不带on的事件名
     //注:只有支持定义属性的浏览器才支持以on的方式注册事件,否则只能以addEventListener的方式注册事件
@@ -627,7 +628,7 @@ flyingon.IComponent = function () {
     };
 
 
-
+    
     //扩展属性支持
     flyingon.extend(this, flyingon.IProperty);
 

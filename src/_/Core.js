@@ -440,7 +440,7 @@ flyingon.Exception = function (message, parameters) {
             throw new flyingon.Exception("superclass can not be null!");
         }
 
-        target["__flyingon_" + (superclass.xtype || (superclass.xtype = "anonymous_type_" + anonymous_index++))] = true; //实现接口判断
+        target[superclass.__is_xtype || (superclass.__is_xtype = "__flyingon_" + (superclass.xtype || "anonymous_type_" + anonymous_index++))] = true; //实现接口判断
 
         if (superclass.constructor === Function)
         {
@@ -712,7 +712,7 @@ flyingon.Exception = function (message, parameters) {
     //检测当前对象是否指定类型
     function is(type) {
 
-        return type != null && (this instanceof type || (type.xtype && type.xtype in this));
+        return type != null && (this instanceof type || (type.__is_xtype && type.__is_xtype in this));
     };
 
 
