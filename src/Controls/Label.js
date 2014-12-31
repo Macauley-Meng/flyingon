@@ -23,7 +23,7 @@
 
         this.defineProperty("text", "", {
 
-            set_code: flyingon.__fn_html_property_code("dom_span"),
+            set_code: "this.__fn_dom_textContent(this.dom_span, value, this.is_html_text)",
             change_code: "this.__fn_change_text(value);"
         });
 

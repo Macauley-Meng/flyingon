@@ -1608,19 +1608,6 @@ flyingon.defineClass("Control", function () {
 
 
 
-
-        //dom文本内容属性名
-        flyingon.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
-
-
-        //创建html文字属性代码(textConent的性能比innerHTML高, 故自动判断是否按innerHTML的方式设置内容)
-        flyingon.__fn_html_property_code = function (name) {
-
-            return "this." + name + "[value && value.indexOf('<') >= 0 && (value.indexOf('</') > 0 || value.indexOf('/>') > 0) && !this.is_html_text ? 'innerHTML' : '" + flyingon.__textContent_name + "'] = value;"
-        };
-
-
-
         //获取dom关联的目标控件
         this.__fn_dom_control = (function () {
 
@@ -1642,6 +1629,41 @@ flyingon.defineClass("Control", function () {
             };
 
         })();
+
+
+
+        //dom文本内容属性名
+        var textContent_name = flyingon.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+
+
+        //设置dom内容(textConent的性能比innerHTML高, 故自动判断是否按innerHTML的方式设置内容)
+        flyingon.__fn_dom_textContent = this.__fn_dom_textContent = function (dom, text, is_html_text) {
+
+            if (is_html_text || (text && text.indexOf('<') >= 0 && (text.indexOf('</') > 0 || text.indexOf('/>') > 0)))
+            {
+                dom.innerHTML = text;
+            }
+            else
+            {
+                dom[textContent_name] = text;
+            }
+        };
+
+
+        //清除选区
+        flyingon.__fn_clear_selection = function () {
+
+            var cache = document.selection;
+
+            if (cache && cache.empty)
+            {
+                cache.empty();
+            }
+            else if (cache = window.getSelection)
+            {
+                cache.call(window).removeAllRanges();
+            }
+        };
 
 
 

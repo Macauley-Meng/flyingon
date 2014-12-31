@@ -33,6 +33,8 @@
                 items,
                 length;
 
+            flyingon.style(css_template.replace(/0/g, name).replace(/1/g, flyingon.icons_path + name));
+
             font_list[name] = icons;
 
             if (list && (length = list.length) > 0)
@@ -46,6 +48,26 @@
             }
         }
     };
+
+
+
+    //生成icons预览html
+    flyingon.__fn_icons_view = function (name) {
+
+        var icons = font_list[name],
+            items = [];
+
+        if (icons)
+        {
+            for (var name in icons)
+            {
+                items.push("<span class='item'><div class='icon'>" + icons[name] + "</div><div class='text'>" + name + "<br/>" + escape(icons[name]).replace("%", "\\").toLowerCase() + "</div></span>");
+            }
+        }
+
+        return items.join("");
+    };
+
 
 
     //设置字体图标
@@ -99,9 +121,7 @@
                     else
                     {
                         (font_list[cache] = [[dom, icon]]).__icon_cache__ = true; //暂存
-
                         flyingon.script(flyingon.icons_path + cache + ".js");
-                        flyingon.style(css_template.replace(/0/g, cache).replace(/1/g, flyingon.icons_path + cache));
                     }
                 }
             }
@@ -145,6 +165,14 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
     });
 
 
+
+    this.__event_bubble_mousemove = function (event) {
+
+        if (event.pressdown)
+        {
+            flyingon.__fn_clear_selection();
+        }
+    };
 
 
     this.after_measure = function (box) {

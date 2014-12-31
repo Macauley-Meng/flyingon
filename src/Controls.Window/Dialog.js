@@ -98,7 +98,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         target = this.__header_close = new flyingon.Icon()
             .set_column3("after")
-            .set_image("close")
+            .set_image("dialog-close")
             .addClass("flyingon-Dialog-close")
 
             .on("click", function (event) {

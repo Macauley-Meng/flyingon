@@ -7,7 +7,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
     this.defineProperty("text", "", {
 
-        set_code: flyingon.__fn_html_property_code("dom")
+        set_code: "this.__fn_dom_textContent(this.dom, value, this.is_html_text)"
     });
 
 

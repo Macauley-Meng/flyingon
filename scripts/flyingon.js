@@ -8073,19 +8073,6 @@ flyingon.defineClass("Control", function () {
 
 
 
-
-        //dom文本内容属性名
-        flyingon.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
-
-
-        //创建html文字属性代码(textConent的性能比innerHTML高, 故自动判断是否按innerHTML的方式设置内容)
-        flyingon.__fn_html_property_code = function (name) {
-
-            return "this." + name + "[value && value.indexOf('<') >= 0 && (value.indexOf('</') > 0 || value.indexOf('/>') > 0) && !this.is_html_text ? 'innerHTML' : '" + flyingon.__textContent_name + "'] = value;"
-        };
-
-
-
         //获取dom关联的目标控件
         this.__fn_dom_control = (function () {
 
@@ -8107,6 +8094,41 @@ flyingon.defineClass("Control", function () {
             };
 
         })();
+
+
+
+        //dom文本内容属性名
+        var textContent_name = flyingon.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
+
+
+        //设置dom内容(textConent的性能比innerHTML高, 故自动判断是否按innerHTML的方式设置内容)
+        flyingon.__fn_dom_textContent = this.__fn_dom_textContent = function (dom, text, is_html_text) {
+
+            if (is_html_text || (text && text.indexOf('<') >= 0 && (text.indexOf('</') > 0 || text.indexOf('/>') > 0)))
+            {
+                dom.innerHTML = text;
+            }
+            else
+            {
+                dom[textContent_name] = text;
+            }
+        };
+
+
+        //清除选区
+        flyingon.__fn_clear_selection = function () {
+
+            var cache = document.selection;
+
+            if (cache && cache.empty)
+            {
+                cache.empty();
+            }
+            else if (cache = window.getSelection)
+            {
+                cache.call(window).removeAllRanges();
+            }
+        };
 
 
 
@@ -11247,6 +11269,194 @@ flyingon.IChildren = function (base) {
 
 
 ﻿
+
+//字体图标
+(function (flyingon) {
+
+
+
+
+    var font_list = {},    //字体图标库
+
+        textContent_name = flyingon.__textContent_name,
+
+        css_template = "@font-face {\n"
+            + "font-family: \"0\";\n"
+            + "font-style: normal;\n"
+            + "font-weight: normal;\n"
+            + "src: url(\"1.eot\");\n" /* ie9 */
+            + "src: url(\"1.eot?#iefix\") format(\"embedded-opentype\"),\n" /* ie6-ie8 */
+                + "url(\"1.woff\") format(\"woff\"),\n" /* chrome, firefox */
+                + "url(\"1.ttf\") format(\"truetype\"),\n" /* chrome, firefox, opera, safari, android, ios4.2+ */
+                + "url(\"1.svg#0\") format(\"svg\");\n" /* ios4.1- */
+        + "}";
+
+
+
+
+    //注册字体名值对回调函数
+    flyingon.icons = function (name, icons) {
+
+        if (name && icons)
+        {
+            var list = font_list[name],
+                items,
+                length;
+
+            flyingon.style(css_template.replace(/0/g, name).replace(/1/g, flyingon.icons_path + name));
+
+            font_list[name] = icons;
+
+            if (list && (length = list.length) > 0)
+            {
+                name = textContent_name;
+
+                for (var i = 0; i < length; i++)
+                {
+                    (items = list[i])[0][name] = icons[items[1]] || items[1];
+                }
+            }
+        }
+    };
+
+
+
+    //生成icons预览html
+    flyingon.__fn_icons_view = function (name) {
+
+        var icons = font_list[name],
+            items = [];
+
+        if (icons)
+        {
+            for (var name in icons)
+            {
+                items.push("<span class='item'><div class='icon'>" + icons[name] + "</div><div class='text'>" + name + "<br/>" + escape(icons[name]).replace("%", "\\").toLowerCase() + "</div></span>");
+            }
+        }
+
+        return items.join("");
+    };
+
+
+
+    //设置字体图标
+    flyingon.__fn_font_icon = (function (name) {
+
+        return function (dom, icon) {
+
+            if (icon)
+            {
+                var cache;
+
+                if (icon.indexOf("url" >= 0) && (cache = icon.indexOf(")")) > 0)
+                {
+                    if (++cache === icon.length)
+                    {
+                        dom.style.backgroundImage = icon;
+                    }
+                    else
+                    {
+                        dom.style.backgroundImage = icon.substring(0, cache);
+                        dom.style.backgroundPosition = icon.substring(cache + 1);
+                    }
+                }
+                else
+                {
+                    var value = icon.indexOf(":");
+
+                    if (value >= 0)
+                    {
+                        cache = icon.substring(0, value) || "flyingon";
+                        icon = icon.substring(value + 1);
+                    }
+                    else
+                    {
+                        cache = "flyingon";
+                    }
+
+                    dom.style.fontFamily = cache;
+
+                    if (value = font_list[cache])
+                    {
+                        if (value.__icon_cache__) //暂存
+                        {
+                            value.push([dom, icon]);
+                        }
+                        else
+                        {
+                            dom[name] = value[icon] || icon;
+                        }
+                    }
+                    else
+                    {
+                        (font_list[cache] = [[dom, icon]]).__icon_cache__ = true; //暂存
+                        flyingon.script(flyingon.icons_path + cache + ".js");
+                    }
+                }
+            }
+            else
+            {
+                dom[name] = "";
+            }
+        };
+
+    })(textContent_name);
+
+
+
+})(flyingon);
+
+
+
+//图标
+flyingon.defineClass("Icon", flyingon.Control, function (base) {
+
+
+
+
+    //设置默认大小
+    this.defaultWidth = this.defaultHeight = 24;
+
+
+    //创建dom元素模板
+    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;user-select:none;-webkit-user-select:none;-moz-user-select:none;");
+
+
+
+
+    //图像
+    //name:             字体图标名(系统字库)
+    //library:name      指定字库的字体图标名
+    //url(...)[x, y]    图片路径及位置
+    this.defineProperty("image", "", {
+
+        set_code: "flyingon.__fn_font_icon(this.dom, value);"
+    });
+
+
+
+    this.__event_bubble_mousemove = function (event) {
+
+        if (event.pressdown)
+        {
+            flyingon.__fn_clear_selection();
+        }
+    };
+
+
+    this.after_measure = function (box) {
+
+        this.dom.style.lineHeight = this.clientHeight + "px";
+    };
+
+
+
+});
+
+
+
+﻿
 //面板控件
 flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
@@ -11596,7 +11806,8 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
             (target = this.__parent) && (layout = target.__layout) &&
             (target = target.__children[index]))
         {
-            start.capture_dom = true;
+            start.capture = true; //设置鼠标捕获
+
             start = start.start || (start.start = layout.__fn_resize_start(target, layout.vertical, this));
             value = start.vertical ? event.distanceY : event.distanceX;
 
@@ -11992,7 +12203,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         this.defineProperty("showClose", false, {
 
             attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'close', 'close', 'after')"
+            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'close', 'tab-close', 'after')"
         });
 
 
@@ -12000,7 +12211,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         this.defineProperty("showCollapse", false, {
 
             attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'collapse', 'collapse', 'after', '__close')"
+            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'collapse', 'collapse-left', 'after', '__close')"
         });
 
 
@@ -12077,40 +12288,39 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
         //渲染页签头
         this.__fn_render_header = function (box, header, data) {
 
-
             //处理收拢或只显示页签头
             if (data.collapse || data.only_tab)
             {
                 var width = header.offsetWidth + box.border_width - this.offsetWidth,
                     height = header.offsetHeight + box.border_height - this.offsetHeight,
-                    change;
+                    cache;
 
                 if (data.only_tab)
                 {
-                    change = { width: width, height: height };
+                    cache = { width: width, height: height };
                 }
                 else if (data.direction === "left" || data.direction === "right")  //竖直方向收拢
                 {
-                    change = { width: width }; //返回宽度变化量
+                    cache = { width: width }; //返回宽度变化量
                 }
                 else
                 {
-                    change = { height: height }; //返回高度变化量
+                    cache = { height: height }; //返回高度变化量
                 }
 
                 if (data.collapse && header.__collapse)
                 {
-                    header.__collapse.set_image("expand");
+                    header.__collapse.set_image("expand-" + data.direction);
                 }
 
                 header.render();
 
-                return change;
+                return cache;
             }
 
             if (header.__collapse)
             {
-                header.__collapse.set_image(data.direction === "top" || data.direction === "bottom" ? "collapse" : "collapse");
+                header.__collapse.set_image("collapse-" + ((cache = this.__parent) && (cache = cache.__layout) && cache.__fn_collapse(this) || data.direction));
             }
 
             header.render();
@@ -13146,7 +13356,7 @@ flyingon.defineClass("Splitter", flyingon.Control, function (base) {
 
         this.defineProperty("text", "", {
 
-            set_code: flyingon.__fn_html_property_code("dom_span"),
+            set_code: "this.__fn_dom_textContent(this.dom_span, value, this.is_html_text)",
             change_code: "this.__fn_change_text(value);"
         });
 
@@ -13315,166 +13525,6 @@ flyingon.defineClass("Button", flyingon.Control, function (base) {
 
 
 
-﻿
-
-//字体图标
-(function (flyingon) {
-
-
-
-
-    var font_list = {},    //字体图标库
-
-        textContent_name = flyingon.__textContent_name,
-
-        css_template = "@font-face {\n"
-            + "font-family: \"0\";\n"
-            + "font-style: normal;\n"
-            + "font-weight: normal;\n"
-            + "src: url(\"1.eot\");\n" /* ie9 */
-            + "src: url(\"1.eot?#iefix\") format(\"embedded-opentype\"),\n" /* ie6-ie8 */
-                + "url(\"1.woff\") format(\"woff\"),\n" /* chrome, firefox */
-                + "url(\"1.ttf\") format(\"truetype\"),\n" /* chrome, firefox, opera, safari, android, ios4.2+ */
-                + "url(\"1.svg#0\") format(\"svg\");\n" /* ios4.1- */
-        + "}";
-
-
-
-
-    //注册字体名值对回调函数
-    flyingon.icons = function (name, icons) {
-
-        if (name && icons)
-        {
-            var list = font_list[name],
-                items,
-                length;
-
-            font_list[name] = icons;
-
-            if (list && (length = list.length) > 0)
-            {
-                name = textContent_name;
-
-                for (var i = 0; i < length; i++)
-                {
-                    (items = list[i])[0][name] = icons[items[1]] || items[1];
-                }
-            }
-        }
-    };
-
-
-    //设置字体图标
-    flyingon.__fn_font_icon = (function (name) {
-
-        return function (dom, icon) {
-
-            if (icon)
-            {
-                var cache;
-
-                if (icon.indexOf("url" >= 0) && (cache = icon.indexOf(")")) > 0)
-                {
-                    if (++cache === icon.length)
-                    {
-                        dom.style.backgroundImage = icon;
-                    }
-                    else
-                    {
-                        dom.style.backgroundImage = icon.substring(0, cache);
-                        dom.style.backgroundPosition = icon.substring(cache + 1);
-                    }
-                }
-                else
-                {
-                    var value = icon.indexOf(":");
-
-                    if (value >= 0)
-                    {
-                        cache = icon.substring(0, value) || "flyingon";
-                        icon = icon.substring(value + 1);
-                    }
-                    else
-                    {
-                        cache = "flyingon";
-                    }
-
-                    dom.style.fontFamily = cache;
-
-                    if (value = font_list[cache])
-                    {
-                        if (value.__icon_cache__) //暂存
-                        {
-                            value.push([dom, icon]);
-                        }
-                        else
-                        {
-                            dom[name] = value[icon] || icon;
-                        }
-                    }
-                    else
-                    {
-                        (font_list[cache] = [[dom, icon]]).__icon_cache__ = true; //暂存
-
-                        flyingon.script(flyingon.icons_path + cache + ".js");
-                        flyingon.style(css_template.replace(/0/g, cache).replace(/1/g, flyingon.icons_path + cache));
-                    }
-                }
-            }
-            else
-            {
-                dom[name] = "";
-            }
-        };
-
-    })(textContent_name);
-
-
-
-})(flyingon);
-
-
-
-//图标
-flyingon.defineClass("Icon", flyingon.Control, function (base) {
-
-
-
-
-    //设置默认大小
-    this.defaultWidth = this.defaultHeight = 24;
-
-
-    //创建dom元素模板
-    this.create_dom_template("div", "overflow:hidden;text-align:center;vertical-align:middle;background-repeat:no-repeat;user-select:none;-webkit-user-select:none;-moz-user-select:none;");
-
-
-
-
-    //图像
-    //name:             字体图标名(系统字库)
-    //library:name      指定字库的字体图标名
-    //url(...)[x, y]    图片路径及位置
-    this.defineProperty("image", "", {
-
-        set_code: "flyingon.__fn_font_icon(this.dom, value);"
-    });
-
-
-
-
-    this.after_measure = function (box) {
-
-        this.dom.style.lineHeight = this.clientHeight + "px";
-    };
-
-
-
-});
-
-
-
 ﻿/// <reference path="../Base/Core.js" />
 /// <reference path="Control.js" />
 
@@ -13545,7 +13595,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
     this.defineProperty("text", "", {
 
-        set_code: flyingon.__fn_html_property_code("dom")
+        set_code: "this.__fn_dom_textContent(this.dom, value, this.is_html_text)"
     });
 
 
@@ -13692,8 +13742,12 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         Class.create = function (text) {
 
             (this.__fields = Object.create(this.__defaults)).text = text || "";
-            this.dom = this.dom_template.cloneNode(true);
         };
+
+
+
+        //扩展属性支持
+        flyingon.IProperty.call(this);
 
 
 
@@ -13702,45 +13756,110 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
             var div = document.createElement("div");
 
-            div.innerHTML = "<div class='flyingon-TreeNode' style='overflow:hidden;'><div class='flyingon-TreeNode-collapse' style='position:absolute;'></div><div class='flyingon-TreeNode-image' style='position:absolute;'></div><div class='flyingon-TreeNode-text' style='position:absolute;'></div></div><div class='flyingon-TreeNode-nodes'></div>";
+            div.className = "flyingon-TreeView-node";
+            div.innerHTML = "<div class='flyingon-TreeNode'><div class='flyingon-TreeNode-collapse'></div><div class='flyingon-TreeNode-check'></div><div class='flyingon-TreeNode-image'></div><div class='flyingon-TreeNode-text'></div></div>";
 
             return div;
 
         })();
 
 
-        //扩展属性支持
-        flyingon.IProperty.call(this);
+        var textContent_name = flyingon.__textContent_name;
 
+        this.__fn_create_dom = function () {
+
+            var dom = this.dom = this.dom_template.cloneNode(true),
+                dom_node = this.dom_node = dom.children[0],
+                name = textContent_name;
+
+            dom_node.__target = this;
+
+            flyingon.__fn_font_icon(dom_node.children[0], "tree-collapse");
+            flyingon.__fn_font_icon(dom_node.children[2], this.get_image());
+            flyingon.__fn_dom_textContent(dom_node.children[3], this.get_text(), this.is_html_text);
+
+            return dom;
+        };
 
 
         //节点文字
         this.defineProperty("text", "", {
 
-            change_code: "if (this.dom_text) " + flyingon.__fn_html_property_code("dom_text")
+            change_code: "if (this.dom_node) flyingon.__fn_dom_textContent(this.dom_node.children[3], value, this.is_html_text)"
         });
 
 
         //节点图像
         this.defineProperty("image", "", {
 
-            change_code: "if (this.dom_image) flyingon.__fn_font_icon(this.dom_image, value);"
+            change_code: "if (this.dom_node) flyingon.__fn_font_icon(this.dom_node.children[2], value);"
         });
 
 
         //无子节点时图像
-        this.defineProperty("no_child_image", "");
+        this.defineProperty("image1", "");
 
 
         //节点展开时图像
-        this.defineProperty("expanded_image", "");
+        this.defineProperty("image2", "");
 
 
         //是否展开
         this.defineProperty("expanded", false, {
 
+            change_code: "if (this.dom_node) this.__fn_expanded(value);"
         });
 
+
+        //是否选中
+        this.defineProperty("checked", false, {
+
+            change_code: "if (this.dom_node) flyingon.__fn_font_icon(this.dom_node.children[1], value ? 'tree-checked' : 'tree-unchecked');"
+        });
+
+
+
+        this.__fn_expanded = function (value) {
+
+            var nodes = this.__nodes,
+                length,
+                cache;
+
+            flyingon.__fn_font_icon(this.dom_node.children[0], value ? "tree-expand" : "tree-collapse");
+
+            if (value)
+            {
+                if (this.__nodes_loaded)
+                {
+                    nodes.dom.style.display = "";
+                }
+                else
+                {
+                    cache = document.createDocumentFragment();
+
+                    if (nodes && (length = nodes.length) > 0)
+                    {
+                        for (var i = 0; i < length; i++)
+                        {
+                            cache.appendChild(nodes[i].__fn_create_dom());
+                        }
+
+                        nodes.dom.appendChild(cache);
+                        this.dom.appendChild(nodes.dom);
+                    }
+                    else
+                    {
+
+                    }
+
+                    this.__nodes_loaded = true;
+                }
+            }
+            else if (nodes)
+            {
+                nodes.dom.style.display = "none";
+            }
+        };
 
 
         //父节点
@@ -13795,7 +13914,15 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         Class.create = function (owner, parent) {
 
             this.owner = owner;
-            this.parent = parent;
+
+            if (this.parent = parent)
+            {
+                (this.dom = document.createElement("div")).className = "flyingon-TreeView-nodes";
+            }
+            else
+            {
+                this.dom = owner.dom;
+            }
         };
 
 
@@ -13803,66 +13930,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         //扩展集合接口
         flyingon.ICollection.call(this);
 
-
-
-        //添加子项
-        this.__fn_append = function () {
-
-            var change = !flyingon.__initializing;
-
-            for (var i = 0, _ = arguments.length; i < _; i++)
-            {
-                validate(this, arguments[i], change);
-            }
-
-            update(this.owner);
-        };
-
-
-        //在指定位置插入子节点
-        this.__fn_insert = function (index) {
-
-            var change = !flyingon.__initializing;
-
-            for (var i = 1, _ = arguments.length; i < _; i++)
-            {
-                validate(this, item = arguments[i], change);
-            }
-
-            update(this.owner);
-        };
-
-
-        //移除指定子节点
-        this.__fn_remove = function (item) {
-
-            remove_item(item);
-            update(this.owner);
-        };
-
-
-        //移除指定位置的子节点
-        this.__fn_removeAt = function (index, length) {
-
-            for (var i = 0; i < length; i++)
-            {
-                remove_item(this[index + i]);
-            }
-
-            update(this.owner);
-        };
-
-
-        //清除子节点
-        this.__fn_clear = function () {
-
-            for (var i = 0, _ = this.length; i < _; i++)
-            {
-                remove_item(this[i]);
-            }
-
-            update(this.owner);
-        };
 
 
         //添加进集合时进行验证
@@ -13886,7 +13953,11 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 }
 
                 item.__owner = owner;
-                item.__parent = target.parent;
+
+                if (!(item.__parent = target.parent) || owner.__expanded) //根节点立即生成dom
+                {
+                    target.dom.appendChild(item.__fn_create_dom());
+                }
 
                 return true;
             }
@@ -13910,14 +13981,54 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         };
 
 
-        //标记更新
-        function update(target) {
+        //添加子项
+        this.__fn_append = function () {
 
-            target.__arrange_dirty = true;
+            var change = !flyingon.__initializing;
 
-            while ((target = target.__owner) && !target.__arrange_dirty)
+            for (var i = 0, _ = arguments.length; i < _; i++)
             {
-                target.__arrange_dirty = true;
+                validate(this, arguments[i], change);
+            }
+
+            //update(this.owner);
+        };
+
+
+        //在指定位置插入子节点
+        this.__fn_insert = function (index) {
+
+            var change = !flyingon.__initializing;
+
+            for (var i = 1, _ = arguments.length; i < _; i++)
+            {
+                validate(this, item = arguments[i], change);
+            }
+
+            //update(this.owner);
+        };
+
+
+        //移除指定子节点
+        this.__fn_remove = remove_item;
+
+
+        //移除指定位置的子节点
+        this.__fn_removeAt = function (index, length) {
+
+            for (var i = 0; i < length; i++)
+            {
+                remove_item(this[index + i]);
+            }
+        };
+
+
+        //清除子节点
+        this.__fn_clear = function () {
+
+            for (var i = 0, _ = this.length; i < _; i++)
+            {
+                remove_item(this[i]);
             }
         };
 
@@ -13932,19 +14043,24 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-        //Class.create_mode = "merge";
 
-        //Class.create = function () {
-
-        //    this.dom_children = this.dom.children[0];
-        //}
+        this.defaultWidth = 200;
+        this.defaultHeight = 400;
 
 
 
-        ////dom元素模板
-        //this.create_dom_template("div", null, "<div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div>");
+        //是否显示图像
+        this.defineProperty("image", false, {
+
+            set_code: "value ? this.removeClass('flyingon-TreeView-no-image') : this.addClass('flyingon-TreeView-no-image');"
+        });
 
 
+        //是否允许选择
+        this.defineProperty("checked", false, {
+
+            set_code: "this.toggleClass('flyingon-TreeView-checked');"
+        });
 
 
         //子节点集合
@@ -13959,22 +14075,21 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-        ////获取可视节点数
-        //function visible_count(nodes) {
+        this.__event_bubble_mousedown = function (event) {
 
-        //    var count = nodes.length,
-        //        node;
+            var target;
 
-        //    for (var i = 0, _ = count; i < _; i++)
-        //    {
-        //        if ((node = nodes[i]).__fields.expanded && node.__nodes)
-        //        {
-        //            count += visible_count(node.__nodes);
-        //        }
-        //    }
+            switch (event.dom.className)
+            {
+                case "flyingon-TreeNode-collapse":
+                    (target = event.dom.parentNode.__target).set_expanded(!target.get_expanded());
+                    break;
 
-        //    return count;
-        //};
+                case "flyingon-TreeNode-check":
+                    (target = event.dom.parentNode.__target).set_checked(!target.get_checked());
+                    break;
+            }
+        };
 
 
         //渲染控件
@@ -13982,15 +14097,14 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
             if (this.__update_dirty === 1)
             {
+                var style = this.dom.style;
+
                 flyingon.__fn_compute_css(this);
-            }
 
-            if (this.__arrange_dirty)
-            {
-
+                style.overflowX = this.get_overflowX();
+                style.overflowY = this.get_overflowY();
             }
         };
-
 
 
     });
@@ -14029,14 +14143,16 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             draggable,                              //拖动方式
             resizable,                              //调整大小的方式
 
-            hover_control,                          //鼠标指向控件
-
             setCapture,                             //捕获鼠标
             releaseCapture,                         //释放鼠标
             capture_dom,                            //捕获的dom
             capture_cache,                          //捕获时缓存数据
 
             pressdown,                              //按下时dom事件
+            pressdown_dom,                          //鼠标按下时dom
+            pressdown_target,                       //鼠标按下时目标控件
+
+            hover_control,                          //鼠标指向控件
             host_mousemove = true,                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
 
             user_select = flyingon.__fn_style_prefix("user-select"),
@@ -14218,47 +14334,45 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                     event.which = event.button & 1 ? 1 : (event.button & 2 ? 3 : 2);
                 }
 
+                //获取enabled控件
                 target = cache = dom_target(event, false) || ownerWindow;
 
-                //记录鼠标按下位置
-                pressdown = {
-
-                    dom: event.target,  //按下时触发事件的dom
-                    which: event.which,
-                    clientX: event.clientX,
-                    clientY: event.clientY
-                };
-
-                //获取enabled控件
-                while (!cache.get_enabled())
+                while (!target.get_enabled())
                 {
-                    if (!(cache = cache.__parent))
+                    if (!(target = target.__parent))
                     {
-                        cache = ownerWindow;
+                        target = ownerWindow;
                         break;
                     }
                 }
 
-                //设置捕获目标
-                pressdown.capture = pressdown.target = cache;
+                //初始化鼠标按下时数据
+                pressdown_dom = event.target;
+
+                pressdown = {
+
+                    capture: false,
+                    which: event.which,
+                    clientX: event.clientX,
+                    clientY: event.clientY,
+                    target: pressdown_target = target
+                };
 
                 //分发mousedown事件
-                cache.dispatchEvent(new MouseEvent("mousedown", event));
+                target.dispatchEvent(new MouseEvent("mousedown", event));
 
                 //可调整大小 触控版目前不支持调整大小
                 if (resizable)
                 {
                     //设置目标控件
                     pressdown.target = resizable.target;
+                    pressdown.capture = true;
 
                     //禁止点击事件
                     flyingon.__disable_click = flyingon.__disable_dbclick = true;
                 }
                 else
                 {
-                    //查找当前鼠标位置下的控件
-                    cache = target;
-
                     //检测拖动
                     while (cache)
                     {
@@ -14268,6 +14382,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                             {
                                 //设置捕获目标
                                 pressdown.target = cache;
+                                pressdown.capture = true;
 
                                 return;
                             }
@@ -14299,29 +14414,30 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
                 event = fix_event(window.event);
             }
 
-            if (pressdown && (target = pressdown.target))
+            if (pressdown)
             {
                 if (resizable) //调整大小
                 {
-                    target.__fn_resize(resizable, event, pressdown);
-                    target.get_ownerWindow().__fn_registry_update(target, true);
+                    if (target = pressdown.target)
+                    {
+                        target.__fn_resize(resizable, event, pressdown);
+                        target.get_ownerWindow().__fn_registry_update(target, true);
+                    }
                 }
                 else if (draggable) //拖动
                 {
                     dragdrop.move(event, pressdown);
                 }
-                else if (target = pressdown.capture)  //启用捕获
+                else if (target = pressdown_target)  //启用捕获
                 {
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
                 }
 
                 //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
-                if (!capture_dom && pressdown.capture_dom)
+                if (!capture_dom && pressdown.capture)
                 {
-                    setCapture(capture_dom = pressdown.dom);
+                    setCapture(capture_dom = pressdown_dom);
                 }
-
-                //window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty(); //清除选区
             }
             else if (cache = target = dom_target(event, false))
             {
@@ -14404,15 +14520,15 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
             if (draggable) //如果处于拖动状态则停止拖动
             {
-                draggable = null;
-
                 if (dragdrop.stop(event, pressdown, cancel)) //如果拖动过则取消相关鼠标事件
                 {
                     flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
                 }
+
+                draggable = null;
             }
 
-            if (pressdown && (target = pressdown.capture))
+            if (pressdown && (target = pressdown_target))
             {
                 target.dispatchEvent(new MouseEvent("mouseup", event, pressdown));
                 target.__fn_to_active(false); //取消活动状态
@@ -15065,7 +15181,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         target = this.__header_close = new flyingon.Icon()
             .set_column3("after")
-            .set_image("close")
+            .set_image("dialog-close")
             .addClass("flyingon-Dialog-close")
 
             .on("click", function (event) {

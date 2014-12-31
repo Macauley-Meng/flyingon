@@ -30,7 +30,7 @@
 
         for (var i = 0; i < 100; i++)
         {
-            var node = new flyingon.TreeNode("text " + i);
+            var node = new flyingon.TreeNode("<span style='color:blue;'>text " + i + "</span>");
 
             for (var j = 0; j < 100; j++)
             {
@@ -41,18 +41,19 @@
 
             tree.appendChild(node);
         }
-  
+
         alert(new Date() - date);
 
+        w.appendChild(tree);
         w.show();
 
-        
+
     </script>
 
 </head>
 <body>
 
- 
+
 
 </body>
 </html>

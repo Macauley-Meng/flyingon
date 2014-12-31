@@ -378,7 +378,7 @@
         this.defineProperty("showClose", false, {
 
             attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'close', 'close', 'after')"
+            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'close', 'tab-close', 'after')"
         });
 
 
@@ -386,7 +386,7 @@
         this.defineProperty("showCollapse", false, {
 
             attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'collapse', 'collapse', 'after', '__close')"
+            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'collapse', 'collapse-left', 'after', '__close')"
         });
 
 
@@ -463,40 +463,39 @@
         //渲染页签头
         this.__fn_render_header = function (box, header, data) {
 
-
             //处理收拢或只显示页签头
             if (data.collapse || data.only_tab)
             {
                 var width = header.offsetWidth + box.border_width - this.offsetWidth,
                     height = header.offsetHeight + box.border_height - this.offsetHeight,
-                    change;
+                    cache;
 
                 if (data.only_tab)
                 {
-                    change = { width: width, height: height };
+                    cache = { width: width, height: height };
                 }
                 else if (data.direction === "left" || data.direction === "right")  //竖直方向收拢
                 {
-                    change = { width: width }; //返回宽度变化量
+                    cache = { width: width }; //返回宽度变化量
                 }
                 else
                 {
-                    change = { height: height }; //返回高度变化量
+                    cache = { height: height }; //返回高度变化量
                 }
 
                 if (data.collapse && header.__collapse)
                 {
-                    header.__collapse.set_image("expand");
+                    header.__collapse.set_image("expand-" + data.direction);
                 }
 
                 header.render();
 
-                return change;
+                return cache;
             }
 
             if (header.__collapse)
             {
-                header.__collapse.set_image(data.direction === "top" || data.direction === "bottom" ? "collapse" : "collapse");
+                header.__collapse.set_image("collapse-" + ((cache = this.__parent) && (cache = cache.__layout) && cache.__fn_collapse(this) || data.direction));
             }
 
             header.render();

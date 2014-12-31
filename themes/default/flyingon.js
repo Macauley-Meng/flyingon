@@ -121,7 +121,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         focus_back = "blue",
         focus_color = "black",
         focus_border = "blue",
-        
+
         disabled_back = "darkgray",
         disabled_border = "#060606",
         disabled_color = "#0A0A0A";
@@ -143,7 +143,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         //图标控件样式
         "@flyingon-Icon": {
 
-            fontSize: "18px",
+            fontSize: "16px",
             color: icon_color,
             cursor: "default",
 
@@ -176,63 +176,61 @@ A~B                    匹配任何在A控件之后的同级B控件
         //页签面板默认样式
         "@flyingon-TabPanel": {
 
-            //内容区域
-            "css:.flyingon-TabPanel-body": {
+        },
 
-                borderStyle: "solid",
-                borderColor: control_border,
-                borderWidth: "1px",
-                backgroundColor: window_back
-            },
+        //页签面板内容区域
+        "css:.flyingon-TabPanel-body": {
 
-            //页签头
-            "@flyingon-TabPanelHeader": {
+            borderStyle: "solid",
+            borderColor: control_border,
+            borderWidth: "1px",
+            backgroundColor: window_back
+        },
 
-                layoutType: "column3",
-                margin: "0",
-                borderStyle: "solid",
-                borderColor: control_border,
-                borderWidth: "1px",
-                width: "fill",
-                height: "fill",
-                overflow: "hidden",
-                backgroundColor: control_back,
-                cursor: "default"
-            },
+        //页签面板页签头
+        "@flyingon-TabPanelHeader": {
 
-            //选中状态时页签头
-            ".flyingon-TabPanelHeader-selected": {
+            layoutType: "column3",
+            margin: "0",
+            borderStyle: "solid",
+            borderColor: control_border,
+            borderWidth: "1px",
+            width: "fill",
+            height: "fill",
+            overflow: "hidden",
+            backgroundColor: control_back,
+            cursor: "default"
+        },
 
-                backgroundColor: hover_back
-            },
+        //页签面板选中状态时页签头
+        ".flyingon-TabPanelHeader-selected": {
 
-            //页签头图标
-            ".flyingon-TabPanelHeader-icon": {
+            backgroundColor: hover_back
+        },
 
-                color: control_color
-            },
+        //页签面板页签头图标
+        ".flyingon-TabPanelHeader-icon": {
 
-            //页签头文字
-            ".flyingon-TabPanelHeader-text": {
+            color: control_color
+        },
 
-                column3: "center",
-                width: "fill",
-                height: "fill"
-            },
+        //页签面板页签头文字
+        ".flyingon-TabPanelHeader-text": {
 
-            //页签头收拢图标
-            ".flyingon-TabPanelHeader-collapse": {
+            column3: "center",
+            width: "fill",
+            height: "fill"
+        },
 
-                ":hover": {
+        //页签面板页签头收拢图标
+        ".flyingon-TabPanelHeader-collapse:hover": {
 
-                    color: hover_color
-                }
-            },
+            color: hover_color
+        },
 
-            //页签头关闭图标
-            ".flyingon-TabPanelHeader-close": {
+        //页签面板页签头关闭图标
+        ".flyingon-TabPanelHeader-close": {
 
-            }
         },
 
 
@@ -552,66 +550,62 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             borderStyle: "solid",
             borderColor: control_border,
-            borderWidth: "0",
-
-            //上一页图标
-            ".flyingon-TabControl-previous": {
-
-                borderStyle: "solid",
-                borderColor: control_border,
-                borderWidth: "1px",
-                backgroundColor: control_back
-            },
-
-            //下一页图标
-            ".flyingon-TabControl-next": {
-
-                borderStyle: "solid",
-                borderColor: control_border,
-                borderWidth: "1px",
-                backgroundColor: control_back
-            },
-
-            //页签头
-            "@flyingon-TabControlHeader": {
-
-                layoutType: "column3",
-                margin: "0",
-                borderStyle: "solid",
-                borderColor: control_border,
-                borderWidth: "1px 1px 0 1px",
-                width: "fill",
-                height: "fill",
-                overflow: "hidden",
-                backgroundColor: control_back,
-                cursor: "default"
-            },
-
-            //页签头图标
-            ".flyingon-TabControlHeader-icon": {
-
-            },
-
-            //页签头标题
-            ".flyingon-TabControlHeader-text": {
-
-            },
-
-            //页签头收拢图标
-            ".flyingon-TabControlHeader-collapse": {
-
-                ":hover": {
-
-                    color: hover_color
-                }
-            },
-
-            //页签头关闭图标
-            ".flyingon-TabControlHeader-close": {
-
-            }
+            borderWidth: "0"
         },
 
+        //页签控件上一页图标
+        ".flyingon-TabControl-previous": {
+
+            borderStyle: "solid",
+            borderColor: control_border,
+            borderWidth: "1px",
+            backgroundColor: control_back
+        },
+
+        //页签控件下一页图标
+        ".flyingon-TabControl-next": {
+
+            borderStyle: "solid",
+            borderColor: control_border,
+            borderWidth: "1px",
+            backgroundColor: control_back
+        },
+
+        //页签控件页签头
+        "@flyingon-TabControlHeader": {
+
+            layoutType: "column3",
+            margin: "0",
+            borderStyle: "solid",
+            borderColor: control_border,
+            borderWidth: "1px 1px 0 1px",
+            width: "fill",
+            height: "fill",
+            overflow: "hidden",
+            backgroundColor: control_back,
+            cursor: "default"
+        },
+
+        //页签控件页签头图标
+        ".flyingon-TabControlHeader-icon": {
+
+        },
+
+        //页签控件页签头标题
+        ".flyingon-TabControlHeader-text": {
+
+        },
+
+        //页签控件页签头收拢图标
+        ".flyingon-TabControlHeader-collapse:hover": {
+
+            color: hover_color
+        },
+
+        //页签控件页签头关闭图标
+        ".flyingon-TabControlHeader-close": {
+
+        },
 
         ".flyingon-TabControl-collapse-left,.flyingon-TabControl-collapse-right": {
 
@@ -634,6 +628,82 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
+
+
+        //树控件
+        "@flyingon-TreeView": {
+
+            borderStyle: "solid",
+            borderColor: control_border,
+            borderWidth: "1px",
+            overflow: "auto"
+        },
+
+        "css:.flyingon-TreeView-nodes": {
+
+            marginLeft: "20px"
+        },
+
+        "css:.flyingon-TreeView-node": {
+
+        },
+
+        "css:.flyingon-TreeNode": {
+
+            height: "20px",
+            lineHeight: "20px",
+            verticalAlign: "middle",
+            overflow: "hidden",
+            cursor: "default"
+        },
+
+        "css:.flyingon-TreeNode-selected": {
+
+            backgroundColor: "skyblue",
+            color: "white"
+        },
+
+        "css:.flyingon-TreeNode-collapse": {
+
+            marginLeft: "2px",
+            float: "left",
+            width: "20px",
+            height: "20px",
+            textAlign: "center"
+        },
+
+        "css:.flyingon-TreeNode-check": {
+
+            display: "none",
+            float: "left",
+            width: "20px",
+            height: "20px",
+            textAlign: "center"
+        },
+
+        "css:.flyingon-TreeNode-image": {
+
+            float: "left",
+            width: "20px",
+            height: "20px",
+            textAlign: "center"
+        },
+
+        "css:.flyingon-TreeNode-text": {
+
+            float: "left",
+            height: "20px"
+        },
+
+        "css:.flyingon-TreeView css:.flyingon-TreeNode-check": {
+
+            display: "block"
+        },
+
+        "css:.flyingon-TreeView-check .flyingon-TreeNode-check": {
+
+            display: "block"
+        },
 
 
         //按钮控件样式

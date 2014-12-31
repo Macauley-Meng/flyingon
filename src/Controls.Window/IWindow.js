@@ -25,14 +25,16 @@
             draggable,                              //拖动方式
             resizable,                              //调整大小的方式
 
-            hover_control,                          //鼠标指向控件
-
             setCapture,                             //捕获鼠标
             releaseCapture,                         //释放鼠标
             capture_dom,                            //捕获的dom
             capture_cache,                          //捕获时缓存数据
 
             pressdown,                              //按下时dom事件
+            pressdown_dom,                          //鼠标按下时dom
+            pressdown_target,                       //鼠标按下时目标控件
+
+            hover_control,                          //鼠标指向控件
             host_mousemove = true,                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
 
             user_select = flyingon.__fn_style_prefix("user-select"),
@@ -214,47 +216,45 @@
                     event.which = event.button & 1 ? 1 : (event.button & 2 ? 3 : 2);
                 }
 
+                //获取enabled控件
                 target = cache = dom_target(event, false) || ownerWindow;
 
-                //记录鼠标按下位置
-                pressdown = {
-
-                    dom: event.target,  //按下时触发事件的dom
-                    which: event.which,
-                    clientX: event.clientX,
-                    clientY: event.clientY
-                };
-
-                //获取enabled控件
-                while (!cache.get_enabled())
+                while (!target.get_enabled())
                 {
-                    if (!(cache = cache.__parent))
+                    if (!(target = target.__parent))
                     {
-                        cache = ownerWindow;
+                        target = ownerWindow;
                         break;
                     }
                 }
 
-                //设置捕获目标
-                pressdown.capture = pressdown.target = cache;
+                //初始化鼠标按下时数据
+                pressdown_dom = event.target;
+
+                pressdown = {
+
+                    capture: false,
+                    which: event.which,
+                    clientX: event.clientX,
+                    clientY: event.clientY,
+                    target: pressdown_target = target
+                };
 
                 //分发mousedown事件
-                cache.dispatchEvent(new MouseEvent("mousedown", event));
+                target.dispatchEvent(new MouseEvent("mousedown", event));
 
                 //可调整大小 触控版目前不支持调整大小
                 if (resizable)
                 {
                     //设置目标控件
                     pressdown.target = resizable.target;
+                    pressdown.capture = true;
 
                     //禁止点击事件
                     flyingon.__disable_click = flyingon.__disable_dbclick = true;
                 }
                 else
                 {
-                    //查找当前鼠标位置下的控件
-                    cache = target;
-
                     //检测拖动
                     while (cache)
                     {
@@ -264,6 +264,7 @@
                             {
                                 //设置捕获目标
                                 pressdown.target = cache;
+                                pressdown.capture = true;
 
                                 return;
                             }
@@ -295,29 +296,30 @@
                 event = fix_event(window.event);
             }
 
-            if (pressdown && (target = pressdown.target))
+            if (pressdown)
             {
                 if (resizable) //调整大小
                 {
-                    target.__fn_resize(resizable, event, pressdown);
-                    target.get_ownerWindow().__fn_registry_update(target, true);
+                    if (target = pressdown.target)
+                    {
+                        target.__fn_resize(resizable, event, pressdown);
+                        target.get_ownerWindow().__fn_registry_update(target, true);
+                    }
                 }
                 else if (draggable) //拖动
                 {
                     dragdrop.move(event, pressdown);
                 }
-                else if (target = pressdown.capture)  //启用捕获
+                else if (target = pressdown_target)  //启用捕获
                 {
                     target.dispatchEvent(new MouseEvent("mousemove", event, pressdown));
                 }
 
                 //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
-                if (!capture_dom && pressdown.capture_dom)
+                if (!capture_dom && pressdown.capture)
                 {
-                    setCapture(capture_dom = pressdown.dom);
+                    setCapture(capture_dom = pressdown_dom);
                 }
-
-                //window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty(); //清除选区
             }
             else if (cache = target = dom_target(event, false))
             {
@@ -400,15 +402,15 @@
 
             if (draggable) //如果处于拖动状态则停止拖动
             {
-                draggable = null;
-
                 if (dragdrop.stop(event, pressdown, cancel)) //如果拖动过则取消相关鼠标事件
                 {
                     flyingon.__disable_click = flyingon.__disable_dbclick = true; //禁止点击事件
                 }
+
+                draggable = null;
             }
 
-            if (pressdown && (target = pressdown.capture))
+            if (pressdown && (target = pressdown_target))
             {
                 target.dispatchEvent(new MouseEvent("mouseup", event, pressdown));
                 target.__fn_to_active(false); //取消活动状态
