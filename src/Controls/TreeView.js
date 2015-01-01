@@ -8,15 +8,6 @@
     var node_base = function (base, serialize, deserialize_property) {
 
 
-        //是否使用ajax的方式异步加载子节点
-        this.defineProperty("async", false);
-
-
-        //ajax异步加载子节点地址
-        this.defineProperty("ajax", "");
-
-
-
         //添加子节点
         this.appendChild = function (node) {
 
@@ -65,8 +56,6 @@
 
             return this;
         };
-
-
 
 
 
@@ -129,7 +118,7 @@
             var div = document.createElement("div");
 
             div.className = "flyingon-TreeView-node";
-            div.innerHTML = "<div class='flyingon-TreeNode'><div class='flyingon-TreeNode-collapse'></div><div class='flyingon-TreeNode-check'></div><div class='flyingon-TreeNode-image'></div><div class='flyingon-TreeNode-text'></div></div>";
+            div.innerHTML = "<div class='flyingon-TreeNode'><div class='flyingon-TreeNode-display'></div><div class='flyingon-TreeNode-check'></div><div class='flyingon-TreeNode-image'></div><div class='flyingon-TreeNode-text'></div></div>";
 
             return div;
 
@@ -142,13 +131,19 @@
 
             var dom = this.dom = this.dom_template.cloneNode(true),
                 dom_node = this.dom_node = dom.children[0],
+                fields = this.__fields,
+                nodes = this.__nodes,
+                ajax = this.__ajax = this.get_ajax(),
                 name = textContent_name;
 
             dom_node.__target = this;
 
-            flyingon.__fn_font_icon(dom_node.children[0], "tree-collapse");
-            flyingon.__fn_font_icon(dom_node.children[2], this.get_image());
-            flyingon.__fn_dom_textContent(dom_node.children[3], this.get_text(), this.is_html_text);
+            dom_node.children[0].className = nodes && nodes.length > 0 ? (fields.expanded ? " flyingon-TreeNode-expanded" : " flyingon-TreeNode-collapse") : (ajax ? " flyingon-TreeNode-collapse" : "flyingon-TreeNode-none");
+
+            //flyingon.__fn_font_icon(dom_node.children[0], nodes && nodes.length > 0 ? (fields.expanded ? "tree-expanded" : "tree-collapse") : (ajax ? "tree-collapse" : ""));
+            flyingon.__fn_font_icon(dom_node.children[1], fields.checked ? "tree-checked" : "tree-unchecked");
+            flyingon.__fn_font_icon(dom_node.children[2], fields.image);
+            flyingon.__fn_dom_textContent(dom_node.children[3], fields.text, this.is_html_text);
 
             return dom;
         };
@@ -186,8 +181,13 @@
         //是否选中
         this.defineProperty("checked", false, {
 
-            change_code: "if (this.dom_node) flyingon.__fn_font_icon(this.dom_node.children[1], value ? 'tree-checked' : 'tree-unchecked');"
+            change_code: "if (this.dom_node) this.dom_node.children[1].className = value ? 'flyingon-TreeNode-checked' : 'flyingon-TreeNode-unchecked';"
         });
+
+                
+        //ajax异步加载子节点地址
+        this.defineProperty("ajax", "");
+
 
 
 
@@ -232,6 +232,14 @@
                 nodes.dom.style.display = "none";
             }
         };
+
+
+
+        this.__fn_autoChecked = function (value) {
+
+          
+        };
+
 
 
         //父节点

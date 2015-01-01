@@ -669,7 +669,8 @@ A~B                    匹配任何在A控件之后的同级B控件
             float: "left",
             width: "20px",
             height: "20px",
-            textAlign: "center"
+            textAlign: "center",
+            fontSize: "12px"
         },
 
         "css:.flyingon-TreeNode-check": {
@@ -678,7 +679,8 @@ A~B                    匹配任何在A控件之后的同级B控件
             float: "left",
             width: "20px",
             height: "20px",
-            textAlign: "center"
+            textAlign: "center",
+            fontSize: "12px"
         },
 
         "css:.flyingon-TreeNode-image": {
@@ -686,7 +688,8 @@ A~B                    匹配任何在A控件之后的同级B控件
             float: "left",
             width: "20px",
             height: "20px",
-            textAlign: "center"
+            textAlign: "center",
+            fontSize: "16px"
         },
 
         "css:.flyingon-TreeNode-text": {

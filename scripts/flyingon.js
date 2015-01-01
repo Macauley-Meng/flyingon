@@ -13770,13 +13770,17 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
             var dom = this.dom = this.dom_template.cloneNode(true),
                 dom_node = this.dom_node = dom.children[0],
+                fields = this.__fields,
+                nodes = this.__nodes,
+                ajax = this.__ajax = this.get_ajax(),
                 name = textContent_name;
 
             dom_node.__target = this;
 
-            flyingon.__fn_font_icon(dom_node.children[0], "tree-collapse");
-            flyingon.__fn_font_icon(dom_node.children[2], this.get_image());
-            flyingon.__fn_dom_textContent(dom_node.children[3], this.get_text(), this.is_html_text);
+            flyingon.__fn_font_icon(dom_node.children[0], nodes && nodes.length > 0 ? (fields.expanded ? "tree-expanded" : "tree-collapse") : (ajax ? "tree-collapse" : ""));
+            flyingon.__fn_font_icon(dom_node.children[1], fields.checked ? "tree-checked" : "tree-unchecked");
+            flyingon.__fn_font_icon(dom_node.children[2], fields.image);
+            flyingon.__fn_dom_textContent(dom_node.children[3], fields.text, this.is_html_text);
 
             return dom;
         };
@@ -13790,18 +13794,18 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
         //节点图像
-        this.defineProperty("image", "", {
+        this.defineProperty("image", "tree-image", {
 
             change_code: "if (this.dom_node) flyingon.__fn_font_icon(this.dom_node.children[2], value);"
         });
 
 
         //无子节点时图像
-        this.defineProperty("image1", "");
+        this.defineProperty("image1", "tree-image1");
 
 
         //节点展开时图像
-        this.defineProperty("image2", "");
+        this.defineProperty("image2", "tree-image2");
 
 
         //是否展开
