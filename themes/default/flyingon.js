@@ -124,7 +124,9 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         disabled_back = "darkgray",
         disabled_border = "#060606",
-        disabled_color = "#0A0A0A";
+        disabled_color = "#0A0A0A",
+
+        flyingon_gif = "url('/themes/default/images/flyingon.gif')";
 
 
 
@@ -650,63 +652,98 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         "css:.flyingon-TreeNode": {
 
+            position: "relative",
             height: "20px",
-            lineHeight: "20px",
-            verticalAlign: "middle",
-            overflow: "hidden",
             cursor: "default"
         },
 
-        "css:.flyingon-TreeNode-selected": {
+        "css:.flyingon-TreeNode-empty": {
+
+            display: "inline-block",
+            margin: "2px",
+            width: "16px",
+            height: "16px"
+        },
+
+        "css:.flyingon-TreeNode-expand": {
+
+            display: "inline-block",
+            margin: "2px",
+            width: "16px",
+            height: "16px",
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "0 -80px"
+        },
+
+        "css:.flyingon-TreeNode-collapse,.flyingon-TreeNode-ajax": {
+
+            display: "inline-block",
+            margin: "2px",
+            width: "16px",
+            height: "16px",
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "0 -80px"
+        },
+
+        "css:.flyingon-TreeNode-checked": {
+
+            display: "none",
+            margin: "2px",
+            width: "16px",
+            height: "16px",
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "0 -80px"
+        },
+
+        "css:.flyingon-TreeNode-unchecked": {
+
+            display: "none",
+            margin: "2px",
+            width: "16px",
+            height: "16px",
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "0 -80px"
+        },
+
+        "css:.flyingon-TreeNode-unkown": {
+
+            display: "none",
+            margin: "2px",
+            width: "16px",
+            height: "16px",
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "0 -80px"
+        },
+
+        "css:.flyingon-TreeNode-image": {
+
+            display: "inline-block",
+            margin: "2px",
+            width: "16px",
+            height: "16px",
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-160px -80px"
+        },
+
+        "css:.flyingon-TreeNode-text": {
+
+            position: "absolute",
+            display: "inline-block",
+            margin: "2px",
+            height: "16px"
+        },
+
+        "css:.flyingon-TreeNode-selected .flyingon-TreeNode-text": {
 
             backgroundColor: "skyblue",
             color: "white"
         },
 
-        "css:.flyingon-TreeNode-collapse": {
+        "css:.flyingon-TreeView-check .flyingon-TreeNode-checked,.flyingon-TreeNode-unchecked,.flyingon-TreeNode-unkown": {
 
-            marginLeft: "2px",
-            float: "left",
-            width: "20px",
-            height: "20px",
-            textAlign: "center",
-            fontSize: "12px"
+            display: "inline-block"
         },
 
-        "css:.flyingon-TreeNode-check": {
-
-            display: "none",
-            float: "left",
-            width: "20px",
-            height: "20px",
-            textAlign: "center",
-            fontSize: "12px"
-        },
-
-        "css:.flyingon-TreeNode-image": {
-
-            float: "left",
-            width: "20px",
-            height: "20px",
-            textAlign: "center",
-            fontSize: "16px"
-        },
-
-        "css:.flyingon-TreeNode-text": {
-
-            float: "left",
-            height: "20px"
-        },
-
-        "css:.flyingon-TreeView css:.flyingon-TreeNode-check": {
-
-            display: "block"
-        },
-
-        "css:.flyingon-TreeView-check .flyingon-TreeNode-check": {
-
-            display: "block"
-        },
 
 
         //按钮控件样式

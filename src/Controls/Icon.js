@@ -70,8 +70,8 @@
 
 
 
-    //设置字体图标
-    flyingon.__fn_font_icon = (function (name) {
+    //设置dom图标
+    flyingon.dom_icon = (function (name) {
 
         return function (dom, icon) {
 
@@ -87,7 +87,7 @@
                     }
                     else
                     {
-                        dom.style.backgroundImage = icon.substring(0, cache);
+                        dom.style.backgroundImage = icon.substring(0, cache).replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language);
                         dom.style.backgroundPosition = icon.substring(cache + 1);
                     }
                 }
@@ -161,7 +161,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
     //url(...)[x, y]    图片路径及位置
     this.defineProperty("image", "", {
 
-        set_code: "flyingon.__fn_font_icon(this.dom, value);"
+        set_code: "flyingon.dom_icon(this.dom, value);"
     });
 
 

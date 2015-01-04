@@ -1096,7 +1096,12 @@ flyingon.defineClass("Control", function () {
 
             if (this.__update_dirty === 1)
             {
+                var style = this.dom.style;
+
                 flyingon.__fn_compute_css(this);
+
+                style.overflowX = this.get_overflowX();
+                style.overflowY = this.get_overflowY();
             }
         };
 

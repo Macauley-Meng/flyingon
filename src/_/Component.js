@@ -31,7 +31,7 @@ flyingon.IProperty = function () {
     var previous_attributes = null,
         regex_name = /\W/;
 
-    
+
 
     //定义setter函数
     this.__fn_define_setter = function (name, data_type, attributes) {
@@ -225,11 +225,9 @@ flyingon.IProperty = function () {
         }
         else
         {
-            attributes = this.__fn_parse_attributes(attributes);
+            var getter, setter;
 
-            var getter = attributes.getter || new Function("return this.__fields." + name + ";"),
-                setter,
-                data_type;
+            attributes = this.__fn_parse_attributes(attributes);
 
             //设置默认值
             if (defaultValue !== undefined)
@@ -237,15 +235,23 @@ flyingon.IProperty = function () {
                 this.__defaults[name] = defaultValue;
             }
 
-            //处理setter
-            if (!attributes.readOnly && !(setter = attributes.setter))
+            //处理getter
+            if ((getter = attributes.getter) === undefined)
             {
-                if ((data_type = typeof defaultValue) === "number" && !("" + defaultValue).indexOf("."))
+                getter = new Function("return this.__fields." + name + ";")
+            }
+
+            //处理setter
+            if ((setter = attributes.setter) === undefined)
+            {
+                var type = typeof defaultValue;
+
+                if (type === "number" && !("" + defaultValue).indexOf("."))
                 {
-                    data_type = "int";
+                    type = "int";
                 }
 
-                setter = this.__fn_define_setter(name, data_type, attributes);
+                setter = this.__fn_define_setter(name, type, attributes);
             }
 
             //创建属性
@@ -436,7 +442,7 @@ flyingon.IProperty = function () {
 //事件接口
 flyingon.IEvent = function () {
 
-    
+
 
     //定义事件 name为不带on的事件名
     //注:只有支持定义属性的浏览器才支持以on的方式注册事件,否则只能以addEventListener的方式注册事件
@@ -628,7 +634,7 @@ flyingon.IComponent = function () {
     };
 
 
-    
+
     //扩展属性支持
     flyingon.extend(this, flyingon.IProperty);
 

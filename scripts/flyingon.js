@@ -2253,7 +2253,7 @@ flyingon.IProperty = function () {
     var previous_attributes = null,
         regex_name = /\W/;
 
-    
+
 
     //定义setter函数
     this.__fn_define_setter = function (name, data_type, attributes) {
@@ -2447,11 +2447,9 @@ flyingon.IProperty = function () {
         }
         else
         {
-            attributes = this.__fn_parse_attributes(attributes);
+            var getter, setter;
 
-            var getter = attributes.getter || new Function("return this.__fields." + name + ";"),
-                setter,
-                data_type;
+            attributes = this.__fn_parse_attributes(attributes);
 
             //设置默认值
             if (defaultValue !== undefined)
@@ -2459,15 +2457,23 @@ flyingon.IProperty = function () {
                 this.__defaults[name] = defaultValue;
             }
 
-            //处理setter
-            if (!attributes.readOnly && !(setter = attributes.setter))
+            //处理getter
+            if ((getter = attributes.getter) === undefined)
             {
-                if ((data_type = typeof defaultValue) === "number" && !("" + defaultValue).indexOf("."))
+                getter = new Function("return this.__fields." + name + ";")
+            }
+
+            //处理setter
+            if ((setter = attributes.setter) === undefined)
+            {
+                var type = typeof defaultValue;
+
+                if (type === "number" && !("" + defaultValue).indexOf("."))
                 {
-                    data_type = "int";
+                    type = "int";
                 }
 
-                setter = this.__fn_define_setter(name, data_type, attributes);
+                setter = this.__fn_define_setter(name, type, attributes);
             }
 
             //创建属性
@@ -2658,7 +2664,7 @@ flyingon.IProperty = function () {
 //事件接口
 flyingon.IEvent = function () {
 
-    
+
 
     //定义事件 name为不带on的事件名
     //注:只有支持定义属性的浏览器才支持以on的方式注册事件,否则只能以addEventListener的方式注册事件
@@ -2850,7 +2856,7 @@ flyingon.IComponent = function () {
     };
 
 
-    
+
     //扩展属性支持
     flyingon.extend(this, flyingon.IProperty);
 
@@ -7561,7 +7567,12 @@ flyingon.defineClass("Control", function () {
 
             if (this.__update_dirty === 1)
             {
+                var style = this.dom.style;
+
                 flyingon.__fn_compute_css(this);
+
+                style.overflowX = this.get_overflowX();
+                style.overflowY = this.get_overflowY();
             }
         };
 
@@ -11340,8 +11351,8 @@ flyingon.IChildren = function (base) {
 
 
 
-    //设置字体图标
-    flyingon.__fn_font_icon = (function (name) {
+    //设置dom图标
+    flyingon.dom_icon = (function (name) {
 
         return function (dom, icon) {
 
@@ -11357,7 +11368,7 @@ flyingon.IChildren = function (base) {
                     }
                     else
                     {
-                        dom.style.backgroundImage = icon.substring(0, cache);
+                        dom.style.backgroundImage = icon.substring(0, cache).replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language);
                         dom.style.backgroundPosition = icon.substring(cache + 1);
                     }
                 }
@@ -11431,7 +11442,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
     //url(...)[x, y]    图片路径及位置
     this.defineProperty("image", "", {
 
-        set_code: "flyingon.__fn_font_icon(this.dom, value);"
+        set_code: "flyingon.dom_icon(this.dom, value);"
     });
 
 
@@ -13636,15 +13647,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
     var node_base = function (base, serialize, deserialize_property) {
 
 
-        //是否使用ajax的方式异步加载子节点
-        this.defineProperty("async", false);
-
-
-        //ajax异步加载子节点地址
-        this.defineProperty("ajax", "");
-
-
-
         //添加子节点
         this.appendChild = function (node) {
 
@@ -13696,8 +13698,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-
-
         //自定义序列化
         this.serialize = function (writer) {
 
@@ -13739,9 +13739,16 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-        Class.create = function (text) {
+        Class.create = function () {
 
-            (this.__fields = Object.create(this.__defaults)).text = text || "";
+            var dom = (this.dom = this.dom_template.cloneNode(true)).children[0];
+
+            this.__fields = Object.create(this.__defaults);
+
+            (this.dom_collapse = dom.children[0]).__target = this;
+            (this.dom_check = dom.children[1]).__target = this;
+            this.dom_image = dom.children[2];
+            this.dom_text = dom.children[3];
         };
 
 
@@ -13751,119 +13758,114 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
+        //是否需要更新dom
+        this.__dom_dirty = true;
+
+
         //创建dom模板
         this.dom_template = (function () {
 
             var div = document.createElement("div");
 
             div.className = "flyingon-TreeView-node";
-            div.innerHTML = "<div class='flyingon-TreeNode'><div class='flyingon-TreeNode-collapse'></div><div class='flyingon-TreeNode-check'></div><div class='flyingon-TreeNode-image'></div><div class='flyingon-TreeNode-text'></div></div>";
+            div.innerHTML = "<div class='flyingon-TreeNode'><span class='flyingon-TreeNode-empty'></span><span class='flyingon-TreeNode-unchecked'></span><span class='flyingon-TreeNode-image'></span><span class='flyingon-TreeNode-text'></span></div>";
 
             return div;
 
         })();
 
 
-        var textContent_name = flyingon.__textContent_name;
+        //节点图像
+        this.defineProperty("image", "", {
 
-        this.__fn_create_dom = function () {
-
-            var dom = this.dom = this.dom_template.cloneNode(true),
-                dom_node = this.dom_node = dom.children[0],
-                fields = this.__fields,
-                nodes = this.__nodes,
-                ajax = this.__ajax = this.get_ajax(),
-                name = textContent_name;
-
-            dom_node.__target = this;
-
-            flyingon.__fn_font_icon(dom_node.children[0], nodes && nodes.length > 0 ? (fields.expanded ? "tree-expanded" : "tree-collapse") : (ajax ? "tree-collapse" : ""));
-            flyingon.__fn_font_icon(dom_node.children[1], fields.checked ? "tree-checked" : "tree-unchecked");
-            flyingon.__fn_font_icon(dom_node.children[2], fields.image);
-            flyingon.__fn_dom_textContent(dom_node.children[3], fields.text, this.is_html_text);
-
-            return dom;
-        };
+            set_code: "flyingon.dom_icon(this.dom_image, value);"
+        });
 
 
         //节点文字
         this.defineProperty("text", "", {
 
-            change_code: "if (this.dom_node) flyingon.__fn_dom_textContent(this.dom_node.children[3], value, this.is_html_text)"
+            set_code: "flyingon.__fn_dom_textContent(this.dom_text, value, this.is_html_text);"
         });
-
-
-        //节点图像
-        this.defineProperty("image", "tree-image", {
-
-            change_code: "if (this.dom_node) flyingon.__fn_font_icon(this.dom_node.children[2], value);"
-        });
-
-
-        //无子节点时图像
-        this.defineProperty("image1", "tree-image1");
-
-
-        //节点展开时图像
-        this.defineProperty("image2", "tree-image2");
 
 
         //是否展开
         this.defineProperty("expanded", false, {
 
-            change_code: "if (this.dom_node) this.__fn_expanded(value);"
+            set_code: "this.__fn_expanded(value);"
         });
 
 
         //是否选中
         this.defineProperty("checked", false, {
 
-            change_code: "if (this.dom_node) flyingon.__fn_font_icon(this.dom_node.children[1], value ? 'tree-checked' : 'tree-unchecked');"
+            set_code: "this.dom_check.className = value ? 'flyingon-TreeNode-checked' : 'flyingon-TreeNode-unchecked';"
+        });
+
+
+        //异步加载子节点
+        //url(...):     异步加载url地址
+        //json:         子节点json
+        this.defineProperty("async", "", {
+
+            set_code: "if (value) this.dom_collapse.className = 'flyingon-TreeNode-async';"
         });
 
 
 
-        this.__fn_expanded = function (value) {
 
-            var nodes = this.__nodes,
+        this.__fn_expanded = function (value, async) {
+
+            var dom = this.dom_collapse,
+                nodes = this.get_nodes(),
                 length,
                 cache;
 
-            flyingon.__fn_font_icon(this.dom_node.children[0], value ? "tree-expand" : "tree-collapse");
 
             if (value)
             {
-                if (this.__nodes_loaded)
+                dom.className = "flyingon-TreeNode-expand";
+
+                if (async)
                 {
-                    nodes.dom.style.display = "";
+
                 }
-                else
+
+                if (this.__dom_dirty && (length = nodes.length) > 0)
                 {
                     cache = document.createDocumentFragment();
 
-                    if (nodes && (length = nodes.length) > 0)
+                    for (var i = 0; i < length; i++)
                     {
-                        for (var i = 0; i < length; i++)
-                        {
-                            cache.appendChild(nodes[i].__fn_create_dom());
-                        }
-
-                        nodes.dom.appendChild(cache);
-                        this.dom.appendChild(nodes.dom);
-                    }
-                    else
-                    {
-
+                        cache.appendChild(nodes[i].dom);
                     }
 
-                    this.__nodes_loaded = true;
+                    nodes.dom.appendChild(cache);
+                    this.dom.appendChild(nodes.dom);
+
+                    this.__dom_dirty = false;
                 }
+
+                if (!this.get_image())
+                {
+                    flyingon.dom_icon(this.dom_image, "url('/themes/@theme/images/flyingon.gif') -120px -80px");
+                }
+
+                nodes.dom.style.display = "";
             }
-            else if (nodes)
+            else
             {
+                if (!this.get_image())
+                {
+                    flyingon.dom_icon(this.dom_image, "url('/themes/@theme/images/flyingon.gif') -80px -80px");
+                }
+
+                dom.className = "flyingon-TreeNode-collapse";
                 nodes.dom.style.display = "none";
             }
         };
+
+
 
 
         //父节点
@@ -13936,17 +13938,19 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
+
         //添加进集合时进行验证
         function validate(target, item, change) {
 
             if (item instanceof TreeNode)
             {
                 var owner = target.owner,
-                    oldValue = item.__owner;
+                    parent = target.parent,
+                    cache = item.__owner;
 
-                if (oldValue) //从原有父控件中删除
+                if (cache) //从原有父控件中删除
                 {
-                    if (oldValue !== owner)
+                    if (cache !== owner)
                     {
                         item.remove();
                     }
@@ -13958,9 +13962,19 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
                 item.__owner = owner;
 
-                if (!(item.__parent = target.parent) || owner.__expanded) //根节点立即生成dom
+                if (parent && target.length === 0)
                 {
-                    target.dom.appendChild(item.__fn_create_dom());
+                    parent.dom_collapse.className = (cache = owner.__fields.expanded) ? "flyingon-TreeNode-expand" : "flyingon-TreeNode-collapse";
+
+                    if (!owner.__fields.image)
+                    {
+                        flyingon.dom_icon(parent.dom_image, "url('/themes/@theme/images/flyingon.gif') " + (cache ? "-120px -80px" : "-80px -80px"));
+                    }
+                }
+
+                if (!(item.__parent = parent) || !owner.__dom_dirty) //根节点或dom已更新
+                {
+                    target.dom.appendChild(item.dom);
                 }
 
                 return true;
@@ -13994,8 +14008,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             {
                 validate(this, arguments[i], change);
             }
-
-            //update(this.owner);
         };
 
 
@@ -14008,8 +14020,6 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
             {
                 validate(this, item = arguments[i], change);
             }
-
-            //update(this.owner);
         };
 
 
@@ -14053,24 +14063,25 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
 
 
-        //是否显示图像
-        this.defineProperty("image", false, {
 
-            set_code: "value ? this.removeClass('flyingon-TreeView-no-image') : this.addClass('flyingon-TreeView-no-image');"
+        //是否隐藏图像
+        this.defineProperty("noImage", false, {
+
+            change_code: "this.toggleClass('flyingon-TreeView-no-image');"
         });
 
 
         //是否允许选择
-        this.defineProperty("checked", false, {
+        this.defineProperty("allowCheck", false, {
 
-            set_code: "this.toggleClass('flyingon-TreeView-checked');"
+            change_code: "this.toggleClass('flyingon-TreeView-check');"
         });
 
 
         //子节点集合
         flyingon.defineProperty(this, "nodes", function () {
 
-            return this.__nodes || (this.__nodes = new flyingon.TreeNodeCollection(this));
+            return this.__nodes || ((this.__nodes = new flyingon.TreeNodeCollection(this)).__dom_dirty = false, this.__nodes);
         });
 
 
@@ -14081,34 +14092,30 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
         this.__event_bubble_mousedown = function (event) {
 
-            var target;
-
             switch (event.dom.className)
             {
                 case "flyingon-TreeNode-collapse":
-                    (target = event.dom.parentNode.__target).set_expanded(!target.get_expanded());
+                    event.dom.__target.set_expanded(true);
                     break;
 
-                case "flyingon-TreeNode-check":
-                    (target = event.dom.parentNode.__target).set_checked(!target.get_checked());
+                case "flyingon-TreeNode-async":
+                    event.dom.__target.set_expanded(true, true);
+                    break;
+
+                case "flyingon-TreeNode-expand":
+                    event.dom.__target.set_expanded(false);
+                    break;
+
+                case "flyingon-TreeNode-checked":
+                    event.dom.__target.set_checked(false);
+                    break;
+
+                case "flyingon-TreeNode-unchecked":
+                    event.dom.__target.set_checked(true);
                     break;
             }
         };
 
-
-        //渲染控件
-        this.render = function () {
-
-            if (this.__update_dirty === 1)
-            {
-                var style = this.dom.style;
-
-                flyingon.__fn_compute_css(this);
-
-                style.overflowX = this.get_overflowX();
-                style.overflowY = this.get_overflowY();
-            }
-        };
 
 
     });

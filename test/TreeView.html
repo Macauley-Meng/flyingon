@@ -30,12 +30,15 @@
 
         for (var i = 0; i < 100; i++)
         {
-            var node = new flyingon.TreeNode("<span style='color:blue;'>text " + i + "</span>");
+            var node = new flyingon.TreeNode();
+
+            node.set_text("text " + i);
 
             for (var j = 0; j < 100; j++)
             {
-                var child = new flyingon.TreeNode("sub text " + j);
+                var child = new flyingon.TreeNode();
 
+                child.set_text("sub text " + j);
                 node.appendChild(child);
             }
 
