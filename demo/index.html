@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>flyingon demo</title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+</head>
+<body>
+
+    <div layout-type="dock" padding="0">
+
+        <div dock="top" height="50px" class="class" style="border:1px solid blue;margin-bottom:2px;background-color:silver;padding:8px;">
+            <span style="color:red;font-size:24px;">flyingon开源框架</span>
+        </div>
+        <div dock="bottom" height="50px" style="border:1px solid blue; margin-top:2px; background-color:silver;text-align:center; padding-top:10px;">
+            <a href="https://github.com/freeoasoft/flyingon" target="_blank">github: https://github.com/freeoasoft/flyingon</a>
+        </div>
+        <div xtype="flyingon.TabPanel" id="id" dock="left" layout-type="line" vertical="1" icon="url('/themes/@theme/images/flyingon.gif') 4px 4px" text="功能树" show-collapse="1" width="200px" style="padding:1px;">
+            <div xtype="flyingon.TreeView" width="fill" height="fill" style="border:0px solid">
+                <div text="ddd">
+                    <div text="ddd"></div>
+                    <div text="ddd"></div>
+                </div>
+                <div text="ddd">
+                    <div text="ddd"></div>
+                    <div text="ddd"></div>
+                </div>
+            </div>
+        </div>
+        <div xtype="flyingon.Splitter"></div>
+        <div xtype="flyingon.TabPanel" dock="right" layout-type="line" vertical="1" icon="url('/themes/@theme/images/flyingon.gif') 4px 4px" text="操作指引" show-collapse="1" width="200px" style="padding:4px;">
+            <div>right 1</div>
+            <div>right 2</div>
+            <div>right 3</div>
+            <div>right 4</div>
+        </div>
+        <div xtype="flyingon.Splitter" dock="right"></div>
+        <div dock="fill" style="border:1px solid blue;">fill</div>
+
+    </div>
+
+</body>
+</html>

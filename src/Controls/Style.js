@@ -116,6 +116,50 @@
 
 
 
+    //开放或禁止dom选择
+    flyingon.dom_user_select = (function () {
+
+
+        var style = flyingon.__fn_style_prefix("user-select");
+
+
+        function event_false() {
+
+            return false;
+        };
+
+
+        return style ? function (dom, select) {
+
+            if (select)
+            {
+                dom.style[style] = dom.__user_select;
+            }
+            else
+            {
+                dom.__user_select = dom.style[style];
+                dom.style[style] = "none";
+            }
+
+        } : function (dom, select) {
+
+            if (select)
+            {
+                dom.onselectstart = dom.__user_select;
+            }
+            else
+            {
+                dom.__user_select = dom.onselectstart; //禁止选中内容
+                dom.onselectstart = event_false;
+            }
+        };
+
+
+    })();
+
+
+
+
 
     //样式表
     flyingon.styleSheets = (function () {
@@ -639,7 +683,11 @@
         //hidden    内容会被修剪 其余内容是不可见的
         //scroll	内容会被修剪 但是浏览器会显示滚动条以便查看其余的内容
         //auto      如果内容被修剪 则浏览器会显示滚动条以便查看其余的内容
-        styles("overflow-?", ["x", "y"], "auto", "arrange|no");
+        styles("overflow-?", ["x", "y"], "auto", {
+
+            attributes: "arrange",
+            set_code: "if (!this.dom_children) this.dom.style[name] = value !== undefined ? value : '';"
+        });
 
 
 

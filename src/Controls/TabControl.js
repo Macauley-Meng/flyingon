@@ -182,14 +182,7 @@
 
         Class.create = function () {
 
-            this.dom_children = this.dom.children[0];
-            this.__children = new flyingon.ControlCollection(this);
-
-            (this.__text = new flyingon.VerticalText())
-                .set_column3("center")
-                .addClass("flyingon-TabPanelHeader-text");
-
-            this.appendChild(this.__text);
+            this.__fn_initialize();
         };
 
 
@@ -197,47 +190,20 @@
         flyingon.IChildren.call(this, base);
 
 
+        this.__fn_initialize = function () {
+
+            this.dom_children = this.dom.children[0];
+
+            (this.__children = new flyingon.ControlCollection(this)).append(
+                (this.__icon = new flyingon.Icon()).set_column3("before").addClass(class_prefix + "icon").set_visibility("collapse"),
+                (this.__text = new flyingon.VerticalText()).set_column3("center").addClass(class_prefix + "text"),
+                (this.__collapse = new flyingon.Icon()).set_column3("after").addClass(class_prefix + "collapse").set_visibility("collapse"),
+                (this.__close = new flyingon.Icon()).set_column3("after").addClass(class_prefix + "close").set_visibility("collapse"));
+        };
+
+
         this.defaultValue("layoutType", "column3");
 
-
-
-
-        //获取创建图标代码
-        this.__fn_show_icon = function (visible, name, image, column3, index) {
-
-            var key = "__" + name,
-                target = this[key];
-
-            if (visible)
-            {
-                (target || (this[key] = this.__fn_create_icon(name, column3, index))).set_image(image);
-            }
-            else if (this[key])
-            {
-                this[key].set_visibility("collapse");
-            }
-        };
-
-
-        //创建图标
-        this.__fn_create_icon = function (name, column3, index) {
-
-            var target = new flyingon.Icon().set_column3(column3);
-
-            target.name = name;
-            target.addClass(class_prefix + name);
-
-            if (index >= 0 || (index != null && this[index] && (index = this.__children.indexOf(this[index])) >= 0))
-            {
-                this.insertChild(index, target);
-            }
-            else
-            {
-                this.appendChild(target);
-            }
-
-            return target;
-        };
 
 
         //排列子控件
@@ -361,40 +327,21 @@
 
 
     //页签控件基础服务
-    var tab_control = function (base, class_prefix) {
+    var tab_control = function (base, class_prefix1, class_prefix2) {
 
 
 
         //创建模板
-        this.create_dom_template("div", "overflow:hidden;", "<div class='" + class_prefix + "body' style='position:absolute;overflow:hidden;'><div style='position:absolute;width:100%;height:100%;'><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div></div></div>");
+        this.create_dom_template("div", "overflow:hidden;", "<div class='" + class_prefix1 + "body' style='position:absolute;overflow:hidden;'><div style='position:absolute;width:100%;height:100%;'><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div></div></div>");
 
 
-
-        //是否收拢
-        this.defineProperty("collapse", false, "layout");
-
-
-        //是否显示关闭图标
-        this.defineProperty("showClose", false, {
-
-            attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'close', 'tab-close', 'after')"
-        });
-
-
-        //是否显示收拢图标
-        this.defineProperty("showCollapse", false, {
-
-            attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'collapse', 'collapse-left', 'after', '__close')"
-        });
 
 
         //图标
         this.defineProperty("icon", "", {
 
             attributes: "layout",
-            set_code: "(this.__header || this.__fn_create_header()).__fn_show_icon(value, 'icon', value, 'before', 0)"
+            set_code: " this.__fn_visible_icon('__icon', value, value);"
         });
 
 
@@ -405,6 +352,47 @@
             set_code: "(this.__header || this.__fn_create_header()).__text.set_text(value);"
         });
 
+
+        //是否收拢
+        this.defineProperty("collapse", false, "layout");
+
+
+        //是否显示关闭图标
+        this.defineProperty("showClose", false, {
+
+            attributes: "layout",
+            set_code: "this.__fn_visible_icon('__close', value);"
+        });
+
+
+        //是否显示收拢图标
+        this.defineProperty("showCollapse", false, {
+
+            attributes: "layout",
+            set_code: "this.__fn_visible_icon('__collapse', value);"
+        });
+
+
+
+        //显示或隐藏图标
+        this.__fn_visible_icon = function (name, visible, image) {
+
+            var target = this.__header;
+
+            if (visible)
+            {
+                (target || (target = this.__fn_create_header()))[name].set_visibility("visible");
+
+                if (image)
+                {
+                    target[name].set_image(image);
+                }
+            }
+            else if (target)
+            {
+                target[name].set_visibility("collapse");
+            }
+        };
 
 
         //获取页签头指定属性值
@@ -483,9 +471,9 @@
                     cache = { height: height }; //返回高度变化量
                 }
 
-                if (data.collapse && header.__collapse)
+                if (data.collapse)
                 {
-                    header.__collapse.set_image("expand-" + data.direction);
+                    header.__collapse.__fn_className(class_prefix2 + "collapse " + class_prefix2 + "expand-" + data.direction);
                 }
 
                 header.render();
@@ -493,11 +481,7 @@
                 return cache;
             }
 
-            if (header.__collapse)
-            {
-                header.__collapse.set_image("collapse-" + ((cache = this.__parent) && (cache = cache.__layout) && cache.__fn_collapse(this) || data.direction));
-            }
-
+            header.__collapse.__fn_className(class_prefix2 + "collapse " + class_prefix2 + "collapse-" + ((cache = this.__parent) && (cache = cache.__layout) && cache.__fn_collapse(this) || data.direction));
             header.render();
         };
 
@@ -523,36 +507,35 @@
 
             if (target)
             {
-                switch (event.target.name)
+                if (event.target === this.__collapse)
                 {
-                    case "collapse":
-                        target = (parent = target.__parent) && parent.set_collapse ? parent : target;
-                        target.set_collapse(!target.get_collapse());
-                        break;
-
-                    case "close":
-                        target.remove();
-                        break;
-
-                    default:
-                        if (parent = target.__parent)
+                    target = (parent = target.__parent) && parent.set_collapse ? parent : target;
+                    target.set_collapse(!target.get_collapse());
+                }
+                else if (event.target === this.__close)
+                {
+                    target.remove();
+                }
+                else
+                {
+                    if (parent = target.__parent)
+                    {
+                        if (parent.set_selectedIndex)
                         {
-                            if (parent.set_selectedIndex)
-                            {
-                                parent.set_selectedIndex(target.childIndex());
-                            }
-
-                            if (parent.set_collapse && parent.__collapse_last)
-                            {
-                                if (parent.__header_values)
-                                {
-                                    parent.__header_values = null;
-                                }
-
-                                parent.set_collapse(false);
-                            }
+                            parent.set_selectedIndex(target.childIndex());
                         }
-                        break;
+
+                        if (parent.set_collapse && parent.__collapse_last)
+                        {
+                            if (parent.__header_values)
+                            {
+                                parent.__header_values = null;
+                            }
+
+                            parent.set_collapse(false);
+                        }
+                    }
+
                 }
             }
         };
@@ -587,7 +570,7 @@
 
 
         //扩展页签控件基础服务
-        tab_control.call(this, base, "flyingon-TabPanel-");
+        tab_control.call(this, base, "flyingon-TabPanel-", "flyingon-TabPanelHeader-");
 
 
 
@@ -812,17 +795,15 @@
 
         this.__event_bubble_click = function (event) {
 
-            var target = this.__parent;
+            var target = event.target;
 
-            switch (event.target.name)
+            if (target === this.__collapse)
             {
-                case "collapse":
-                    target.set_collapse(!target.get_collapse());
-                    break;
-
-                case "close":
-                    target.remove();
-                    break;
+                (target = this.__parent).set_collapse(!target.get_collapse());
+            }
+            else if (target === this.__close)
+            {
+                this.__parent.remove();
             }
         };
 
@@ -866,7 +847,7 @@
 
 
         //页签控件基础服务
-        tab_control.call(this, base, "flyingon-TabControl-");
+        tab_control.call(this, base, "flyingon-TabControl-", "flyingon-TabControlHeader-");
 
 
 
@@ -1022,7 +1003,7 @@
         (function () {
 
 
-            function show_icon(target, image, width, height, next, vertical) {
+            function show_icon(target, width, height, next, vertical) {
 
                 var name = next ? "next" : "previous",
                     key = "__icon_" + name,
@@ -1032,7 +1013,6 @@
                 {
                     item = target[key] = new flyingon.Icon();
                     item.addClass("flyingon-TabControl-" + name);
-                    item.set_image(image);
                     item.__parent = target;
                     item.__vertical = vertical;
 
@@ -1134,10 +1114,10 @@
 
                 if (x > width) //显示上一页图标
                 {
-                    icon1 = show_icon(target, "collapse", 20, value, false, false);
+                    icon1 = show_icon(target, 20, value, false, false);
                     icon1.locate(0, y);
 
-                    icon2 = show_icon(target, "expand", 20, value, true, false);
+                    icon2 = show_icon(target, 20, value, true, false);
                     icon2.locate(width -= icon2.offsetWidth, y);
 
                     x = values.start = icon1.offsetWidth + spacingWidth;

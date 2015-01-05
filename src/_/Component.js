@@ -406,32 +406,35 @@ flyingon.IProperty = function () {
     this.deserialize = function (reader, data) {
 
         var names = Object.getOwnPropertyNames(data),
-            name;
+            name,
+            fn;
 
         //反序列化属性
         for (var i = 0, _ = names.length; i < _; i++)
         {
-            this.deserialize_property(reader, name = names[i], data[name]);
+            if ((name = names[i]) !== "__id__" && name !== "xtype")
+            {
+                if (fn = this["deserialize_" + name])
+                {
+                    fn.call(this, reader, name, data[name]);
+                }
+                else
+                {
+                    if (fn = this["set_" + name])
+                    {
+                        fn.call(this, data[name], true);
+                    }
+                    else
+                    {
+                        this[name] = data[name];
+                    }
+                }
+            }
         }
 
         return this;
     };
 
-
-    //序列化属性
-    this.deserialize_property = function (reader, name, value) {
-
-        var fn = this["set_" + name];
-
-        if (fn)
-        {
-            fn.call(this, value, true);
-        }
-        else
-        {
-            this[name] = value;
-        }
-    };
 
 
 };
@@ -756,36 +759,22 @@ flyingon.IComponent = function () {
     };
 
 
-    //序列化属性
-    this.deserialize_property = function (reader, name, value) {
+    //反序列化绑定
+    this.deserialize_bindings = function (reader, name, value) {
 
-        switch (name)
+        reader.read_bindings(this, value);
+    };
+
+
+    //反序列化事件
+    this.deserialize_events = function (reader, name, value) {
+
+        if (this.__events = value)
         {
-            case "bindings":
-                reader.read_bindings(this, data.bindings);
-                break;
-
-            case "events":
-                excludes.events = this.__events = data.events;
-
-                for (var name in data.events)
-                {
-                    this.on(name, data.events[name]);
-                }
-                break;
-
-            default:
-                var fn = this["set_" + name];
-
-                if (fn)
-                {
-                    fn.call(this, value, true);
-                }
-                else
-                {
-                    this[name] = value;
-                }
-                bre;
+            for (var name in value)
+            {
+                this.on(name, value[name]);
+            }
         }
     };
 

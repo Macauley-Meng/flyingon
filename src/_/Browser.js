@@ -372,8 +372,140 @@
 
 
 
-//dom操作
-(function (flyingon) {
+//文档树创建完毕
+flyingon.ready = (function () {
+
+
+    var list;
+
+
+    function execute() {
+
+        var body = document.body;
+
+        if (body)
+        {
+            if (list)
+            {
+                for (var i = 0; i < list.length; i++) //执行过程中可能会加入函数，故不能缓存length
+                {
+                    list[i++].call(list[i], body);
+                }
+
+                list.length = 0;
+                list = null;
+            }
+        }
+        else
+        {
+            setTimeout(execute, 0);
+        }
+    };
+
+
+    if (!document.body)
+    {
+        list = [];
+
+        if (document.addEventListener)
+        {
+            document.addEventListener("DOMContentLoaded", function (event) {
+
+                execute();
+
+            }, false);
+        }
+
+        if (flyingon.browser_MSIE)
+        {
+            document.write("<" + "script id='__flyingon_ready__' src='//:' defer='defer'></" + "script>");
+            document.getElementById("__flyingon_ready__").onreadystatechange = function () {
+
+                if (this.readyState === "complete")
+                {
+                    execute();
+                    this.parentNode.removeChild(this);
+                }
+            };
+        }
+
+        flyingon.addEventListener(window, "load", function (event) {
+
+            execute();
+        });
+
+        setTimeout(execute, 0);
+    }
+
+
+    return function (fn, thisArg) {
+
+        if (fn && fn.constructor === Function)
+        {
+            if (list)
+            {
+                list.push(fn, thisArg || null);
+            }
+            else
+            {
+                fn.call(thisArg, document.body);
+            }
+        }
+    };
+
+
+})();
+
+
+
+
+////最低支持IE7
+//window.XMLHttpRequest || flyingon.ready(function () {
+
+//    var body = document.body,
+//        div = document.createElement("div");
+
+//    div.style.cssText = "position:absolute;z-index:1000;background-color:white;left:0;top:0;width:100%;height:" + (body.clientHeight || 100) + "px";
+//    div.innerHTML = "您的浏览器版本太低,请升级浏览器!";
+
+//    body.appendChild(div);
+
+//    div.onclick = function () {
+
+//        body.removeChild(div);
+//    };
+
+//});
+
+
+
+
+//dom相关
+(function (window, document) {
+
+
+
+    var div = document.createElement("div"),
+        selection1 = document.selection,
+        selection2 = window.getSelection;
+
+    if (selection1 && !selection1.empty)
+    {
+        selection1 = null;
+    }
+
+    //清除选区
+    flyingon.clear_selection = function () {
+
+        if (selection1)
+        {
+            selection1.empty();
+        }
+        else if (selection2)
+        {
+            selection2.call(window).removeAllRanges();
+        }
+    };
 
 
 
@@ -407,182 +539,94 @@
 
 
 
-    //文档树创建完毕
-    flyingon.ready = (function () {
-
-
-        var list;
-
-
-        function execute() {
-
-            var body = document.body;
-
-            if (body)
-            {
-                if (list)
-                {
-                    for (var i = 0; i < list.length; i++) //执行过程中可能会加入函数，故不能缓存length
-                    {
-                        list[i++].call(list[i], body);
-                    }
-
-                    list.length = 0;
-                    list = null;
-                }
-            }
-            else
-            {
-                setTimeout(execute, 0);
-            }
-        };
-
-
-        if (!document.body)
-        {
-            list = [];
-
-            if (document.addEventListener)
-            {
-                document.addEventListener("DOMContentLoaded", function (event) {
-
-                    execute();
-
-                }, false);
-            }
-
-            if (flyingon.browser_MSIE)
-            {
-                document.write("<" + "script id='__flyingon_ready__' src='//:' defer='defer'></" + "script>");
-                document.getElementById("__flyingon_ready__").onreadystatechange = function () {
-
-                    if (this.readyState === "complete")
-                    {
-                        execute();
-                        this.parentNode.removeChild(this);
-                    }
-                };
-            }
-
-            flyingon.addEventListener(window, "load", function (event) {
-
-                execute();
-            });
-
-            setTimeout(execute, 0);
-        }
-
-
-        return function (fn, thisArg) {
-
-            if (fn && fn.constructor === Function)
-            {
-                if (list)
-                {
-                    list.push(fn, thisArg || null);
-                }
-                else
-                {
-                    fn.call(thisArg, document.body);
-                }
-            }
-        };
-
-
-    })();
-
-
 
     //获取视口坐标偏移
     //注1: 优先使用getBoundingClientRect来获取元素相对位置,支持此方法的浏览器有:IE5.5+、Firefox 3.5+、Chrome 4+、Safari 4.0+、Opara 10.10+
     //注2: 此方法不是准确获取元素的相对位置的方法,因为某些浏览器的html元素有2px的边框
     //注3: 此方法是为获取鼠标位置相对当前元素的偏移作准备,无须处理html元素边框,鼠标client坐标减去此方法结果正好准确得到鼠标位置相对元素的偏移
-    flyingon.ready(function () {
+    var fn = div.getBoundingClientRect ? null : function (dom) {
 
-        var fn = !document.body.getBoundingClientRect && function (dom) {
+        //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
+        //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
+        //问题2: 在table或iframe中offsetParent取值可能不准确
+        var x = 0,
+            y = 0,
+            width = dom.offsetWidth,
+            height = dom.offsetHeight;
 
-            //返回元素在浏览器当前视口的相对偏移(对某些浏览取值可能不够准确)
-            //问题1: 某些浏览器的边框处理不够准确(有时不需要加边框)
-            //问题2: 在table或iframe中offsetParent取值可能不准确
-            var x = 0,
-                y = 0,
-                width = dom.offsetWidth,
-                height = dom.offsetHeight;
+        while (dom)
+        {
+            x += dom.offsetLeft;
+            y += dom.offsetTop;
 
-            while (dom)
+            if (dom = dom.offsetParent)
             {
-                x += dom.offsetLeft;
-                y += dom.offsetTop;
-
-                if (dom = dom.offsetParent)
-                {
-                    x += dom.clientLeft;
-                    y += dom.clientTop;
-                }
+                x += dom.clientLeft;
+                y += dom.clientTop;
             }
+        }
 
-            dom = flyingon.dom_view;
+        dom = flyingon.quirks_mode ? document.body : document.documentElement;
 
-            x -= dom.scrollLeft;
-            y -= dom.scrollTop;
+        x -= dom.scrollLeft;
+        y -= dom.scrollTop;
 
-            return {
+        return {
 
-                left: x,
-                top: y,
-                right: x + width,
-                bottom: y + height
-            };
+            left: x,
+            top: y,
+            right: x + width,
+            bottom: y + height
         };
+    };
 
 
-        //获取指定dom相对指定视口坐标的偏移
-        flyingon.dom_offset = function (dom, x, y) {
 
-            var offset = fn ? fn.call(dom) : dom.getBoundingClientRect(); //IE6不能使用offset_fn.call的方式调用
+    //获取指定dom相对指定视口坐标的偏移
+    flyingon.dom_offset = function (dom, x, y) {
 
-            return x === undefined ? offset : {
+        var offset = fn ? fn.call(dom) : dom.getBoundingClientRect(); //IE6不能使用offset_fn.call的方式调用
 
-                x: x - offset.left,
-                y: y - offset.top
-            };
+        return x === undefined ? offset : {
+
+            x: x - offset.left,
+            y: y - offset.top
         };
-
-    });
-
+    };
 
 
-    ////最低支持IE7
-    //!window.XMLHttpRequest && flyingon.ready(function () {
 
-    //    var body = document.body,
-    //        div = document.createElement("div");
+    //dom文本内容属性名
+    var textContent_name = flyingon.__textContent_name = "textContent" in div ? "textContent" : "innerText";
 
-    //    div.style.cssText = "position:absolute;z-index:1000;background-color:white;left:0;top:0;width:100%;height:" + (body.clientHeight || 100) + "px";
-    //    div.innerHTML = "您的浏览器版本太低,请升级浏览器!";
 
-    //    body.appendChild(div);
+    //设置dom内容(textConent的性能比innerHTML高, 故自动判断是否按innerHTML的方式设置内容)
+    flyingon.dom_textContent = function (dom, text, is_html) {
 
-    //    div.onclick = function () {
-
-    //        body.removeChild(div);
-    //    };
-
-    //});
+        if (is_html || (text && text.indexOf('<') >= 0 && (text.indexOf('</') > 0 || text.indexOf('/>') > 0)))
+        {
+            dom.innerHTML = text;
+        }
+        else
+        {
+            dom[textContent_name] = text;
+        }
+    };
 
 
 
     //打印指定dom
     flyingon.dom_print = (function () {
 
-        var iframe;
+        var body = document.body,
+            iframe;
 
         return function (dom, children_only) {
 
             iframe = iframe || (iframe = document.createElement("iframe"));
             iframe.style.cssText = "position:absolute;width:0px;height:0px;";
 
-            document.body.appendChild(iframe);
+            body.appendChild(iframe);
 
             var target = iframe.contentWindow;
 
@@ -597,7 +641,7 @@
             target.focus();
             target.print();
 
-            document.body.removeChild(iframe);
+            body.removeChild(iframe);
             target.document.write("");  //清空iframe的内容
         };
 
@@ -606,27 +650,23 @@
 
     //销毁dom节点
     //注:IE6/7/8使用removeChild方法无法回收内存及清空parentNode
-    flyingon.dom_dispose = (function () {
+    flyingon.dom_dispose = function (dom) {
 
-        var div = document.createElement("div");
-
-        return function (dom) {
-
-            if (dom)
+        if (dom)
+        {
+            if (dom.parentNode)
             {
-                if (dom.parentNode)
-                {
-                    div.appendChild(dom);
-                }
-
-                div.innerHTML = "";
+                div.appendChild(dom);
             }
-        };
 
-    })();
+            div.innerHTML = "";
+        }
+    };
 
 
 
-})(flyingon);
+})(window, document);
+
+
 
 

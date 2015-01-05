@@ -181,7 +181,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //元素类型
-        this.type = "or";
+        this.type = ",";
 
         //子项数
         this.length = 2;
@@ -348,7 +348,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             node,       //当前节点
             tokens = selector.match(split_regex), //标记集合
             token,      //当前标记
-            type = "",  //当前类型
+            type = " ", //当前类型
             i = 0,
             length = tokens.length,
             cache;

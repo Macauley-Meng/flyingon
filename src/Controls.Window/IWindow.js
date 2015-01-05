@@ -11,7 +11,6 @@
 
 
         var host = document.documentElement,        //主容器
-            body,                                   //
 
             events = Object.create(null),           //注册的事件集合
 
@@ -28,29 +27,16 @@
             setCapture,                             //捕获鼠标
             releaseCapture,                         //释放鼠标
             capture_dom,                            //捕获的dom
-            capture_cache,                          //捕获时缓存数据
 
             pressdown,                              //按下时dom事件
             pressdown_dom,                          //鼠标按下时dom
             pressdown_target,                       //鼠标按下时目标控件
 
             hover_control,                          //鼠标指向控件
-            host_mousemove = true,                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
-
-            user_select = flyingon.__fn_style_prefix("user-select"),
-
-            event_false = function () { return false; };
+            host_mousemove = true;                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
 
 
-
-
-        flyingon.ready(function () {
-
-            body = document.body;
-        });
-
-
-
+        
         //获取dom目标控件
         function dom_target(event, enabled) {
 
@@ -81,41 +67,27 @@
 
 
 
-
         //捕获或释放鼠标
         if (document.createElement("div").setCapture)
         {
 
             setCapture = function (dom) {
 
-                if (user_select)
-                {
-                    capture_cache = body.style[user_select];
-                    body.style[user_select] = "none";
-                }
-                else
-                {
-                    capture_cache = body.onselectstart; //禁止选中内容
-                    body.onselectstart = event_false;
-                }
+                flyingon.dom_user_select(document.body, false);
 
-                dom.setCapture();
-                //dom.onlosecapture = pressdown_cancel; //IE特有 注册此方法会造成IE7无法拖动滚动条
+                if (capture_dom = dom)
+                {
+                    dom.setCapture();
+                    //dom.onlosecapture = pressdown_cancel; //IE特有 注册此方法会造成IE7无法拖动滚动条
+                }
             };
 
-            releaseCapture = function (dom) {
+            releaseCapture = function () {
 
-                if (user_select)
-                {
-                    body.style[user_select] = capture_cache;
-                }
-                else
-                {
-                    body.onselectstart = capture_cache;
-                }
+                flyingon.dom_user_select(document.body, true);
 
-                dom.releaseCapture();
-                //dom.onlosecapture = null;
+                capture_dom.releaseCapture();
+                //capture_dom.onlosecapture = null;
             };
 
         }
@@ -125,21 +97,14 @@
             //设置捕获
             setCapture = function (dom) {
 
-                if (user_select)
-                {
-                    capture_cache = body.style[user_select];
-                    body.style[user_select] = "none";
-                }
+                flyingon.dom_user_select(document.body, false);
             };
 
 
             //释放捕获
-            releaseCapture = function (dom) {
+            releaseCapture = function () {
 
-                if (user_select)
-                {
-                    body.style[user_select] = capture_cache;
-                }
+                flyingon.dom_user_select(document.body, true);
             };
 
 
@@ -163,6 +128,7 @@
 
 
         };
+
 
 
 
@@ -318,7 +284,7 @@
                 //捕获dom(只能捕获当前事件dom,不能捕获target.dom,否则在两个dom不同的情况下IE会造成滚动条无法拖动的问题)
                 if (!capture_dom && pressdown.capture)
                 {
-                    setCapture(capture_dom = pressdown_dom);
+                    setCapture(pressdown_dom);
                 }
             }
             else if (cache = target = dom_target(event, false))
@@ -389,7 +355,7 @@
 
             if (capture_dom)
             {
-                releaseCapture(capture_dom);
+                releaseCapture();
                 capture_dom = null;
             }
 

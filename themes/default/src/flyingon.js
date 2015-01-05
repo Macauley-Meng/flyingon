@@ -213,7 +213,6 @@ A~B                    匹配任何在A控件之后的同级B控件
         //页签面板页签头图标
         ".flyingon-TabPanelHeader-icon": {
 
-            color: control_color
         },
 
         //页签面板页签头文字
@@ -225,15 +224,10 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
         //页签面板页签头收拢图标
-        ".flyingon-TabPanelHeader-collapse:hover": {
-
-            color: hover_color
-        },
-
-        //页签面板页签头关闭图标
-        ".flyingon-TabPanelHeader-close": {
+        ".flyingon-TabPanelHeader-collapse": {
 
         },
+
 
 
         //左右页签面板默认样式
@@ -599,9 +593,8 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
         //页签控件页签头收拢图标
-        ".flyingon-TabControlHeader-collapse:hover": {
+        ".flyingon-TabControlHeader-collapse": {
 
-            color: hover_color
         },
 
         //页签控件页签头关闭图标
@@ -628,6 +621,62 @@ A~B                    匹配任何在A控件之后的同级B控件
 
                 height: "27px"
             }
+        },
+
+
+        //页签头图标
+        "css:.flyingon-TabPanelHeader-collapse-left,.flyingon-TabPanelHeader-expand-right,.flyingon-TabControlHeader-collapse-left,.flyingon-TabControlHeader-expand-right": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "4px -36px"
+        },
+
+        "css:.flyingon-TabPanelHeader-collapse-right,.flyingon-TabPanelHeader-expand-left,.flyingon-TabControlHeader-collapse-right,.flyingon-TabControlHeader-expand-left": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-36px -36px"
+        },
+
+        "css:.flyingon-TabPanelHeader-collapse-top,.flyingon-TabPanelHeader-expand-bottom,.flyingon-TabControlHeader-collapse-top,.flyingon-TabControlHeader-expand-bottom": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-76px -36px"
+        },
+
+        "css:.flyingon-TabPanelHeader-collapse-bottom,.flyingon-TabPanelHeader-expand-top,.flyingon-TabControlHeader-collapse-bottom,.flyingon-TabControlHeader-expand-top": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-116px -36px"
+        },
+
+        "css:.flyingon-TabPanelHeader-close,.flyingon-TabControlHeader-close": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-156px -36px"
+        },
+
+        "css:.flyingon-TabControl-previous": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "0 -156px"
+        },
+
+        "css:.flyingon-TabControl-next": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-36px -156px"
+        },
+
+        "css:.flyingon-TabControl-previous--disabled": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-76px -156px"
+        },
+
+        "css:.flyingon-TabControl-next--disabled": {
+
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-116px -156px"
         },
 
 
@@ -672,10 +721,10 @@ A~B                    匹配任何在A控件之后的同级B控件
             width: "16px",
             height: "16px",
             backgroundImage: flyingon_gif,
-            backgroundPosition: "0 -80px"
+            backgroundPosition: "-40px -80px"
         },
 
-        "css:.flyingon-TreeNode-collapse,.flyingon-TreeNode-ajax": {
+        "css:.flyingon-TreeNode-collapse,.flyingon-TreeNode-delay": {
 
             display: "inline-block",
             margin: "2px",
@@ -692,7 +741,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             width: "16px",
             height: "16px",
             backgroundImage: flyingon_gif,
-            backgroundPosition: "0 -80px"
+            backgroundPosition: "0 -120px"
         },
 
         "css:.flyingon-TreeNode-unchecked": {
@@ -702,7 +751,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             width: "16px",
             height: "16px",
             backgroundImage: flyingon_gif,
-            backgroundPosition: "0 -80px"
+            backgroundPosition: "-40px -120px"
         },
 
         "css:.flyingon-TreeNode-unkown": {
@@ -712,7 +761,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             width: "16px",
             height: "16px",
             backgroundImage: flyingon_gif,
-            backgroundPosition: "0 -80px"
+            backgroundPosition: "-80px -120px"
         },
 
         "css:.flyingon-TreeNode-image": {
@@ -742,6 +791,11 @@ A~B                    匹配任何在A控件之后的同级B控件
         "css:.flyingon-TreeView-check .flyingon-TreeNode-checked,.flyingon-TreeNode-unchecked,.flyingon-TreeNode-unkown": {
 
             display: "inline-block"
+        },
+
+        "css:.flyingon-TreeView-no-image .flyingon-TreeNode-image": {
+
+            display: "none"
         },
 
 

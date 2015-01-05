@@ -26,6 +26,17 @@
 
         var date = new Date();
 
+
+        var nodes = [];
+
+        for (var i = 0; i < 100; i++)
+        {
+            nodes.push("{ text: 'sub text " + i + "' }");
+        }
+
+        nodes = "[" + nodes.join(",") + "]";
+
+
         var tree = new flyingon.TreeView();
 
         for (var i = 0; i < 100; i++)
@@ -33,17 +44,12 @@
             var node = new flyingon.TreeNode();
 
             node.set_text("text " + i);
-
-            for (var j = 0; j < 100; j++)
-            {
-                var child = new flyingon.TreeNode();
-
-                child.set_text("sub text " + j);
-                node.appendChild(child);
-            }
+            //node.set_delay(nodes);
+            node.set_delay("TreeView.txt");
 
             tree.appendChild(node);
         }
+
 
         alert(new Date() - date);
 

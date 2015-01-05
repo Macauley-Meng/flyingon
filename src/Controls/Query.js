@@ -52,11 +52,11 @@ flyingon.defineClass("Query", function () {
             {
                 node = selector[i];
 
-                this.__query_types[node.type || " "](node, items, exports = []); //批量传入数组减少函数调用以提升性能
+                this.__query_types[node.type](node, items, exports = []); //批量传入数组减少函数调用以提升性能
 
                 if (exports.length == 0)
                 {
-                    return exports;
+                    return;
                 }
 
                 items = exports;

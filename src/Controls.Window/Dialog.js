@@ -64,7 +64,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
     //窗口图标
     this.defineProperty("icon", "", {
 
-        wrapper: "this.__header_icon.set_image(value);"
+        wrapper: "this.__header_icon.set_image(value);this.__header_icon.set_visibility(value ? 'visible' : 'collapse');"
     });
 
 
@@ -89,8 +89,8 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         target = this.__header_icon = new flyingon.Icon()
             .set_column3("before")
-            .set_image("dialog")
-            .addClass("flyingon-Dialog-icon");
+            .addClass("flyingon-Dialog-icon")
+            .set_visibility("collapse");
 
         target = this.__header_text = new flyingon.Label()
             .set_column3("center")
@@ -98,7 +98,6 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         target = this.__header_close = new flyingon.Icon()
             .set_column3("after")
-            .set_image("dialog-close")
             .addClass("flyingon-Dialog-close")
 
             .on("click", function (event) {

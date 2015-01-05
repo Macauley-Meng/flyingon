@@ -668,22 +668,22 @@
                             cache = item.measure(size, height, false, true).width;
                             offset = item.locate(x, 0);
                             x += cache + spacingWidth;
+
+                            size = right - x;
+
+                            if (offset.y > y)
+                            {
+                                y = offset.y;
+                            }
                             break;
 
-                        case "after":
-                            list1.push(item);
+                        case "center":
+                            list2.push(item);
                             break;
 
                         default:
-                            list2.push(item);
-                            continue;
-                    }
-
-                    size = right - x;
-
-                    if (offset.y > y)
-                    {
-                        y = offset.y;
+                            list1.push(item);
+                            break;
                     }
                 }
                 else
@@ -771,22 +771,22 @@
                             cache = item.measure(width, size, true, false).height;
                             offset = item.locate(0, y);
                             y += cache + spacingHeight;
+
+                            size = bottom - y;
+
+                            if (offset.x > x)
+                            {
+                                x = offset.x;
+                            }
                             break;
 
-                        case "after":
-                            list1.push(item);
+                        case "center":
+                            list2.push(item);
                             break;
 
                         default:
-                            list2.push(item);
-                            continue;
-                    }
-
-                    size = bottom - y;
-
-                    if (offset.x > x)
-                    {
-                        x = offset.x;
+                            list1.push(item);
+                            break;
                     }
                 }
                 else
@@ -2445,10 +2445,7 @@
 
         if ((cache1 = dom.getAttribute("xtype")) && (cache1 = class_list[cache1])) //指定布局控件
         {
-            if (!(cache2 = IChildren.__is_xtype in (control = new cache1())))
-            {
-                control.dom.innerHTML = dom.innerHTML;
-            }
+            cache2 = IChildren.__is_xtype in (control = new cache1());
         }
         else if (dom.getAttribute("layout-type")) //有layout-type解析为面板
         {
@@ -2462,30 +2459,38 @@
             cache2 = false;
         }
 
-        //同步属性
-        dom_to(dom, control);
-
-        //处理子控件
-        if (cache2)
+        //如果支持自定义dom反序列化
+        if (cache1 = control.deserialize_by_dom)
         {
-            children = dom.children;
-            cache1 = document.createDocumentFragment();
+            cache1.call(control, dom, deserialize_dom);
+        }
+        else
+        {
+            //同步属性
+            deserialize_dom(dom, control);
 
-            for (var i = 0, _ = children.length; i < _; i++)
+            //处理子控件
+            if (cache2)
             {
-                control.appendChild(cache2 = dom_wrapper(children[0]));
-                cache1.appendChild(cache2.dom);
-            }
+                children = dom.children;
+                cache1 = document.createDocumentFragment();
 
-            control.dom_children.appendChild(cache1);
-            control.__dom_dirty = false;
+                for (var i = 0, _ = children.length; i < _; i++)
+                {
+                    control.appendChild(cache2 = dom_wrapper(children[0]));
+                    cache1.appendChild(cache2.dom);
+                }
+
+                control.dom_children.appendChild(cache1);
+                control.__dom_dirty = false;
+            }
         }
 
         return control;
     };
 
 
-    function dom_to(dom, control) {
+    function deserialize_dom(dom, control) {
 
         var attributes = dom.attributes,
             cssText,
@@ -2539,7 +2544,7 @@
                 length = children.length,
                 item;
 
-            dom_to(dom, control);
+            deserialize_dom(dom, control);
 
             for (var i = 0; i < length; i++)
             {

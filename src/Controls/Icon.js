@@ -79,17 +79,19 @@
             {
                 var cache;
 
-                if (icon.indexOf("url" >= 0) && (cache = icon.indexOf(")")) > 0)
+                if (icon.indexOf("url(") === 0 && (cache = icon.indexOf(")")) > 0)
                 {
-                    if (++cache === icon.length)
+                    if (++cache < icon.length)
                     {
-                        dom.style.backgroundImage = icon;
+                        dom.style.backgroundPosition = icon.substring(cache + 1);
+                        icon = icon.substring(0, cache);
                     }
                     else
                     {
-                        dom.style.backgroundImage = icon.substring(0, cache).replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language);
-                        dom.style.backgroundPosition = icon.substring(cache + 1);
+                        dom.style.backgroundPosition = "";
                     }
+
+                    dom.style.backgroundImage = icon.replace('@theme', flyingon.current_theme).replace('@language', flyingon.current_language);
                 }
                 else
                 {
@@ -170,7 +172,7 @@ flyingon.defineClass("Icon", flyingon.Control, function (base) {
 
         if (event.pressdown)
         {
-            flyingon.__fn_clear_selection();
+            flyingon.clear_selection();
         }
     };
 

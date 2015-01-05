@@ -1096,12 +1096,7 @@ flyingon.defineClass("Control", function () {
 
             if (this.__update_dirty === 1)
             {
-                var style = this.dom.style;
-
                 flyingon.__fn_compute_css(this);
-
-                style.overflowX = this.get_overflowX();
-                style.overflowY = this.get_overflowY();
             }
         };
 
@@ -1635,41 +1630,7 @@ flyingon.defineClass("Control", function () {
 
         })();
 
-
-
-        //dom文本内容属性名
-        var textContent_name = flyingon.__textContent_name = "textContent" in this.dom_template ? "textContent" : "innerText";
-
-
-        //设置dom内容(textConent的性能比innerHTML高, 故自动判断是否按innerHTML的方式设置内容)
-        flyingon.__fn_dom_textContent = this.__fn_dom_textContent = function (dom, text, is_html_text) {
-
-            if (is_html_text || (text && text.indexOf('<') >= 0 && (text.indexOf('</') > 0 || text.indexOf('/>') > 0)))
-            {
-                dom.innerHTML = text;
-            }
-            else
-            {
-                dom[textContent_name] = text;
-            }
-        };
-
-
-        //清除选区
-        flyingon.__fn_clear_selection = function () {
-
-            var cache = document.selection;
-
-            if (cache && cache.empty)
-            {
-                cache.empty();
-            }
-            else if (cache = window.getSelection)
-            {
-                cache.call(window).removeAllRanges();
-            }
-        };
-
+        
 
 
     }).call(this, flyingon);

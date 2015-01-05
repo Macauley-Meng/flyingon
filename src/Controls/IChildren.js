@@ -289,9 +289,9 @@ flyingon.IChildren = function (base) {
     };
 
 
-    this.deserialize_property = function (reader, name, value) {
+    this.deserialize_children = function (reader, name, value) {
 
-        if (value && name === "children")
+        if (value)
         {
             var children = this.get_children();
 
@@ -299,10 +299,6 @@ flyingon.IChildren = function (base) {
             {
                 children.append(reader.read_object(value[i]));
             }
-        }
-        else
-        {
-            base.deserialize_property.call(this, reader, name, value);
         }
     };
 

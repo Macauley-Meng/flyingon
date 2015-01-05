@@ -7,6 +7,12 @@ flyingon.defineClass("SerializeReader", function () {
 
 
 
+    Class.create = function (default_type) {
+
+        this.default_type = default_type; //默认对象类型
+    };
+
+
 
     this.parse = function (data, xml) {
 
@@ -73,8 +79,7 @@ flyingon.defineClass("SerializeReader", function () {
 
         if (value != null && typeof value === "object")
         {
-            //复制对象(不使用原有对象以防止多重引用)
-            return this[value.constructor === Array ? "read_array" : "read_object"](value);
+            return this[value.constructor === Array ? "read_array" : "read_object"](value);//复制对象(不使用原有对象以防止多重引用)
         }
 
         return value;
@@ -114,17 +119,15 @@ flyingon.defineClass("SerializeReader", function () {
             if (value.xtype && (cache = class_list[value.xtype]))
             {
                 result = new cache();
-                delete value.xtype;
             }
             else
             {
-                result = {};
+                result = (cache = this.default_type) ? new cache() : {};
             }
 
             if (cache = value.__id__) //记录绑定源
             {
                 (this.__source_list || (this.__source_list = {}))[cache] = result;
-                delete value.__id__;
             }
 
             if (result.deserialize)
@@ -145,11 +148,15 @@ flyingon.defineClass("SerializeReader", function () {
 
     this.read_properties = function (target, value) {
 
-        var names = Object.getOwnPropertyNames(value);
+        var names = Object.getOwnPropertyNames(value),
+            name;
 
         for (var i = 0, _ = names.length; i < _; i++)
         {
-            target[name = names[i]] = this.read_value(value[name]);
+            if ((name = names[i]) !== "__id__")
+            {
+                target[name] = this.read_value(value[name]);
+            }
         }
     };
 

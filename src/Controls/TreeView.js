@@ -5,7 +5,7 @@
 
 
     //节点基础服务
-    var node_base = function (base, serialize, deserialize_property) {
+    var node_base = function () {
 
 
         //添加子节点
@@ -58,7 +58,90 @@
         };
 
 
+        //循环处理子节点
+        this.forEach = function (fn, cascade) {
 
+            var nodes, node;
+
+            if (fn && (nodes = this.__nodes))
+            {
+                for (var i = 0, _ = nodes.length; i < _; i++)
+                {
+                    fn.call(node = nodes[i], i);
+
+                    if (cascade && node.__nodes)
+                    {
+                        node.forEach(fn, true);
+                    }
+                }
+            }
+        };
+
+
+        //查找指定选中的节点
+        function find(nodes, cascade, name, exports) {
+
+            for (var i = 0, _ = nodes.length; i < _; i++)
+            {
+                var node = nodes[i];
+
+                if (node.__fields[name])
+                {
+                    exports.push(node);
+                }
+
+                if (cascade && node.__nodes)
+                {
+                    find(node.__nodes, true, name, exports);
+                }
+            }
+
+            return exports;
+        };
+
+
+        this.__fn_find = function (cascade, name) {
+
+            var nodes = this.__nodes,
+                length,
+                node;
+
+            if (nodes && (length = nodes.length) > 0)
+            {
+                for (var i = 0; i < length; i++)
+                {
+                    if ((node = nodes[i]).__fields[name])
+                    {
+                        return node;
+                    }
+
+                    if (cascade && node.__nodes && (node = node.__fn_find(true, name)))
+                    {
+                        return node;
+                    }
+                }
+            }
+        };
+
+
+        //获取选择节点
+        this.checked_nodes = function (cascade) {
+
+            var nodes = this.__nodes;
+            return nodes ? find(nodes, cascade, "checked", []) : null;
+        };
+
+
+        //获取选中节点
+        this.selected_nodes = function (cascade) {
+
+            var nodes = this.__nodes;
+            return nodes ? find(nodes, cascade, "selected", []) : null;
+        };
+
+
+
+        var serialize = this.serialize;
 
         //自定义序列化
         this.serialize = function (writer) {
@@ -74,20 +157,21 @@
         };
 
 
-        this.deserialize_property = function (reader, name, value) {
+        this.deserialize_nodes = function (reader, name, value) {
 
-            if (value && name === "nodes")
+            if (value)
             {
-                var nodes = this.get_nodes();
+                var nodes = this.get_nodes(),
+                    data;
+
+                reader.default_type = flyingon.TreeNode;
 
                 for (var i = 0, _ = value.length; i < _; i++)
                 {
-                    nodes.append(reader.read_object(value[i]));
+                    nodes.append(reader.read_object(data));
                 }
-            }
-            else
-            {
-                deserialize_property.call(this, reader, name, value);
+
+                reader.default_type = null;
             }
         };
 
@@ -103,7 +187,7 @@
 
         Class.create = function () {
 
-            var dom = (this.dom = this.dom_template.cloneNode(true)).children[0];
+            var dom = this.dom_node = (this.dom = this.dom_template.cloneNode(true)).children[0];
 
             this.__fields = Object.create(this.__defaults);
 
@@ -147,7 +231,7 @@
         //节点文字
         this.defineProperty("text", "", {
 
-            set_code: "flyingon.__fn_dom_textContent(this.dom_text, value, this.is_html_text);"
+            set_code: "flyingon.dom_textContent(this.dom_text, value, this.is_html_text);"
         });
 
 
@@ -158,55 +242,53 @@
         });
 
 
-        //是否选中
+        //是否选择
         this.defineProperty("checked", false, {
 
             set_code: "this.dom_check.className = value ? 'flyingon-TreeNode-checked' : 'flyingon-TreeNode-unchecked';"
         });
 
 
-        //异步加载子节点
-        //url(...):     异步加载url地址
-        //json:         子节点json
-        this.defineProperty("async", null, {
+        //是否选中
+        this.defineProperty("selected", false, {
 
-            set_code: "if (value) this.dom_collapse.className = 'flyingon-TreeNode-async';"
+            set_code: "this.dom_node.className = 'flyingon-TreeNode' + (value ? ' flyingon-TreeNode-selected' : '')"
+        });
+
+
+        //延迟加载子节点
+        //string:       url || json array
+        //array:        子节点数组
+        this.defineProperty("delay", null, {
+
+            set_code: "if (value && !fields.expanded) this.__fn_dom_collapse('delay');"
         });
 
 
 
+        //修改dom_collapse
+        this.__fn_dom_collapse = function (type) {
 
-
-        //展开节点
-        this.expand = function (all) {
-
-            var nodes = __nodes,
-                async = this.__fields.async,
-                length,
-                cache;
-
-            this.dom_collapse.className = "flyingon-TreeNode-expand";
+            this.dom_collapse.className = "flyingon-TreeNode-" + type;
 
             if (!this.get_image())
             {
-                flyingon.dom_icon(this.dom_image, "url('/themes/@theme/images/flyingon.gif') -120px -80px");
+                flyingon.dom_icon(this.dom_image, "url('/themes/@theme/images/flyingon.gif') " + (type === "expand" ? "-120px -80px" : "-80px -80px"));
             }
+        };
 
-            if (async)
+
+        //展开子节点
+        function expand(cascade) {
+
+            var nodes = this.__nodes,
+                dom = nodes.dom,
+                length,
+                cache;
+
+            if (this.__dom_dirty)
             {
-                nodes = nodes || this.get_nodes();
-
-                if (async.constructor === String) //url
-                {
-
-                }
-
-                this.__fields.async = null;
-            }
-
-            if (nodes)
-            {
-                if (this.__dom_dirty && (length = nodes.length) > 0)
+                if ((length = nodes.length) > 0)
                 {
                     cache = document.createDocumentFragment();
 
@@ -215,33 +297,100 @@
                         cache.appendChild(nodes[i].dom);
                     }
 
-                    nodes.dom.appendChild(cache);
-                    this.dom.appendChild(nodes.dom);
-
-                    this.__dom_dirty = false;
+                    dom.appendChild(cache);
+                    this.dom.appendChild(dom);
                 }
 
-                nodes.dom.style.display = "";
+                this.__dom_dirty = false;
+            }
+
+            if (cascade)
+            {
+                for (var i = 0, _ = nodes.length; i < _; i++)
+                {
+                    nodes[i].expand(true);
+                }
+            }
+
+            dom.style.display = "";
+        };
+
+
+        //展开节点
+        this.expand = function (cascade) {
+
+            var fields = this.__fields,
+                delay;
+
+            if (!fields.expand)
+            {
+                fields.expanded = true;
+                this.__fn_dom_collapse("expand");
+            }
+
+            if (delay = fields.delay)
+            {
+                if (delay.constructor === String) //url
+                {
+                    if (delay.charAt(0) !== "[")
+                    {
+                        var target = this;
+
+                        flyingon.ajax_get(delay, "json", {
+
+                            success: function (data) {
+
+                                target.__dom_dirty = true;
+                                target.appendChild.apply(target, new flyingon.SerializeReader(flyingon.TreeNode).deserialize(data));
+
+                                expand.call(target, cascade);
+                                fields.delay = null;
+                            }
+                        });
+
+                        return;
+                    }
+
+                    delay = new flyingon.SerializeReader(flyingon.TreeNode).deserialize(delay);
+                }
+
+                if (delay.constructor === Array)
+                {
+                    this.__dom_dirty = true;
+                    this.appendChild.apply(this, delay);
+
+                    expand.call(this, cascade);
+                }
+
+                fields.delay = null;
+            }
+            else if (this.__nodes)
+            {
+                expand.call(this, cascade);
             }
         };
 
 
         //收拢节点
-        this.collapse = function (all) {
+        this.collapse = function (cascade) {
 
             var nodes = this.__nodes;
-
-            if (!this.get_image())
-            {
-                flyingon.dom_icon(this.dom_image, "url('/themes/@theme/images/flyingon.gif') -80px -80px");
-            }
-
-            this.dom_collapse.className = "flyingon-TreeNode-collapse";
 
             if (nodes)
             {
                 nodes.dom.style.display = "none";
+
+                if (cascade)
+                {
+                    for (var i = 0, _ = nodes.length; i < _; i++)
+                    {
+                        nodes[i].collapse(true);
+                    }
+                }
             }
+
+            this.__fields.expanded = false;
+            this.__fn_dom_collapse("collapse");
         };
 
 
@@ -278,7 +427,7 @@
 
 
         //扩展节点基础服务
-        node_base.call(this, this.serialize, this.deserialize_property);
+        node_base.call(this);
 
 
     });
@@ -318,7 +467,7 @@
 
 
         //添加进集合时进行验证
-        function validate(target, item, change) {
+        function validate(target, item, index, change) {
 
             if (item instanceof TreeNode)
             {
@@ -340,14 +489,9 @@
 
                 item.__owner = owner;
 
-                if (parent && target.length === 0)
+                if (index === 0 && parent && target.length === 0)
                 {
-                    parent.dom_collapse.className = (cache = owner.__fields.expanded) ? "flyingon-TreeNode-expand" : "flyingon-TreeNode-collapse";
-
-                    if (!owner.__fields.image)
-                    {
-                        flyingon.dom_icon(parent.dom_image, "url('/themes/@theme/images/flyingon.gif') " + (cache ? "-120px -80px" : "-80px -80px"));
-                    }
+                    parent.__fn_dom_collapse(owner.__fields.expanded ? "expand" : "collapse");
                 }
 
                 if (!(item.__parent = parent) || !owner.__dom_dirty) //根节点或dom已更新
@@ -384,7 +528,7 @@
 
             for (var i = 0, _ = arguments.length; i < _; i++)
             {
-                validate(this, arguments[i], change);
+                validate(this, arguments[i], i, change);
             }
         };
 
@@ -396,7 +540,7 @@
 
             for (var i = 1, _ = arguments.length; i < _; i++)
             {
-                validate(this, item = arguments[i], change);
+                validate(this, item = arguments[i], i, change);
             }
         };
 
@@ -445,17 +589,46 @@
         //是否隐藏图像
         this.defineProperty("noImage", false, {
 
-            change_code: "this.toggleClass('flyingon-TreeView-no-image');"
+            set_code: "this.toggleClass('flyingon-TreeView-no-image');"
         });
 
 
         //是否允许选择
         this.defineProperty("allowCheck", false, {
 
-            change_code: "this.toggleClass('flyingon-TreeView-check');"
+            set_code: "this.toggleClass('flyingon-TreeView-check');"
         });
 
 
+        flyingon.defineProperty(this, "selectedNode",
+
+            function () {
+
+                return this.__fn_find(true, "selected");
+            },
+
+            function (value) {
+
+                var nodes = this.selected_nodes(true),
+                    node,
+                    length;
+
+                if (nodes && (length = nodes.length) > 0)
+                {
+                    for (var i = 0; i < length; i++)
+                    {
+                        if ((node = nodes[i]) !== value)
+                        {
+                            node.set_selected(false);
+                        }
+                    }
+                }
+
+                if (value && !value.get_selected())
+                {
+                    value.set_selected(value);
+                }
+            });
 
 
         //子节点集合
@@ -466,33 +639,56 @@
 
 
         //扩展节点基础服务
-        node_base.call(this, base.serialize, base.deserialize_property);
+        node_base.call(this);
 
 
 
         this.__event_bubble_mousedown = function (event) {
 
-            switch (event.dom.className)
+            if (event.which === 1) //左键按下
             {
-                case "flyingon-TreeNode-collapse":
-                    event.dom.__target.__fn_expand(true);
-                    break;
+                var dom = event.dom,
+                    target = dom.__target;
 
-                case "flyingon-TreeNode-async":
-                    event.dom.__target.__fn_expand(true);
-                    break;
+                if (target)
+                {
+                    switch (event.dom.className)
+                    {
+                        case "flyingon-TreeNode-collapse":
+                        case "flyingon-TreeNode-delay":
+                            target.expand();
+                            break;
 
-                case "flyingon-TreeNode-expand":
-                    event.dom.__target.__fn_expand(false);
-                    break;
+                        case "flyingon-TreeNode-expand":
+                            target.collapse();
+                            break;
 
-                case "flyingon-TreeNode-checked":
-                    event.dom.__target.set_checked(false);
-                    break;
+                        case "flyingon-TreeNode-checked":
+                            target.set_checked(false);
+                            break;
 
-                case "flyingon-TreeNode-unchecked":
-                    event.dom.__target.set_checked(true);
-                    break;
+                        case "flyingon-TreeNode-unchecked":
+                        case "flyingon-TreeNode-unkown":
+                            target.set_checked(true);
+                            break;
+                    }
+
+                    if (!dom.__user_select)
+                    {
+                        flyingon.dom_user_select(dom, false);
+                    }
+                }
+                else if ((target = (dom.children[0] || dom.parentNode.children[0]).__target) && !target.get_selected())
+                {
+                    if (event.ctrlKey)
+                    {
+                        target.set_selected(true);
+                    }
+                    else
+                    {
+                        this.set_selectedNode(target);
+                    }
+                }
             }
         };
 
@@ -500,25 +696,45 @@
 
 
         //展开节点
-        this.expand = function (all) {
+        this.expand = function (cascade) {
 
             var nodes = this.__nodes;
 
             for (var i = 0, _ = nodes.length; i < _; i++)
             {
-                nodes[i].__fn_expand(true, all);
+                nodes[i].expand(true, cascade);
             }
         };
 
 
         //收拢节点
-        this.collapse = function (all) {
+        this.collapse = function (cascade) {
 
             var nodes = this.__nodes;
 
             for (var i = 0, _ = nodes.length; i < _; i++)
             {
-                nodes[i].__fn_expand(false, all);
+                nodes[i].expand(false, cascade);
+            }
+        };
+
+
+        this.deserialize_by_dom = function (dom, fn) {
+
+            var children = dom.children,
+                nodes = this.get_nodes(),
+                node,
+                length;
+
+            fn(dom, this);
+
+            if (children && (length = children.length) > 0)
+            {
+                for (var i = 0; i < length; i++)
+                {
+                    fn(children[i], node = new flyingon.TreeNode());
+                    nodes.append(node);
+                }
             }
         };
 
