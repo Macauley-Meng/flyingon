@@ -12551,8 +12551,6 @@ flyingon.IChildren = function (base) {
 
         regex_name = /[-_](\w)/g,
 
-        regex_style = /([\w-]+)\s*\:\s*([^\;\:]+)/g,
-
         regex_trim = /\s+$/;
 
 
@@ -12599,11 +12597,7 @@ flyingon.IChildren = function (base) {
 
     function deserialize_dom(dom, control) {
 
-        var names,
-            cssText,
-            value,
-            fn,
-            cache;
+        var names, value, cache;
 
         //IE678的attributes包含了系统值, 故用正则表达式处理
         if ((cache = dom.outerHTML) && (cache = cache.substring(0, cache.indexOf(">"))))
@@ -12624,26 +12618,10 @@ flyingon.IChildren = function (base) {
         }
 
         //同步样式
-        if (cssText = dom.getAttribute("style"))
+        if (value = dom.style.cssText)
         {
-            regex_style.lastIndex = 0;
-
-            while (cache = regex_style.exec(cssText.cssText || cssText))
-            {
-                if (value = cache[1])
-                {
-                    value = value.toLowerCase().replace(regex_name, to_name);
-
-                    if (fn = control["set_" + value])
-                    {
-                        fn.call(control, dom.style[value]); //cache[2].replace(regex_trim, "")
-                    }
-                    else
-                    {
-                        control.dom.style[value] = cache[2]; //.replace(regex_trim, "");
-                    }
-                }
-            }
+            alert(value);
+            control.dom.style.cssText += value;
         }
 
         //同步dom属性至控件
@@ -12737,7 +12715,7 @@ flyingon.IChildren = function (base) {
 
     flyingon.initialize = function (data, host) {
 
-        new flyingon.SearializeReader(flyingon.Window).deserialize(data).show(host);
+        new flyingon.SerializeReader(flyingon.Window).deserialize(data).show(host);
     };
 
 

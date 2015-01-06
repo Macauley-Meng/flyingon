@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>flyingon demo</title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+
+    <script src="../scripts/flyingon.js"></script>
+    <script src="../themes/default/flyingon.js"></script>
+
+    <script type="text/javascript">
+
+
+        flyingon.ready(function () {
+
+            flyingon.initialize({
+
+                layoutType: "dock",
+                padding: "0",
+
+                children: [
+
+                    {
+                        xtype: "flyingon.HtmlContol",
+                        dock: "top",
+                        height: "50px",
+                        className: "class",
+                        border: "1px solid blue",
+                        marginBottom: "2px",
+                        padding: "8px",
+                        backgroundColor: "silver",
+                        text: '<span style="color:red;font-size:24px;">flyingon开源框架</span>'
+                    },
+
+                    {
+                        xtype: "flyingon.HtmlControl",
+                        dock: "bottom",
+                        height: "50px",
+                        border: "1px solid blue",
+                        marginTop: "2px",
+                        paddingTop: "10px",
+                        backgroundColor: "silver",
+                        textAlign: "center",
+                        text: '<a href="https://github.com/freeoasoft/flyingon" target="_blank">github: https://github.com/freeoasoft/flyingon</a>'
+                    },
+
+                    {
+                        xtype: "flyingon.TabPanel",
+                        dock: "left",
+                        laytoutType: "line",
+                        vertical: true,
+                        icon: "url('/themes/@theme/images/flyingon.gif') 4px 4px",
+                        text: "功能树",
+                        showCollapse: true,
+                        width: "200px",
+                        padding: "1px",
+
+                        children: [
+                            {
+                                xtype: "flyingon.TreeView",
+                                nodes: [
+
+                                    {
+                                        text: "核心功能",
+
+                                        nodes: [
+
+                                            { text: "类-属性-事件" },
+                                            { text: "序列化与反序列化" },
+                                            { text: "拖拉" },
+                                            { text: "调整大小" },
+                                            { text: "数据绑定" }
+                                        ]
+                                    },
+
+                                    {
+                                        text: "布局",
+
+                                        nodes: [
+
+                                            { text: "行式布局" },
+
+                                            { text: "流式布局" },
+
+                                            { text: "三栏布局" },
+
+                                            { text: "停靠布局" },
+
+                                            { text: "网格布局" },
+
+                                            { text: "表格布局" },
+
+                                            { text: "页签面板" },
+
+                                            { text: "页签控件" },
+
+                                            { text: "OutlookBar" },
+
+                                            { text: "Splitter" },
+
+                                            { text: "自定义布局" }
+                                        ]
+                                    },
+
+                                    {
+                                        text: "基础控件",
+
+                                        nodes: [
+
+                                            { text: "..." },
+                                            { text: "..." }
+                                        ]
+                                    },
+
+                                    {
+                                        text: "高级控件",
+
+                                        nodes: [
+
+                                            { text: "..." },
+                                            { text: "..." }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+
+                    {
+                        xtype: "flyingon.Splitter"
+                    },
+
+                    {
+                        xtype: "flyingon.TabPanel",
+                        dock: "right",
+                        layoutType: "line",
+                        vertical: true,
+                        icon: "url('/themes/@theme/images/flyingon.gif') 4px 4px",
+                        text: "操作指引",
+                        showCollapse: true,
+                        collapse: true,
+                        width: "200px",
+                        padding: "4px",
+
+                        children: [
+
+                            {
+                                xtype: "flyingon.HtmlControl",
+                                text: "注意事项 1"
+                            },
+
+                            {
+                                xtype: "flyingon.HtmlControl",
+                                text: "注意事项 2"
+                            },
+
+                            {
+                                xtype: "flyingon.HtmlControl",
+                                text: "注意事项 3"
+                            },
+
+                            {
+                                xtype: "flyingon.HtmlControl",
+                                text: "注意事项 4"
+                            }
+                        ]
+                    },
+
+                    {
+                        xtype: "flyingon.Splitter"
+                    },
+
+                    {
+                        xtype: "flyingon.TabControl",
+                        dock: "fill"
+                    }
+                ]
+
+            });
+
+        });
+
+    </script>
+
+</head>
+<body>
+
+</body>
+</html>
