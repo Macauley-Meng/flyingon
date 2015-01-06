@@ -88,13 +88,18 @@ var flyingon = (function () {
     //扩展Object.getOwnPropertyNames方法
     Object.getOwnPropertyNames || (Object.getOwnPropertyNames = function (target) {
 
-        var names = [];
+        var names = [], type, value;
 
         if (target)
         {
+            if (type = target.constructor)
+            {
+                type = type.prototype;
+            }
+
             for (var name in target)
             {
-                if (target.hasOwnProperty(name))
+                if (!type || type[name] !== target[name]) //IE67怪异模式下不支持hasOwnProperty
                 {
                     names.push(name);
                 }

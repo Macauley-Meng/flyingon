@@ -7,9 +7,9 @@ flyingon.defineClass("SerializeReader", function () {
 
 
 
-    Class.create = function (default_type) {
+    Class.create = function (deserialize_type) {
 
-        this.default_type = default_type; //默认对象类型
+        this.deserialize_type = deserialize_type; //默认对象类型
     };
 
 
@@ -122,7 +122,7 @@ flyingon.defineClass("SerializeReader", function () {
             }
             else
             {
-                result = (cache = this.default_type) ? new cache() : {};
+                result = (cache = this.deserialize_type) ? new cache() : {};
             }
 
             if (cache = value.__id__) //记录绑定源

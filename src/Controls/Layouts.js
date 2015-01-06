@@ -2426,6 +2426,8 @@
 
         IChildren = flyingon.IChildren,
 
+        dom_test = document.createElement("div"),
+
         regex_name = /[-_](\w)/g,
 
         regex_style = /([\w-]+)\s*\:\s*([^\;\:]+)/g,
@@ -2439,51 +2441,35 @@
     };
 
 
-    function dom_wrapper(dom) {
+    function dom_wrapper(dom, deserialize_xtype) {
 
-        var control, children, cache1, cache2;
+        var control, children, cache;
 
-        if ((cache1 = dom.getAttribute("xtype")) && (cache1 = class_list[cache1])) //指定布局控件
+        if ((cache = dom.getAttribute("xtype")) && (cache = class_list[cache])) //指定布局控件
         {
-            cache2 = IChildren.__is_xtype in (control = new cache1());
+            control = new cache();
+        }
+        else if (deserialize_xtype)
+        {
+            control = new deserialize_xtype();
         }
         else if (dom.getAttribute("layout-type")) //有layout-type解析为面板
         {
             control = new flyingon.Panel();
-            cache2 = true;
         }
         else //否则解析成html控件
         {
             control = new flyingon.HtmlControl(dom);
             control.dom.innerHTML = dom.innerHTML;
-            cache2 = false;
         }
+
+        //同步属性
+        deserialize_dom(dom, control);
 
         //如果支持自定义dom反序列化
-        if (cache1 = control.deserialize_by_dom)
+        if (control.__fn_deserialize_dom)
         {
-            cache1.call(control, dom, deserialize_dom);
-        }
-        else
-        {
-            //同步属性
-            deserialize_dom(dom, control);
-
-            //处理子控件
-            if (cache2)
-            {
-                children = dom.children;
-                cache1 = document.createDocumentFragment();
-
-                for (var i = 0, _ = children.length; i < _; i++)
-                {
-                    control.appendChild(cache2 = dom_wrapper(children[0]));
-                    cache1.appendChild(cache2.dom);
-                }
-
-                control.dom_children.appendChild(cache1);
-                control.__dom_dirty = false;
-            }
+            control.__fn_deserialize_dom(dom, dom_wrapper);
         }
 
         return control;
@@ -2492,26 +2478,44 @@
 
     function deserialize_dom(dom, control) {
 
-        var attributes = dom.attributes,
+        var names,
             cssText,
             value,
             fn,
             cache;
+
+        //IE678的attributes包含了系统值, 故用正则表达式处理
+        if ((cache = dom.outerHTML) && (cache = cache.substring(0, cache.indexOf(">"))))
+        {
+            if (value = cache.match(/[\w-]+\s*=/g))
+            {
+                names = value.join("").match(/[\w-]+/g);
+            }
+        }
+        else
+        {
+            names = [];
+
+            for (var i = 0, _ = dom.attributes.length; i < _; i++)
+            {
+                names.push(dom.attributes[i].name);
+            }
+        }
 
         //同步样式
         if (cssText = dom.getAttribute("style"))
         {
             regex_style.lastIndex = 0;
 
-            while (cache = regex_style.exec(cssText))
+            while (cache = regex_style.exec(cssText.cssText || cssText))
             {
                 if (value = cache[1])
                 {
-                    value = value.replace(regex_name, to_name);
+                    value = value.toLowerCase().replace(regex_name, to_name);
 
                     if (fn = control["set_" + value])
                     {
-                        fn.call(control, cache[2].replace(regex_trim, ""));
+                        fn.call(control, dom.style[value]); //cache[2].replace(regex_trim, "")
                     }
                     else
                     {
@@ -2522,11 +2526,14 @@
         }
 
         //同步dom属性至控件
-        for (var i = 0, _ = attributes.length; i < _; i++)
+        if (names)
         {
-            if (control[cache = "set_" + (value = attributes[i]).name.replace(regex_name, to_name)])
+            for (var i = 0, _ = names.length; i < _; i++)
             {
-                control[cache](value.value);
+                if (control[cache = "set_" + (name = names[i]).replace(regex_name, to_name)])
+                {
+                    control[cache](dom.getAttribute(name));
+                }
             }
         }
     };
@@ -2603,6 +2610,14 @@
             flyingon.dom_layout = false;
         }
     });
+
+
+
+
+    flyingon.initialize = function (data, host) {
+
+        new flyingon.SearializeReader(flyingon.Window).deserialize(data).show(host);
+    };
 
 
 

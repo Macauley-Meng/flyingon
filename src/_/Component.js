@@ -549,7 +549,7 @@ flyingon.IEvent = function () {
             {
                 var target = events[i++];
 
-                if (events[i].call(target, event) === false)
+                if (events[i] && events[i].call(target, event) === false)
                 {
                     event.preventDefault();
                 }

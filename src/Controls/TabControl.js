@@ -842,6 +842,10 @@
 
 
 
+        //默认序列化类型
+        this.deserialize_xtype = flyingon.TabPanel;
+
+
         //扩展页签基础服务
         tab_base.call(this, base, true);
 
@@ -902,61 +906,69 @@
         //测量前处理
         this.before_measure = function (box) {
 
-            var header = this.__header,
-                style = header.dom.style,
-                width = this.offsetWidth - box.border_width,
-                values = this.__tab_values,
-                cache;
+            var header = this.__header;
 
-            if (header && this.get_header() && values.style !== "thumb") //缩略图模式不支持标题头
+            if (header)
             {
-                //测量页签头
-                header.__update_dirty = 1;
-                header.__arrange_dirty = true;
+                var style = header.dom.style,
+                    width = this.offsetWidth - box.border_width,
+                    values = this.__tab_values,
+                    cache;
 
-                style.width = style.height = "";
-
-                //获取收拢方向(left, top, right, bottom)
-                if (values.collapse && (cache = this.__parent) && (cache = cache.__layout) && (cache = cache.__fn_collapse(this)))
+                if (header && this.get_header() && values.style !== "thumb") //缩略图模式不支持标题头
                 {
-                    values.direction = cache;
+                    //测量页签头
+                    header.__update_dirty = 1;
+                    header.__arrange_dirty = true;
+
+                    style.width = style.height = "";
+
+                    //获取收拢方向(left, top, right, bottom)
+                    if (values.collapse && (cache = this.__parent) && (cache = cache.__layout) && (cache = cache.__fn_collapse(this)))
+                    {
+                        values.direction = cache;
+                        style.display = "none";
+                    }
+                    else if (style.display)
+                    {
+                        style.display = "";
+                    }
+
+                    header.measure(width, 25, true, true);
+                    header.locate(0, 0, width);
+
+                    //渲染页签头
+                    return this.__fn_render_header(box, header, values);
+                }
+                else
+                {
                     style.display = "none";
                 }
-                else if (style.display)
-                {
-                    style.display = "";
-                }
-
-                header.measure(width, 25, true, true);
-                header.locate(0, 0, width);
-
-                //渲染页签头
-                return this.__fn_render_header(box, header, values);
-            }
-            else
-            {
-                style.display = "none";
             }
         };
 
 
         this.__fn_measure_client = function (box) {
 
-            var header = this.__header,
-                dom = this.dom_body,
-                style = dom.style,
-                y = header && !header.dom.style.display ? header.offsetHeight : 0,
-                width = this.offsetWidth - box.border_width;
+            var header = this.__header;
 
-            style.top = y + "px";
-            style.width = width + "px";
-            style.height = this.offsetHeight - box.border_height - y + "px";
-
-            //处理body盒模型偏差
-            if (!this.box_border_sizing)
+            if (header)
             {
-                style.width = (dom.clientWidth << 1) - dom.offsetWidth + "px";
-                style.height = (dom.clientHeight << 1) - dom.offsetHeight + "px";
+                var dom = this.dom_body,
+                    style = dom.style,
+                    y = header && !header.dom.style.display ? header.offsetHeight : 0,
+                    width = this.offsetWidth - box.border_width;
+
+                style.top = y + "px";
+                style.width = width + "px";
+                style.height = this.offsetHeight - box.border_height - y + "px";
+
+                //处理body盒模型偏差
+                if (!this.box_border_sizing)
+                {
+                    style.width = (dom.clientWidth << 1) - dom.offsetWidth + "px";
+                    style.height = (dom.clientHeight << 1) - dom.offsetHeight + "px";
+                }
             }
 
             base.__fn_measure_client.call(this, box);
@@ -1443,6 +1455,9 @@
             this.dom_children = this.dom.children[0];
         };
 
+
+        //默认序列化类型
+        this.deserialize_xtype = flyingon.TabPanel;
 
 
         //扩展页签基础服务

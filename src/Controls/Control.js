@@ -1353,6 +1353,9 @@ flyingon.defineClass("Control", function () {
         this.defineProperty("droppable", false);
 
 
+        //自定义数据
+        this.defineProperty("tag", null);
+
 
     }).call(this, flyingon);
 
@@ -1630,7 +1633,7 @@ flyingon.defineClass("Control", function () {
 
         })();
 
-        
+
 
 
     }).call(this, flyingon);

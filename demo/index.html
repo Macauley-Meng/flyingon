@@ -16,6 +16,47 @@
 
     <script src="../scripts/flyingon.js"></script>
     <script src="../themes/default/flyingon.js"></script>
+
+    <!--<script type="text/javascript">
+
+        flyingon.ready(function () {
+
+            flyingon.initialize({
+
+                layoutType: "dock",
+                padding: "0",
+
+                children: [
+
+                    {
+
+                    },
+
+                    {
+                    },
+
+                    {
+                    },
+
+                    {
+                    },
+
+                    {
+                    },
+
+                    {
+                    },
+
+                    {
+                    }
+                ]
+
+            });
+
+        });
+
+    </script>-->
+
 </head>
 <body>
 
@@ -29,27 +70,70 @@
         </div>
         <div xtype="flyingon.TabPanel" id="id" dock="left" layout-type="line" vertical="1" icon="url('/themes/@theme/images/flyingon.gif') 4px 4px" text="功能树" show-collapse="1" width="200px" style="padding:1px;">
             <div xtype="flyingon.TreeView" width="fill" height="fill" style="border:0px solid">
-                <div text="ddd">
-                    <div text="ddd"></div>
-                    <div text="ddd"></div>
+                <div text="核心功能">
+                    <div text="类-属性-事件"></div>
+                    <div text="序列化与反序列化"></div>
+                    <div text="拖拉"></div>
+                    <div text="调整大小"></div>
+                    <div text="数据绑定"></div>
                 </div>
-                <div text="ddd">
-                    <div text="ddd"></div>
-                    <div text="ddd"></div>
+                <div text="布局">
+                    <div text="行式布局"></div>
+                    <div text="流式布局"></div>
+                    <div text="三栏布局"></div>
+                    <div text="停靠布局"></div>
+                    <div text="风格布局"></div>
+                    <div text="表格布局"></div>
+                    <div text="页签面板"></div>
+                    <div text="页签控件"></div>
+                    <div text="OutlookBar"></div>
+                    <div text="Splitter"></div>
+                    <div text="自定义布局"></div>
+                </div>
+                <div text="基础控件">
+                    <div text="..."></div>
+                    <div text="..."></div>
+                </div>
+                <div text="高级控件">
+                    <div text="..."></div>
+                    <div text="..."></div>
                 </div>
             </div>
         </div>
         <div xtype="flyingon.Splitter"></div>
-        <div xtype="flyingon.TabPanel" dock="right" layout-type="line" vertical="1" icon="url('/themes/@theme/images/flyingon.gif') 4px 4px" text="操作指引" show-collapse="1" width="200px" style="padding:4px;">
-            <div>right 1</div>
-            <div>right 2</div>
-            <div>right 3</div>
-            <div>right 4</div>
+        <div xtype="flyingon.TabPanel" dock="right" layout-type="line" vertical="1" icon="url('/themes/@theme/images/flyingon.gif') 4px 4px" text="操作指引" show-collapse="1" collapse="1" width="200px" style="padding:4px;">
+            <div>注意事项 1</div>
+            <div>注意事项 2</div>
+            <div>注意事项 3</div>
+            <div>注意事项 4</div>
         </div>
         <div xtype="flyingon.Splitter" dock="right"></div>
-        <div dock="fill" style="border:1px solid blue;">fill</div>
+        <div xtype="flyingon.TabControl" dock="fill">
+
+        </div>
 
     </div>
+
+    <script type="text/javascript">
+
+        flyingon.ready(function () {
+
+            //var tree = flyingon.query_xtype("flyingon.TreeView")[0],
+            //    tab = flyingon.query_xtype("flyinton.TabControl")[0];
+
+            //tree.on("click", function (event) {
+
+            //    var node = tree.get_selectedNode();
+
+            //    if (node)
+            //    {
+            //        alert(node.get_text());
+            //    }
+            //});
+
+        });
+
+    </script>
 
 </body>
 </html>

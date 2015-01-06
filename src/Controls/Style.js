@@ -386,19 +386,20 @@
         //折分边框
         function split_border(name) {
 
-            var regex = /(\d+\S*)?\s*(\w+)?\s*([\S\s]+)?/,
+            var style = document.createElement("div").style,
                 name0 = convert_name(name + "-width"),
                 name1 = convert_name(name + "-style"),
                 name2 = convert_name(name + "-color");
 
             return function (value) {
 
-                var result = {},
-                    values = value && ("" + value).match(regex) || [];
+                var result = {};
 
-                result[name0] = values[1] || "";
-                result[name1] = values[2] || "";
-                result[name2] = values[3] || "";
+                style.broderLeft = value;
+
+                result[name0] = style.borderLeftWidth;
+                result[name1] = style.borderLeftStyle;
+                result[name2] = style.borderLeftColor;
 
                 return result;
             };

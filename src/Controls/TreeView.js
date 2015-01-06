@@ -143,6 +143,7 @@
 
         var serialize = this.serialize;
 
+
         //自定义序列化
         this.serialize = function (writer) {
 
@@ -157,6 +158,10 @@
         };
 
 
+        //默认序列化类型
+        this.deserialize_xtype = flyingon.TreeNode;
+
+
         this.deserialize_nodes = function (reader, name, value) {
 
             if (value)
@@ -164,17 +169,34 @@
                 var nodes = this.get_nodes(),
                     data;
 
-                reader.default_type = flyingon.TreeNode;
+                reader.deserialize_xtype = flyingon.TreeNode;
 
                 for (var i = 0, _ = value.length; i < _; i++)
                 {
                     nodes.append(reader.read_object(data));
                 }
 
-                reader.default_type = null;
+                reader.deserialize_xtype = null;
             }
         };
 
+
+        this.__fn_deserialize_dom = function (dom, dom_wrapper) {
+
+            var children = dom.children,
+                length;
+
+            if (children && (length = children.length) > 0)
+            {
+                var nodes = this.get_nodes(),
+                    type = flyingon.TreeNode;
+
+                for (var i = 0; i < length; i++)
+                {
+                    nodes.append(dom_wrapper(children[i], type));
+                }
+            }
+        };
 
     };
 
@@ -677,6 +699,9 @@
                     {
                         flyingon.dom_user_select(dom, false);
                     }
+
+                    event.disable_click(false);
+                    event.disable_dbclick(false);
                 }
                 else if ((target = (dom.children[0] || dom.parentNode.children[0]).__target) && !target.get_selected())
                 {
@@ -715,26 +740,6 @@
             for (var i = 0, _ = nodes.length; i < _; i++)
             {
                 nodes[i].expand(false, cascade);
-            }
-        };
-
-
-        this.deserialize_by_dom = function (dom, fn) {
-
-            var children = dom.children,
-                nodes = this.get_nodes(),
-                node,
-                length;
-
-            fn(dom, this);
-
-            if (children && (length = children.length) > 0)
-            {
-                for (var i = 0; i < length; i++)
-                {
-                    fn(children[i], node = new flyingon.TreeNode());
-                    nodes.append(node);
-                }
             }
         };
 
