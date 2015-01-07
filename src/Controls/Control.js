@@ -1009,7 +1009,7 @@ flyingon.defineClass("Control", function () {
             this.clientLeft = x;
             this.clientTop = y;
             this.clientWidth = width > 0 ? width : 0;
-            this.clientHeight = width > 0 ? height : 0;
+            this.clientHeight = height > 0 ? height : 0;
         };
 
 
@@ -1167,24 +1167,23 @@ flyingon.defineClass("Control", function () {
         //调整大小
         this.__fn_resize = function (side, event, pressdown) {
 
-            var layout = this.__parent && this.__parent.__layout,
-                x = event.clientX - pressdown.clientX,
+            var x = event.clientX - pressdown.clientX,
                 y = event.clientY - pressdown.clientY;
 
-            if (side.left && layout && !layout.absolute)
+            if (side.left)
             {
+                x = resize_value(this, pressdown, "width", -x, true);
                 resize_value(this, pressdown, "left", x);
-                resize_value(this, pressdown, "width", -x, true);
             }
             else if (side.right)
             {
                 resize_value(this, pressdown, "width", x, true);
             }
 
-            if (side.top && layout && !layout.absolute)
+            if (side.top)
             {
+                y = resize_value(this, pressdown, "height", -y, true);
                 resize_value(this, pressdown, "top", y);
-                resize_value(this, pressdown, "height", -y, true);
             }
             else if (side.bottom)
             {
@@ -1240,11 +1239,11 @@ flyingon.defineClass("Control", function () {
                 {
                     target["set_" + name](value + start.unit);
                 }
+
+                return start.value - value;
             }
-            else
-            {
-                target["set_" + name](value + start.unit);
-            }
+
+            target["set_" + name](value + start.unit);
         };
 
 

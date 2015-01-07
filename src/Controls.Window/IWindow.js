@@ -36,7 +36,7 @@
             host_mousemove = true;                  //是否允许host处理mousemove事件 仅在不能使用setCapture时有效
 
 
-        
+
         //获取dom目标控件
         function dom_target(event, enabled) {
 
@@ -195,11 +195,10 @@
                 }
 
                 //初始化鼠标按下时数据
-                pressdown_dom = event.target;
-
                 pressdown = {
 
                     capture: false,
+                    dom: pressdown_dom = event.target,
                     which: event.which,
                     clientX: event.clientX,
                     clientY: event.clientY,
@@ -251,7 +250,9 @@
 
         events.mousemove = function (event) {
 
-            var ownerWindow, target, cache;
+            var ownerWindow = this.flyingon,
+                target,
+                cache;
 
             //防止host处理
             host_mousemove = false;
@@ -269,7 +270,7 @@
                     if (target = pressdown.target)
                     {
                         target.__fn_resize(resizable, event, pressdown);
-                        target.get_ownerWindow().__fn_registry_update(target, true);
+                        ownerWindow.__fn_registry_update(target, true);
                     }
                 }
                 else if (draggable) //拖动
@@ -289,8 +290,6 @@
             }
             else if (cache = target = dom_target(event, false))
             {
-                ownerWindow = this.flyingon;
-
                 //调整大小状态不触发相关事件
                 while (cache)
                 {

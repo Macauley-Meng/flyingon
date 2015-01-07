@@ -832,14 +832,40 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
         //弹出窗口页签样式
-        ".flyingon-Dialog-header": {
+        "css:.flyingon-Dialog-header": {
 
             paddingLeft: "2px",
             paddingRight: "2px",
             height: "25px",
+            lineHeight: "25px",
             verticalAlign: "middle",
             backgroundColor: "silver",
             cursor: "default"
+        },
+
+
+        "css:.flyingon-Dialog-icon": {
+
+            float: "left",
+            width: "20px",
+            height: "20px"
+        },
+
+
+        "css:.flyingon-Dialog-text": {
+
+            float: "left"
+        },
+
+
+        "css:.flyingon-Dialog-close": {
+
+            float: "right",
+            width: "20px",
+            height: "20px",
+            marginRight: "2px",
+            backgroundImage: flyingon_gif,
+            backgroundPosition: "-120px 4px"
         }
 
 

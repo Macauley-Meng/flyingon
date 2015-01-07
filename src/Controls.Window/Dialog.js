@@ -11,15 +11,18 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
         //默认设置为初始化状态,在渲染窗口后终止
         flyingon.__initializing = true;
 
-        this.initialize_header(this.__header = new flyingon.Panel());
+        var dom = this.dom_header = this.dom.children[1],
+            _this = this;
 
-        (this.dom_header = this.dom.children[0]).appendChild(this.__header.dom);
+        this.dom_icon = dom.children[0];
+        this.dom_text = dom.children[1];
 
-        this.dom_children = (this.dom_body = this.dom.children[1]).children[0];
+        dom.children[2].onclick = function (event) {
 
-        this.__header.addClass("flyingon-Dialog-header")
-            .set_layoutType("column3")
-            .__parent = this;
+            _this.close();
+        };
+
+        this.dom_children = (this.dom_body = this.dom.children[0]).children[0];
 
         this.__fn_init_window(this.dom);
     };
@@ -34,7 +37,14 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //创建模板
-    this.create_dom_template("div", "overflow:hidden;", "<div style='position:absolute;left:0;top:0;width:100%;overflow:hidden;'></div><div style='position:absolute;left:0;width:100%;'><div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div></div>");
+    this.create_dom_template("div", "overflow:hidden;", "<div class='flyingon-Dialog-body' style='position:absolute;left:0;width:100%;'>"
+            + "<div style='position:relative;margin:0;border:0;padding:0;left:0;top:0;overflow:hidden;'></div>"
+        + "</div>"
+        + "<div class='flyingon-Dialog-header' style='position:absolute;left:0;top:0;width:100%;overflow:hidden;'>"
+            + "<div class='flyingon-Dialog-icon' style='display:none;'></div>"
+            + "<div class='flyingon-Dialog-text'></div>"
+            + "<div class='flyingon-Dialog-close'></div>"
+        + "</div>");
 
 
 
@@ -56,20 +66,24 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
     //是否显示页签
-    this.defineProperty("header", true, "layout");
+    this.defineProperty("header", true, {
+
+        attributes: "layout",
+        set_code: "this.dom_header.display = value ? '' : 'none';"
+    });
 
 
     //窗口图标
     this.defineProperty("icon", "", {
 
-        wrapper: "this.__header_icon.set_image(value);this.__header_icon.set_visibility(value ? 'visible' : 'collapse');"
+        set_code: "this.__fn_icon(value);"
     });
 
 
     //窗口标题
     this.defineProperty("text", "", {
 
-        set_code: "this.__header_text.set_text(value);"
+        set_code: "flyingon.dom_textContent(this.dom_text, value);"
     });
 
 
@@ -78,49 +92,37 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
+    this.__fn_icon = function (icon) {
 
+        var dom = this.dom_icon;
 
-    //初始化窗口标题栏
-    this.initialize_header = function (header) {
-
-        var target;
-
-        target = this.__header_icon = new flyingon.Icon()
-            .set_column3("before")
-            .addClass("flyingon-Dialog-icon")
-            .set_visibility("collapse");
-
-        target = this.__header_text = new flyingon.Label()
-            .set_column3("center")
-            .addClass("flyingon-Dialog-text");
-
-        target = this.__header_close = new flyingon.Icon()
-            .set_column3("after")
-            .addClass("flyingon-Dialog-close")
-
-            .on("click", function (event) {
-
-                target.close();
-            });
-
-        header.appendChild(this.__header_icon, this.__header_text, target);
-
-        target = this;
+        if (icon)
+        {
+            flyingon.dom_icon(dom, icon);
+            dom.style.display = "";
+        }
+        else
+        {
+            dom.style.display = "none";
+        }
     };
-
-
 
 
     this.__event_capture_mousemove = function (event) {
 
-        if (event.pressdown && (event.which === 1 && event.in_dom(this.dom_header))) //按标题栏拖动
+        var start = event.pressdown,
+            dom;
+
+        if (start && event.which === 1 && (dom = event.dom) && (dom === this.dom_header || dom.parentNode == this.dom_header)) //按标题栏拖动
         {
-            var start = event.pressdown.start || (event.pressdown.start = { x: this.offsetLeft, y: this.offsetTop });
+            var styles = this.__styles,
+                style = this.dom.style;
 
-            this.set_left(start.x + event.distanceX + "px");
-            this.set_top(start.y + event.distanceY + "px");
+            start.capture = true; //设置鼠标捕获
+            start = start.start || (start.start = { x: this.offsetLeft, y: this.offsetTop });
 
-            this.__fn_registry_update(this, true);
+            style.left = styles.left = (this.offsetLeft = start.x + event.distanceX) + "px";
+            style.top = styles.top = (this.offsetTop = start.y + event.distanceY) + "px";
         }
     };
 
@@ -148,7 +150,7 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
             var mask = this.dom_mask = document.createElement("div");
 
             mask.flyingon = this;
-            mask.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background-color:silver;filter:alpha(opacity=10);-moz-opacity:0.1;-khtml-opacity:0.1;opacity:0.1;";
+            mask.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;background-color:silver;cursor:default;filter:alpha(opacity=10);-moz-opacity:0.1;-khtml-opacity:0.1;opacity:0.1;";
 
             host.appendChild(mask);
         }
@@ -197,37 +199,8 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-    this.before_measure = function (box) {
-
-        var header = this.__header,
-            style1 = this.dom_header.style,
-            style2 = this.dom_body.style,
-            y = 0;
-
-        if (this.get_header())
-        {
-            style1.display = "";
-
-            header.__update_dirty = 1;
-            header.__arrange_dirty = true;
-            header.measure(this.offsetWidth - box.border_width, 25, true, true);
-            header.render();
-
-            style1.height = (y = header.offsetHeight) + "px";
-        }
-        else
-        {
-            style1.display = "none";
-        }
-
-        style2.top = y + "px";
-        style2.height = this.offsetHeight - box.border_width - y + "px";
-    };
-
 
     this.render = function (center) {
-
-        var dom = this.dom;
 
         if (this.__update_dirty === 1)
         {
@@ -237,6 +210,8 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         if (this.__arrange_dirty)
         {
+            var dom = this.dom;
+
             this.measure(+this.get_width() || this.defaultWidth, +this.get_height() || this.defaultHeight);
 
             if (center)
@@ -254,6 +229,19 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
         base.render.call(this);
     };
+
+
+    this.__fn_measure_client = function (box) {
+
+        var style = this.dom_body.style,
+            height = this.dom_header.offsetHeight;
+
+        style.top = (height - 1) + "px";
+        style.height = (this.offsetHeight - height + 1) + "px";
+
+        base.__fn_measure_client.call(this, box);
+    };
+
 
 
 

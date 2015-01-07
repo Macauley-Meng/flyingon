@@ -232,7 +232,11 @@
             var div = document.createElement("div");
 
             div.className = "flyingon-TreeView-node";
-            div.innerHTML = "<div class='flyingon-TreeNode'><span class='flyingon-TreeNode-empty'></span><span class='flyingon-TreeNode-unchecked'></span><span class='flyingon-TreeNode-image'></span><span class='flyingon-TreeNode-text'></span></div>";
+            div.innerHTML = "<div class='flyingon-TreeNode'>"
+                    + "<span class='flyingon-TreeNode-empty'></span>"
+                    + "<span class='flyingon-TreeNode-unchecked'></span>"
+                    + "<span class='flyingon-TreeNode-image'></span><span class='flyingon-TreeNode-text'></span>"
+                + "</div>";
 
             return div;
 
