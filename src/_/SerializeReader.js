@@ -7,9 +7,8 @@ flyingon.defineClass("SerializeReader", function () {
 
 
 
-    Class.create = function (deserialize_type) {
+    Class.create = function () {
 
-        this.deserialize_type = deserialize_type; //默认对象类型
     };
 
 
@@ -31,11 +30,11 @@ flyingon.defineClass("SerializeReader", function () {
     };
 
 
-    this.deserialize = function (data, xml) {
+    this.deserialize = function (data, xml, deserialize_type) {
 
         if (data = this.parse(data, xml))
         {
-            data = this[data.constructor === Array ? "read_array" : "read_object"](data);
+            data = this[data.constructor === Array ? "read_array" : "read_object"](data, deserialize_type);
             this.complete();
         }
 
@@ -110,36 +109,36 @@ flyingon.defineClass("SerializeReader", function () {
     };
 
 
-    this.read_object = function (value) {
+    this.read_object = function (value, deserialize_type) {
 
         if (value != null)
         {
-            var result, cache;
+            var target, cache;
 
             if (value.xtype && (cache = class_list[value.xtype]))
             {
-                result = new cache();
+                target = new cache();
             }
             else
             {
-                result = (cache = this.deserialize_type) ? new cache() : {};
+                target = deserialize_type ? new deserialize_type() : {};
             }
 
             if (cache = value.__id__) //记录绑定源
             {
-                (this.__source_list || (this.__source_list = {}))[cache] = result;
+                (this.__source_list || (this.__source_list = {}))[cache] = target;
             }
 
-            if (result.deserialize)
+            if (target.deserialize)
             {
-                result.deserialize(this, value);
+                target.deserialize(this, value);
             }
             else
             {
-                this.read_properties(result, value);
+                this.read_properties(target, value);
             }
 
-            return result;
+            return target;
         }
 
         return value;

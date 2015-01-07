@@ -414,6 +414,7 @@
         //line:         线性布局(支持竖排)
         //column3:      3栏布局(支持竖排)
         //dock:         停靠布局(不支持竖排)
+        //fill:         充满布局(不支持竖排)
         //cascade:      层叠布局(不支持竖排)
         //grid:         网格布局(支持竖排)
         //table:        表格布局(支持竖排)
@@ -1546,6 +1547,7 @@
 
             return true;
         };
+
 
 
         type_fn[""] = function (selector, index, target) {

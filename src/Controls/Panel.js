@@ -11,8 +11,6 @@ flyingon.defineClass("Panel", flyingon.Control, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     //如果未指定构造函数则创建默认构造函数
     Class.create = function (dom) {
 

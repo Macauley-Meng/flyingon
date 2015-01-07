@@ -6,6 +6,9 @@ flyingon.defineClass("Query", function () {
 
     //缓存选择器
     var document = window.document,
+
+        parse_selector = flyingon.parse_selector,
+
         selector_cache = {};
 
 
@@ -13,37 +16,15 @@ flyingon.defineClass("Query", function () {
     //selector:     css样式选择表达式 
     //start:        开始搜索控件(省略则表示搜索所有控件)
     //repeat_id:    是否支持重复id
-    Class.create = function (selector, start, repeat_id) {
+    Class.create = function (selector, start, cache) {
 
         if (selector)
         {
-            var selector = selector_cache[selector] || (selector_cache[selector] = flyingon.parse_selector(selector)),
+            var selector = selector_cache[selector] || (cache !== false ? (selector_cache[selector] = parse_selector(selector)) : parse_selector(selector)),
                 length = selector.length,
                 items,
                 exports,
                 node;
-
-            //快速搜索Id及class
-            if (length === 1)
-            {
-                switch ((node = selector[0]).token)
-                {
-                    case "#": //快速搜索Id
-                        if (repeat_id !== true) //如果指定了重复id则使用通用选择器搜索
-                        {
-                            if (exports = flyingon.query_id(node.name, start))
-                            {
-                                this.push(exports);
-                            }
-                            return;
-                        }
-                        break;
-
-                    case ".": //快速搜索class
-                        flyingon.query_class(node.name, start, this);
-                        return;
-                }
-            }
 
             //使用通用选择器搜索
             items = start ? [start] : flyingon.__all_windows;
@@ -68,116 +49,6 @@ flyingon.defineClass("Query", function () {
             }
         }
     };
-
-
-
-
-    //查找指定id的控件
-    flyingon.query_id = function (id, start) {
-
-        var target = document.getElementById(id);
-
-        if (target && (target = target.flyingon))
-        {
-            if (start)
-            {
-                var cache = target;
-
-                do
-                {
-                    if (cache === start)
-                    {
-                        return target;
-                    }
-
-                } while (cache = cache.__parent);
-            }
-            else
-            {
-                return target;
-            }
-        }
-    };
-
-
-    //查找指定class的控件
-    var query_class = flyingon.query_class = document.getElementsByClassName ? function (className, start, exports) {
-
-        var items = (start ? start.dom : document).getElementsByClassName(className),
-            item;
-
-        exports = exports || (exports = new flyingon.Query());
-
-        for (var i = 0, _ = items.length; i < _; i++)
-        {
-            if (item = items[i].flyingon)
-            {
-                exports.push(item);
-            }
-        }
-
-        return exports;
-
-    } : function (className, start, exports) {
-
-        exports = exports || (exports = new flyingon.Query());
-
-        if (start)
-        {
-            if (start.__class_list && start.__class_list[className])
-            {
-                exports.push(start);
-            }
-
-            start = start.__children;
-        }
-        else
-        {
-            start = flyingon.__all_windows;
-        }
-
-        if (start)
-        {
-            for (var i = 0, _ = start.length; i < _; i++)
-            {
-                query_class(className, start[i], exports);
-            }
-        }
-
-        return exports;
-    };
-
-
-    //查找指定类型的控件
-    var query_xtype = flyingon.query_xtype = function (xtype, start, exports) {
-
-        exports = exports || (exports = new flyingon.Query());
-
-        if (start)
-        {
-            if (start.xtype === xtype)
-            {
-                exports.push(start);
-            }
-
-            start = start.__children;
-        }
-        else
-        {
-            start = flyingon.__all_windows;
-        }
-
-        if (start)
-        {
-            for (var i = 0, _ = start.length; i < _; i++)
-            {
-                query_xtype(xtype, start[i], exports);
-            }
-        }
-
-        return exports;
-    };
-
 
 
 

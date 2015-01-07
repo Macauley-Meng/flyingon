@@ -9,8 +9,6 @@ flyingon.defineClass("Image", flyingon.Control, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     Class.create = function () {
 
         this.dom.load = this.__fn_image_load;

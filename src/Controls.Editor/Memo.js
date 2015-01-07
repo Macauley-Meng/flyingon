@@ -9,8 +9,6 @@ flyingon.defineClass("Memo", flyingon.Control, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     Class.create = function () {
 
         (this.dom_input = this.dom).onchange = this.__fn_dom_onchange;

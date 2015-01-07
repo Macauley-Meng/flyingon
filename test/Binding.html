@@ -12,6 +12,7 @@
     <script type="text/javascript">
 
 
+
         var w = new flyingon.Window().init({
 
             border: "4px solid blue",
@@ -44,22 +45,18 @@
         });
 
 
+        w.query("#button1").on("click", function (event) {
+
+            this.set_width(this.offsetWidth + 10 + "px");
+        });
+
+        w.query("#button2").on("click", function (event) {
+
+            this.set_width(this.offsetWidth - 10 + "px");
+        });
+
 
         w.show();
-
-
-        flyingon.ready(function () {
-
-            w.query("#button1").on("click", function (event) {
-
-                this.set_width(this.offsetWidth + 10 + "px");
-            });
-
-            w.query("#button2").on("click", function (event) {
-
-                this.set_width(this.offsetWidth - 10 + "px");
-            });
-        });
 
 
     </script>

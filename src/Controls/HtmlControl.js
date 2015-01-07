@@ -7,7 +7,7 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
 
     this.defineProperty("text", "", {
 
-        set_code: "flyingon.dom_textContent(this.dom, value, this.is_html_text)"
+        set_code: "flyingon.dom_textContent(this.dom, value, this.is_html_text);"
     });
 
 
@@ -32,6 +32,12 @@ flyingon.defineClass("HtmlControl", flyingon.Control, function (base) {
         return this;
     };
 
+
+
+    this.deserialize_from_dom = function (dom) {
+
+        flyingon.dom_textContent(this.dom, this.__fields.text = dom.innerHTML, true)
+    };
 
 
 });

@@ -178,19 +178,7 @@
 
 
 
-        Class.create_mode = "merge";
-
         Class.create = function () {
-
-            this.__fn_initialize();
-        };
-
-
-
-        flyingon.IChildren.call(this, base);
-
-
-        this.__fn_initialize = function () {
 
             this.dom_children = this.dom.children[0];
 
@@ -200,6 +188,11 @@
                 (this.__collapse = new flyingon.Icon()).set_column3("after").addClass(class_prefix + "collapse").set_visibility("collapse"),
                 (this.__close = new flyingon.Icon()).set_column3("after").addClass(class_prefix + "close").set_visibility("collapse"));
         };
+
+
+
+        flyingon.IChildren.call(this, base);
+
 
 
         this.defaultValue("layoutType", "column3");
@@ -373,6 +366,10 @@
         });
 
 
+        //自动收拢大小(通过鼠标调整大小时小时此值则自动收拢)
+        this.defineProperty("autoCollapse", 25);
+
+
 
         //显示或隐藏图标
         this.__fn_visible_icon = function (name, visible, image) {
@@ -486,6 +483,31 @@
         };
 
 
+        //调整大小
+        this.__fn_adjust_size = function (size, change, vertical) {
+
+            var value = this.__tab_values;
+
+            if (value && value.collapse)
+            {
+                if (size > this.get_autoCollapse())
+                {
+                    this.set_collapse(false);
+                    return size;
+                }
+
+                return -1;
+            }
+
+            if ((value = this.get_autoCollapse()) >= size && value > 0)
+            {
+                this.set_collapse(true);
+                return value;
+            }
+
+            return size > 0 ? size : 0;
+        };
+
     };
 
 
@@ -551,8 +573,6 @@
 
 
 
-
-        Class.create_mode = "merge";
 
         Class.create = function () {
 

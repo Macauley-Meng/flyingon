@@ -6,8 +6,6 @@ flyingon.defineClass("Fieldset", flyingon.Panel, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     Class.create = function () {
 
         this.dom_legend = this.dom.children[0];

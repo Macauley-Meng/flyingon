@@ -6,8 +6,6 @@ flyingon.defineClass("Window", flyingon.Panel, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     Class.create = function () {
 
         var dom = this.dom_window = document.createElement("div");

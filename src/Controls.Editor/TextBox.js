@@ -7,8 +7,6 @@ flyingon.defineClass("TextBox", flyingon.Control, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     Class.create = function () {
 
         (this.dom_input = this.dom).onchange = this.__fn_dom_onchange;
@@ -36,8 +34,6 @@ flyingon.defineClass("TextBox", flyingon.Control, function (base) {
 flyingon.defineClass("Password", flyingon.Control, function (base) {
 
 
-
-    Class.create_mode = "merge";
 
     Class.create = function () {
 

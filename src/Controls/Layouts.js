@@ -252,8 +252,12 @@
         //调整控件大小
         this.__fn_resize = function (target, start, change) {
 
-            change = start.scale === 1 ? change : ((change * start.scale * 100 | 0) / 100);
-            target[start.vertical ? "set_height" : "set_width"](start.value + change + start.unit);
+            var size = start.value + (start.scale === 1 ? change : ((change * start.scale * 100) | 0) / 100);
+
+            if ((size = target.__fn_adjust_size(size, change, start.vertical)) >= 0)
+            {
+                target[start.vertical ? "set_height" : "set_width"](size + start.unit);
+            }
         };
 
 
@@ -1025,6 +1029,32 @@
             var dock = target.get_dock();
             return this.__fn_collapse_mirror(dock !== "none" ? dock : "top");
         };
+
+    });
+
+
+
+    //充满布局(不支持竖排)
+    flyingon.defineLayout("fill", function (base) {
+
+
+        this.arrange = function (target, items, width, height) {
+
+            for (var i = 0, _ = items.length; i < _; i++)
+            {
+                var item = items[i];
+
+                item.measure(width, height, false, false, false, false, true, true);
+                item.locate(0, 0, width, height);
+            }
+        };
+
+
+        //屏蔽不支持调整大小
+        this.__fn_resize = function () {
+
+        };
+
 
     });
 
@@ -2424,13 +2454,7 @@
 
     var class_list = flyingon.__registry_class_list, //注册类型集合
 
-        IChildren = flyingon.IChildren,
-
-        dom_test = document.createElement("div"),
-
-        regex_name = /[-_](\w)/g,
-
-        regex_trim = /\s+$/;
+        regex_name = /[-_](\w)/g;
 
 
     function to_name(_, x) {
@@ -2458,57 +2482,56 @@
         else //否则解析成html控件
         {
             control = new flyingon.HtmlControl(dom);
-            control.dom.innerHTML = dom.innerHTML;
+        }
+
+        //同步样式
+        if (cache = dom.style.cssText)
+        {
+            control.dom.style.cssText += cache;
         }
 
         //同步属性
-        deserialize_dom(dom, control);
+        deserialize_dom(control, dom);
 
         //如果支持自定义dom反序列化
-        if (control.__fn_deserialize_dom)
+        if (control.deserialize_from_dom)
         {
-            control.__fn_deserialize_dom(dom, dom_wrapper);
+            control.deserialize_from_dom(dom, dom_wrapper);
         }
 
         return control;
     };
 
 
-    function deserialize_dom(dom, control) {
+    function deserialize_dom(control, dom) {
 
-        var names, value, cache;
+        var names, name, length, cache;
 
         //IE678的attributes包含了系统值, 故用正则表达式处理
         if ((cache = dom.outerHTML) && (cache = cache.substring(0, cache.indexOf(">"))))
         {
-            if (value = cache.match(/[\w-]+\s*=/g))
+            if (name = cache.match(/[\w-]+\s*=/g))
             {
-                names = value.join("").match(/[\w-]+/g);
+                names = name.join("").match(/[\w-]+/g);
             }
         }
         else
         {
             names = [];
+            length = (cache = dom.attributes).length;
 
-            for (var i = 0, _ = dom.attributes.length; i < _; i++)
+            for (var i = 0; i < length; i++)
             {
-                names.push(dom.attributes[i].name);
+                names.push(cache[i].name);
             }
         }
 
-        //同步样式
-        if (value = dom.style.cssText)
-        {
-            alert(value);
-            control.dom.style.cssText += value;
-        }
-
         //同步dom属性至控件
-        if (names)
+        if (names && (length = names.length) > 0)
         {
-            for (var i = 0, _ = names.length; i < _; i++)
+            for (var i = 0; i < length; i++)
             {
-                if (control[cache = "set_" + (name = names[i]).replace(regex_name, to_name)])
+                if ((name = names[i]) !== "style" && control[cache = "set_" + name.replace(regex_name, to_name)])
                 {
                     control[cache](dom.getAttribute(name));
                 }
@@ -2517,36 +2540,40 @@
     };
 
 
-
     //自动dom布局器
     flyingon.layout = function (dom) {
 
         if (dom)
         {
             var control = new flyingon.Window(),
-                cache = document.createDocumentFragment(),
-                children = dom.children,
-                length = children.length,
-                item;
+                div = document.createElement("div"),
+                children,
+                cache;
 
-            deserialize_dom(dom, control);
-
-            for (var i = 0; i < length; i++)
+            //同步样式
+            if (cache = dom.style.cssText)
             {
-                cache.appendChild(children[0]);
+                control.dom.style.cssText += cache;
+            }
+
+            //反序列化dom
+            deserialize_dom(control, dom);
+
+            //如果支持自定义dom反序列化
+            if (control.deserialize_from_dom)
+            {
+                cache = document.createDocumentFragment();
+
+                for (var i = 0, _ = (children = dom.children).length; i < _; i++)
+                {
+                    cache.appendChild(children[0]);
+                }
+
+                div.appendChild(cache);
+                control.deserialize_from_dom(div, dom_wrapper);
             }
 
             dom.innerHTML = "";
-            children = cache.childNodes;
-            cache = document.createDocumentFragment();
-
-            for (var i = 0; i < length; i++)
-            {
-                control.appendChild(item = dom_wrapper(children[i]));
-                cache.appendChild(item.dom);
-            }
-
-            control.dom_children.appendChild(cache);
             dom.appendChild(control.dom_window);
 
             flyingon.ready(function () {
@@ -2594,7 +2621,14 @@
 
     flyingon.initialize = function (data, host) {
 
-        new flyingon.SerializeReader(flyingon.Window).deserialize(data).show(host);
+        var target = new flyingon.SerializeReader().deserialize(data, false, flyingon.Window);
+
+        flyingon.ready(function () {
+
+            target.show(host);
+        });
+
+        return target;
     };
 
 

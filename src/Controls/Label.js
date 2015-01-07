@@ -7,8 +7,6 @@
     var text_base = function (base) {
 
 
-        Class.create_mode = "merge";
-
         Class.create = function () {
 
             this.dom_span = this.dom.children[0];
@@ -23,7 +21,7 @@
 
         this.defineProperty("text", "", {
 
-            set_code: "flyingon.dom_textContent(this.dom_span, value, this.is_html_text)",
+            set_code: "flyingon.dom_textContent(this.dom_span, value, this.is_html_text);",
             change_code: "this.__fn_change_text(value);"
         });
 
@@ -58,6 +56,12 @@
                 width: box.auto_width ? this.dom_span.offsetWidth + box.client_width - this.offsetWidth : 0,
                 height: box.auto_height ? this.dom_span.offsetHeight + box.client_height - this.offsetHeight : 0
             }
+        };
+
+
+        this.deserialize_from_dom = function (dom) {
+
+            flyingon.dom_textContent(this.dom_span, this.__fields.text = dom.innerHTML, true)
         };
 
     };

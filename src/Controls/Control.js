@@ -1173,22 +1173,22 @@ flyingon.defineClass("Control", function () {
 
             if (side.left && layout && !layout.absolute)
             {
-                this.__fn_resize_value(pressdown, "left", x);
-                this.__fn_resize_value(pressdown, "width", -x);
+                resize_value(this, pressdown, "left", x);
+                resize_value(this, pressdown, "width", -x, true);
             }
             else if (side.right)
             {
-                this.__fn_resize_value(pressdown, "width", x);
+                resize_value(this, pressdown, "width", x, true);
             }
 
             if (side.top && layout && !layout.absolute)
             {
-                this.__fn_resize_value(pressdown, "top", y);
-                this.__fn_resize_value(pressdown, "height", -y);
+                resize_value(this, pressdown, "top", y);
+                resize_value(this, pressdown, "height", -y, true);
             }
             else if (side.bottom)
             {
-                this.__fn_resize_value(pressdown, "height", y)
+                resize_value(this, pressdown, "height", y, true)
             }
 
             event.stopPropagation(false);
@@ -1198,6 +1198,15 @@ flyingon.defineClass("Control", function () {
 
         //保持原单位的大小调整
         var regex_resize = /[a-zA-Z%*]+/,  //
+
+            scale_keys = {
+
+                px: 1,
+                fill: 1,
+                auto: 1,
+                "default": 1,
+                "*": 1
+            },
 
             resize_names = { //默认位置大小名称对应关系
 
@@ -1209,24 +1218,40 @@ flyingon.defineClass("Control", function () {
 
 
 
+        //获取开始调整数据
+        function resize_start(target, pressdown, name) {
 
-        //调整大小
-        this.__fn_resize_value = function (start, name, change) {
+            var start = pressdown[name] = target.__fn_unit_scale(target["get_" + name](), target[resize_names[name]]);
 
-            var cache = start[name];
+            start.reverse = target.__arrange_mirror !== "none";
+            return start;
+        };
 
-            if (!cache)
+
+        //调整控件位置及大小
+        function resize_value(target, pressdown, name, change, resize) {
+
+            var start = pressdown[name] || resize_start(target, pressdown, name),
+                value = start.value + (start.scale === 1 ? change : ((change * start.scale * 100) | 0) / 100);
+
+            if (resize)
             {
-                start = start[name] = this.__fn_unit_scale(this["get_" + name](), this[resize_names[name]]);
-                start.reverse = this.__parent && this.__arrange_mirror !== "none";
+                if ((value = target.__fn_adjust_size(value, change, name === "height")) > 0)
+                {
+                    target["set_" + name](value + start.unit);
+                }
             }
             else
             {
-                start = cache;
+                target["set_" + name](value + start.unit);
             }
+        };
 
-            cache = start.value + (start.scale === 1 ? change : (change * start.scale * 100 | 0) / 100);
-            this["set_" + name]((cache > 0 ? cache : 0) + start.unit);
+
+        //调整大小
+        this.__fn_adjust_size = function (size, change, vertical) {
+
+            return size > 0 ? size : 0;
         };
 
 
@@ -1238,7 +1263,7 @@ flyingon.defineClass("Control", function () {
 
             var unit = value.match(regex_resize);
 
-            if (!unit || unit === "px" || (unit = unit[0]).length !== 2)
+            if (!unit || scale_keys[unit = unit[0]])
             {
                 return { value: px, unit: "px", scale: 1 };
             }
@@ -1399,28 +1424,6 @@ flyingon.defineClass("Control", function () {
 
             return new flyingon.Query(selector, this);
         };
-
-
-        //查找指定id的控件或子控件
-        this.query_id = function (id) {
-
-            return flyingon.query_id(id, this);
-        };
-
-
-        //查找指定class的控件或子控件
-        this.query_class = function (className) {
-
-            return flyingon.query_class(className, this);
-        };
-
-
-        //查找指定类型的控件或子控件
-        this.query_xtype = function (xtype) {
-
-            return flyingon.query_xtype(xtype, this);
-        };
-
 
 
         //设置当前控件为焦点控件

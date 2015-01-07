@@ -6,8 +6,6 @@
 
 
 
-        Class.create_mode = "merge";
-
         Class.create = function () {
 
             var dom = this.dom.children[0];

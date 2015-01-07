@@ -293,21 +293,18 @@ flyingon.IChildren = function (base) {
 
         if (value)
         {
-            var children = this.get_children();
-
-            reader.deserialize_xtype = this.deserialize_xtype;
+            var children = this.get_children(),
+                type = this.deserialize_xtype;
 
             for (var i = 0, _ = value.length; i < _; i++)
             {
-                children.append(reader.read_object(value[i]));
+                children.append(reader.read_object(value[i], type));
             }
-
-            reader.deserialize_xtype = null;
         }
     };
 
 
-    this.__fn_deserialize_dom = function (dom, dom_wrapper) {
+    this.deserialize_from_dom = function (dom, dom_wrapper) {
 
         var children = dom.children,
             cache = document.createDocumentFragment(),

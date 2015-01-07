@@ -6,8 +6,6 @@ flyingon.defineClass("Dialog", flyingon.Panel, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     Class.create = function () {
 
         //默认设置为初始化状态,在渲染窗口后终止

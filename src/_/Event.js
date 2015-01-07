@@ -92,9 +92,11 @@ flyingon.defineClass("MouseEvent", flyingon.Event, function (base) {
 
 
 
-    Class.create_mode = "merge";
+    Class.create_mode = "replace";
 
     Class.create = function (type, dom_event, pressdown) {
+
+        this.type = type;
 
         //触事件的dom对象
         this.dom = pressdown ? pressdown.dom : dom_event.target;
@@ -213,9 +215,12 @@ flyingon.defineClass("DragEvent", flyingon.MouseEvent, function (base) {
 
 
 
-//    Class.create_mode = "merge";
+//    Class.create_mode = "replace";
 
 //    Class.create = function (type, dom_event, pressdown) {
+
+
+//        this.type = type;
 
 //        //关联的原始dom事件
 //        this.dom_event = dom_event;
@@ -263,9 +268,11 @@ flyingon.defineClass("KeyEvent", flyingon.Event, function (base) {
 
 
 
-    Class.create_mode = "merge";
+    Class.create_mode = "replace";
 
     Class.create = function (type, dom_event) {
+
+        this.type = type;
 
         //触事件的dom对象
         this.dom = dom_event.target;
@@ -305,9 +312,11 @@ flyingon.defineClass("ChangeEvent", flyingon.Event, function (base) {
 
 
 
-    Class.create_mode = "merge";
+    Class.create_mode = "replace";
 
     Class.create = function (type, name, value, oldValue) {
+
+        this.type = type;
 
         this.name = name;
         this.oldValue = oldValue;

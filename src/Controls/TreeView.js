@@ -167,21 +167,17 @@
             if (value)
             {
                 var nodes = this.get_nodes(),
-                    data;
-
-                reader.deserialize_xtype = flyingon.TreeNode;
+                    type = flyingon.TreeNode;
 
                 for (var i = 0, _ = value.length; i < _; i++)
                 {
-                    nodes.append(reader.read_object(data));
+                    nodes.append(reader.read_object(value[i], type));
                 }
-
-                reader.deserialize_xtype = null;
             }
         };
 
 
-        this.__fn_deserialize_dom = function (dom, dom_wrapper) {
+        this.deserialize_from_dom = function (dom, dom_wrapper) {
 
             var children = dom.children,
                 length;
@@ -363,7 +359,7 @@
                             success: function (data) {
 
                                 target.__dom_dirty = true;
-                                target.appendChild.apply(target, new flyingon.SerializeReader(flyingon.TreeNode).deserialize(data));
+                                target.appendChild.apply(target, new flyingon.SerializeReader().deserialize(data, false, flyingon.TreeNode));
 
                                 expand.call(target, cascade);
                                 fields.delay = null;
@@ -373,7 +369,7 @@
                         return;
                     }
 
-                    delay = new flyingon.SerializeReader(flyingon.TreeNode).deserialize(delay);
+                    delay = new flyingon.SerializeReader().deserialize(delay, false, flyingon.TreeNode);
                 }
 
                 if (delay.constructor === Array)

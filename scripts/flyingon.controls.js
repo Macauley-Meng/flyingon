@@ -569,8 +569,6 @@ flyingon.defineClass("Fieldset", flyingon.Panel, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     Class.create = function () {
 
         this.dom_legend = this.dom.children[0];
@@ -682,8 +680,6 @@ flyingon.defineClass("TextBox", flyingon.Control, function (base) {
 
 
 
-    Class.create_mode = "merge";
-
     Class.create = function () {
 
         (this.dom_input = this.dom).onchange = this.__fn_dom_onchange;
@@ -711,8 +707,6 @@ flyingon.defineClass("TextBox", flyingon.Control, function (base) {
 flyingon.defineClass("Password", flyingon.Control, function (base) {
 
 
-
-    Class.create_mode = "merge";
 
     Class.create = function () {
 
@@ -841,8 +835,6 @@ flyingon.defineClass("TextButton", flyingon.Control, function (base) {
     function checked_base(type, base) {
 
 
-
-        Class.create_mode = "merge";
 
         Class.create = function () {
 
@@ -1015,8 +1007,6 @@ flyingon.defineClass("ComboBox", flyingon.TextButton, function (base) {
 flyingon.defineClass("Memo", flyingon.Control, function (base) {
 
 
-
-    Class.create_mode = "merge";
 
     Class.create = function () {
 
