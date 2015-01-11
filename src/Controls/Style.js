@@ -1741,10 +1741,8 @@
                 //解析选择器
                 selector = flyingon.parse_selector(selector);
 
-                if (selector.forks) //如果存在分支则拆分分支为独立选择器
+                if (selector.split_selector) //如果是组合选择器则拆分处理
                 {
-                    selector = split_selector(selector);
-
                     for (var i = 0, _ = selector.length ; i < _; i++)
                     {
                         css_list.push(handle_selector(selector[i], style, cssText, css_style));
@@ -1789,12 +1787,10 @@
                     if (name.indexOf("css:") === 0)
                     {
                         name = name.substring(4);
-                        name = (selector.indexOf("css:") !== 0 ? "css:" : "") + selector.replace("@", ".") + " " + name;
+                        selector = (selector.indexOf("css:") !== 0 ? "css:" : "") + selector.replace("@", ".");
                     }
-                    else
-                    {
-                        name = selector + " " + name
-                    }
+
+                    name = selector.replace(/\,/g, " " + name + ",") + " " + name;
 
                     styles[name] = value;
                     parse_selector(styles, name, exports);
@@ -1898,56 +1894,6 @@
         }
 
         return target;
-    };
-
-
-    //拆分有分支的选择器为多个独立选择器
-    function split_selector(selector) {
-
-        var result = [],                    //结果集
-            forks = selector.forks,         //分支位置集合
-            fill = 1,                       //每一轮的填充个数(从后到前逐级递增)
-            total = 1;                      //总数
-
-        //计算总结果数
-        for (var i = forks.length - 1; i >= 0; i--)
-        {
-            total *= selector[forks[i]].length;
-        }
-
-        result.length = total;
-
-        //先全部复制选择器内容
-        for (var i = 0; i < total; i++)
-        {
-            result[i] = selector.slice(0);
-        }
-
-        //再从后到前替换每个分支子项
-        for (var i = forks.length - 1; i >= 0; i--)
-        {
-            var index = forks[i],            //目标位置
-                nodes = selector[index],     //当前分支节点
-                length = nodes.length,
-                j = 0;                       //填充位置
-
-            while (j < total)
-            {
-                for (var j1 = 0; j1 < length; j1++)
-                {
-                    var node = nodes[j1];
-
-                    for (var j2 = 0; j2 < fill; j2++)
-                    {
-                        result[j++][index] = node;
-                    }
-                }
-            }
-
-            fill *= length;
-        }
-
-        return result;
     };
 
 

@@ -231,7 +231,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //左右页签面板默认样式
-        ".flyingon-TabPanel-left,.flyingon-TabPanel-right": {
+        ".flyingon-TabPanel-left, .flyingon-TabPanel-right": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -250,7 +250,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
         //上下页签面板默认样式
-        ".flyingon-TabPanel-top,.flyingon-TabPanel-bottom": {
+        ".flyingon-TabPanel-top, .flyingon-TabPanel-bottom": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -270,19 +270,25 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //收拢状态页签面板样式
-        ".flyingon-TabPanel-collapse-left,.flyingon-TabPanel-collapse-right @flyingon-TabPanelHeader": {
+        ".flyingon-TabPanel-collapse-left, .flyingon-TabPanel-collapse-right": {
 
-            width: "28px"
+            "@flyingon-TabPanelHeader": {
+
+                width: "28px"
+            }
         },
 
-        ".flyingon-TabPanel-collapse-top,.flyingon-TabPanel-collapse-bottom @flyingon-TabPanelHeader": {
+        ".flyingon-TabPanel-collapse-top, .flyingon-TabPanel-collapse-bottom": {
 
-            height: "28px"
+            "@flyingon-TabPanelHeader": {
+
+                height: "28px"
+            }
         },
 
 
         //紧缩状态页签面板样式(TabControl收拢时状态)
-        ".flyingon-TabPanel-shrink-left,.flyingon-TabPanel-shrink-right": {
+        ".flyingon-TabPanel-shrink-left, .flyingon-TabPanel-shrink-right": {
 
             width: "28px",
             height: "50px",
@@ -299,7 +305,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-shrink-top,.flyingon-TabPanel-shrink-bottom": {
+        ".flyingon-TabPanel-shrink-top, .flyingon-TabPanel-shrink-bottom": {
 
             width: "auto",
             height: "28px",
@@ -319,7 +325,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //outlookbar页签面板样式
-        ".flyingon-TabPanel-outlook-left,.flyingon-TabPanel-outlook-right": {
+        ".flyingon-TabPanel-outlook-left, .flyingon-TabPanel-outlook-right": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -333,7 +339,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-outlook-top,.flyingon-TabPanel-outlook-bottom": {
+        ".flyingon-TabPanel-outlook-top, .flyingon-TabPanel-outlook-bottom": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -349,7 +355,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //缩略图页签面板样式
-        ".flyingon-TabPanel-thumb-left,.flyingon-TabPanel-thumb-right": {
+        ".flyingon-TabPanel-thumb-left, .flyingon-TabPanel-thumb-right": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -372,7 +378,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-thumb-top,.flyingon-TabPanel-thumb-bottom": {
+        ".flyingon-TabPanel-thumb-top, .flyingon-TabPanel-thumb-bottom": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -398,7 +404,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //页签式页签面板样式
-        ".flyingon-TabPanel-tab1-top,.flyingon-TabPanel-tab2-top,.flyingon-TabPanel-tab3-top,.flyingon-TabPanel-tab4-top": {
+        ".flyingon-TabPanel-tab1-top, .flyingon-TabPanel-tab2-top, .flyingon-TabPanel-tab3-top, .flyingon-TabPanel-tab4-top": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -419,7 +425,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-tab1-left,.flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab3-left,.flyingon-TabPanel-tab4-left": {
+        ".flyingon-TabPanel-tab1-left, .flyingon-TabPanel-tab2-left, .flyingon-TabPanel-tab3-left, .flyingon-TabPanel-tab4-left": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -439,7 +445,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-tab1-right,.flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab3-right,.flyingon-TabPanel-tab4-right": {
+        ".flyingon-TabPanel-tab1-right, .flyingon-TabPanel-tab2-right, .flyingon-TabPanel-tab3-right, .flyingon-TabPanel-tab4-right": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -459,7 +465,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-tab1-bottom,.flyingon-TabPanel-tab2-bottom,.flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-bottom": {
+        ".flyingon-TabPanel-tab1-bottom, .flyingon-TabPanel-tab2-bottom, .flyingon-TabPanel-tab3-bottom, .flyingon-TabPanel-tab4-bottom": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -480,14 +486,17 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab4-left @flyingon-TabPanelHeader": {
+        ".flyingon-TabPanel-tab2-left, .flyingon-TabPanel-tab4-left": {
 
-            contentAlignX: "right",
-            padding: "0 4px 0 0"
+            "@flyingon-TabPanelHeader": {
+
+                contentAlignX: "right",
+                padding: "0 4px 0 0"
+            }
         },
 
 
-        ".flyingon-TabPanel-tab2-left,.flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab4-left,.flyingon-TabPanel-tab4-right": {
+        ".flyingon-TabPanel-tab2-left, .flyingon-TabPanel-tab2-right, .flyingon-TabPanel-tab4-left, .flyingon-TabPanel-tab4-right": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -506,14 +515,17 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-tab2-right,.flyingon-TabPanel-tab4-right @flyingon-TabPanelHeader": {
+        ".flyingon-TabPanel-tab2-right, .flyingon-TabPanel-tab4-right": {
 
-            contentAlignX: "left",
-            padding: "0 0 0 4px"
+            "@flyingon-TabPanelHeader": {
+
+                contentAlignX: "left",
+                padding: "0 0 0 4px"
+            }
         },
 
 
-        ".flyingon-TabPanel-tab3-top,.flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-top,.flyingon-TabPanel-tab4-bottom": {
+        ".flyingon-TabPanel-tab3-top, .flyingon-TabPanel-tab3-bottom, .flyingon-TabPanel-tab4-top, .flyingon-TabPanel-tab4-bottom": {
 
             "@flyingon-TabPanelHeader": {
 
@@ -533,10 +545,13 @@ A~B                    匹配任何在A控件之后的同级B控件
             }
         },
 
-        ".flyingon-TabPanel-tab3-bottom,.flyingon-TabPanel-tab4-bottom @flyingon-TabPanelHeader": {
+        ".flyingon-TabPanel-tab3-bottom, .flyingon-TabPanel-tab4-bottom": {
 
-            contentAlignY: "top",
-            padding: "4px 0 0 0"
+            "@flyingon-TabPanelHeader": {
+
+                contentAlignY: "top",
+                padding: "4px 0 0 0"
+            }
         },
 
 
@@ -602,7 +617,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         },
 
-        ".flyingon-TabControl-collapse-left,.flyingon-TabControl-collapse-right": {
+        ".flyingon-TabControl-collapse-left, .flyingon-TabControl-collapse-right": {
 
             backgroundColor: control_back,
 
@@ -613,7 +628,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         },
 
 
-        ".flyingon-TabControl-collapse-top,.flyingon-TabControl-collapse-bottom": {
+        ".flyingon-TabControl-collapse-top, .flyingon-TabControl-collapse-bottom": {
 
             backgroundColor: control_back,
 
@@ -625,31 +640,31 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
         //页签头图标
-        "css:.flyingon-TabPanelHeader-collapse-left,.flyingon-TabPanelHeader-expand-right,.flyingon-TabControlHeader-collapse-left,.flyingon-TabControlHeader-expand-right": {
+        "css:.flyingon-TabPanelHeader-collapse-left, .flyingon-TabPanelHeader-expand-right, .flyingon-TabControlHeader-collapse-left, .flyingon-TabControlHeader-expand-right": {
 
             backgroundImage: flyingon_gif,
             backgroundPosition: "4px -36px"
         },
 
-        "css:.flyingon-TabPanelHeader-collapse-right,.flyingon-TabPanelHeader-expand-left,.flyingon-TabControlHeader-collapse-right,.flyingon-TabControlHeader-expand-left": {
+        "css:.flyingon-TabPanelHeader-collapse-right, .flyingon-TabPanelHeader-expand-left, .flyingon-TabControlHeader-collapse-right, .flyingon-TabControlHeader-expand-left": {
 
             backgroundImage: flyingon_gif,
             backgroundPosition: "-36px -36px"
         },
 
-        "css:.flyingon-TabPanelHeader-collapse-top,.flyingon-TabPanelHeader-expand-bottom,.flyingon-TabControlHeader-collapse-top,.flyingon-TabControlHeader-expand-bottom": {
+        "css:.flyingon-TabPanelHeader-collapse-top, .flyingon-TabPanelHeader-expand-bottom, .flyingon-TabControlHeader-collapse-top, .flyingon-TabControlHeader-expand-bottom": {
 
             backgroundImage: flyingon_gif,
             backgroundPosition: "-76px -36px"
         },
 
-        "css:.flyingon-TabPanelHeader-collapse-bottom,.flyingon-TabPanelHeader-expand-top,.flyingon-TabControlHeader-collapse-bottom,.flyingon-TabControlHeader-expand-top": {
+        "css:.flyingon-TabPanelHeader-collapse-bottom, .flyingon-TabPanelHeader-expand-top, .flyingon-TabControlHeader-collapse-bottom, .flyingon-TabControlHeader-expand-top": {
 
             backgroundImage: flyingon_gif,
             backgroundPosition: "-116px -36px"
         },
 
-        "css:.flyingon-TabPanelHeader-close,.flyingon-TabControlHeader-close": {
+        "css:.flyingon-TabPanelHeader-close, .flyingon-TabControlHeader-close": {
 
             backgroundImage: flyingon_gif,
             backgroundPosition: "-156px -36px"
@@ -724,7 +739,7 @@ A~B                    匹配任何在A控件之后的同级B控件
             backgroundPosition: "-40px -80px"
         },
 
-        "css:.flyingon-TreeNode-collapse,.flyingon-TreeNode-delay": {
+        "css:.flyingon-TreeNode-collapse, .flyingon-TreeNode-delay": {
 
             display: "inline-block",
             margin: "2px",
@@ -788,9 +803,12 @@ A~B                    匹配任何在A控件之后的同级B控件
             color: "white"
         },
 
-        "css:.flyingon-TreeView-check .flyingon-TreeNode-checked,.flyingon-TreeNode-unchecked,.flyingon-TreeNode-unkown": {
+        "css:.flyingon-TreeView-check": {
 
-            display: "inline-block"
+            ".flyingon-TreeNode-checked, .flyingon-TreeNode-unchecked, .flyingon-TreeNode-unkown": {
+
+                display: "inline-block"
+            }
         },
 
         "css:.flyingon-TreeView-no-image .flyingon-TreeNode-image": {

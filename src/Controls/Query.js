@@ -4,53 +4,67 @@ flyingon.defineClass("Query", function () {
 
 
 
-    //缓存选择器
+
     var document = window.document,
 
         parse_selector = flyingon.parse_selector,
 
-        selector_cache = {};
+        selector_cache = {}, //缓存选择器
+
+        query_types = Object.create(null); //查询类型
+
 
 
 
     //selector:     css样式选择表达式 
     //start:        开始搜索控件(省略则表示搜索所有控件)
-    //repeat_id:    是否支持重复id
-    Class.create = function (selector, start, cache) {
+    Class.create = function (selector, start) {
 
         if (selector)
         {
-            var selector = selector_cache[selector] || (cache !== false ? (selector_cache[selector] = parse_selector(selector)) : parse_selector(selector)),
-                length = selector.length,
-                items,
-                exports,
-                node;
+            var nodes = selector_cache[selector] || (selector_cache[selector] = parse_selector(selector)),
+                items = start ? [start] : flyingon.__all_windows;
 
-            //使用通用选择器搜索
-            items = start ? [start] : flyingon.__all_windows;
-
-            for (var i = 0; i < length; i++)
+            //如果是组合选择器
+            if (nodes.split_selector)
             {
-                node = selector[i];
-
-                this.__query_types[node.type](node, items, exports = []); //批量传入数组减少函数调用以提升性能
-
-                if (exports.length == 0)
+                for (var i = 0, _ = nodes.length; i < _; i++)
                 {
-                    return;
+                    query(this, nodes[i], items);
                 }
-
-                items = exports;
             }
-
-            if (exports.length > 0)
+            else
             {
-                this.push.apply(this, exports);
+                query(this, nodes, items);
             }
         }
     };
 
 
+
+    //查找控件
+    function query(target, nodes, items) {
+
+        var node, exports;
+
+        for (var i = 0, _ = nodes.length; i < _; i++)
+        {
+            query_types[(node = nodes[i]).type](node, items, exports = []); //批量传入数组减少函数调用以提升性能
+
+            if (exports.length == 0)
+            {
+                return;
+            }
+
+            items = exports;
+        }
+
+        if (exports && exports.length > 0)
+        {
+            target.push.apply(target, exports);
+        }
+    };
+    
 
 
     //组合查询方法
@@ -169,7 +183,6 @@ flyingon.defineClass("Query", function () {
         flyingon.__fn_check_property = check_property;
 
 
-
         //并列选择器
         this[""] = function (node, items, exports) {
 
@@ -179,37 +192,16 @@ flyingon.defineClass("Query", function () {
             }
         };
 
-        //合并元素集
-        this[","] = function (node, items, exports) {
-
-            var item, fn, values;
-
-            for (var i = 0, _ = node.length; i < _; i++)
-            {
-                item = node[i];
-
-                if (fn = this[item.type])
-                {
-                    fn(item, items, values = []);
-
-                    if (values.length > 0)
-                    {
-                        exports.push.apply(exports, values);
-                    }
-                }
-            }
-        };
-
         //所有后代元素(默认为所有后代元素)
         this[" "] = function (node, items, exports) {
 
-            var children;
+            var cache;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                if ((children = items[i].__children) && children.length > 0)
+                if ((cache = items[i].__children) && cache.length > 0)
                 {
-                    query_cascade(node, children, exports);
+                    query_cascade(node, cache, exports);
                 }
             }
         };
@@ -232,15 +224,15 @@ flyingon.defineClass("Query", function () {
         //子元素
         this[">"] = function (node, items, exports) {
 
-            var children;
+            var cache;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                if ((children = items[i].__children) && children.length > 0)
+                if ((cache = items[i].__children) && cache.length > 0)
                 {
-                    for (var j = 0, __ = children.length; j < __; j++)
+                    for (var j = 0, __ = cache.length; j < __; j++)
                     {
-                        check_node(node, children[j], exports);
+                        check_node(node, cache[j], exports);
                     }
                 }
             }
@@ -249,14 +241,13 @@ flyingon.defineClass("Query", function () {
         //后一个元素 元素伪类:after也会转换成此节点类型
         this["+"] = function (node, items, exports) {
 
+            var item, children, index;
+
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__parent)
+                if ((item = items[i]).__parent)
                 {
-                    var children = item.__parent.__children,
-                        index;
+                    children = item.__parent.__children;
 
                     if (children.length > (index = children.indexOf(item) + 1))
                     {
@@ -269,13 +260,13 @@ flyingon.defineClass("Query", function () {
         //所有后续兄弟元素
         this["~"] = function (node, items, exports) {
 
+            var item, children;
+
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__parent)
+                if ((item = items[i]).__parent)
                 {
-                    var children = item.__parent.__children;
+                    children = item.__parent.__children;
 
                     for (var j = children.indexOf(item) + 1, __ = children.length; j < __; j++)
                     {
@@ -446,7 +437,7 @@ flyingon.defineClass("Query", function () {
         };
 
 
-    }).call(this.__query_types = Object.create(null));
+    }).call(query_types);
 
 
 

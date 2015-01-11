@@ -17,9 +17,9 @@ var flyingon = (function () {
 
 
     //全局选择器
-    function fn(selector, start, cache) {
+    function fn(selector, start) {
 
-        return new flyingon.Query(selector, start, cache);
+        return new flyingon.Query(selector, start);
     };
 
 
@@ -960,7 +960,11 @@ flyingon.Exception = function (message, parameters) {
         {
             if (typeof XMLHttpRequest !== "undefined")
             {
-                return (ajax_fn = function () { return new XMLHttpRequest(); })();
+                return (ajax_fn = function () {
+
+                    return new XMLHttpRequest();
+
+                })();
             }
 
             if (typeof ActiveXObject !== "undefined")
@@ -977,7 +981,11 @@ flyingon.Exception = function (message, parameters) {
                 {
                     try
                     {
-                        if (result = (ajax_fn = function () { return new ActiveXObject(items[i]); })())
+                        if (result = (ajax_fn = function () {
+
+                            return new ActiveXObject(items[i]);
+
+                        })())
                         {
                             return result;
                         }
@@ -1012,7 +1020,6 @@ flyingon.Exception = function (message, parameters) {
                 clearTimeout(options.timer);
                 delete options.timer;
             }
-
 
             options.responseText = request.responseText;
 
@@ -2212,24 +2219,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         Class.create = function (nodes, type, token, name) {
 
-            var last;
-
-            if (type !== "," || nodes.length === 0) //非组合直接添加到当前节点集合
-            {
-                this.type = type;
-                nodes.push(this);
-            }
-            else if ((last = nodes[nodes.length - 1]) instanceof element_nodes)
-            {
-                last.push(this);
-            }
-            else
-            {
-                nodes.pop();
-                (nodes.forks || (nodes.forks = [])).push(nodes.length); //记录分支位置
-                nodes.push(new element_nodes(last, this));
-            }
-
+            this.type = type;
             this.token = token;
 
             switch (name[0])
@@ -2243,6 +2233,8 @@ A~B                    匹配任何在A控件之后的同级B控件
                     this.name = name;
                     break;
             }
+
+            nodes.push(this);
         };
 
 
@@ -2270,6 +2262,9 @@ A~B                    匹配任何在A控件之后的同级B控件
             this[this.length++] = item;
         };
 
+
+        var join = Array.prototype.join;
+
         this.toString = function () {
 
             var result = [];
@@ -2291,47 +2286,12 @@ A~B                    匹配任何在A控件之后的同级B控件
             //属性
             if (this.length > 0)
             {
-                result.push([].join.call(this, ""));
+                result.push(join.call(this, ""));
             }
 
             return result.join("");
         };
 
-
-    });
-
-
-
-    //元素节点集合 不同类型的节点组合成一个集合
-    var element_nodes = flyingon.defineClass(function () {
-
-
-        Class.create = function (first, second) {
-
-            second.type = first.type;
-
-            this[0] = first;
-            this[1] = second;
-        };
-
-
-        //元素类型
-        this.type = ",";
-
-        //子项数
-        this.length = 2;
-
-
-        this.push = function (item) {
-
-            item.type = this[0].type;
-            this[this.length++] = item;
-        };
-
-        this.toString = function () {
-
-            return [].join.call(this, ",");
-        };
 
     });
 
@@ -2472,18 +2432,19 @@ A~B                    匹配任何在A控件之后的同级B控件
 
 
 
-    var split_regex = /"[^"]*"|'[^']*'|[\w-]+|[@.#* ,>+:=~|^$()\[\]]/g; //选择器拆分正则表达式
+    var split_regex = /"[^"]*"|'[^']*'|[\w-]+|\:\:|\W/g; //选择器拆分正则表达式
 
 
     //注1: 按从左至右的顺序解析
     //注2: 两个之间没有任何符号表示并列选器, 但是IE6或怪异模式不支持两个class并列
     flyingon.parse_selector = function (selector) {
 
-        var nodes = [], //节点数组
-            node,       //当前节点
-            tokens = selector.match(split_regex), //标记集合
-            token,      //当前标记
-            type = " ", //当前类型
+        var result,                                 //结果
+            nodes = [],                             //当前节点数组
+            node,                                   //当前节点
+            tokens = selector.match(split_regex),   //标记集合
+            token,                                  //当前标记
+            type = " ",                             //当前类型
             i = 0,
             length = tokens.length,
             cache;
@@ -2506,6 +2467,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                     break;
 
                 case " ":  //后代选择器标记
+                case "\t":
                     if (!type) //忽略其它类型后的空格
                     {
                         type = token;
@@ -2515,8 +2477,19 @@ A~B                    匹配任何在A控件之后的同级B控件
                 case ">":  //子元素选择器标记
                 case "+":  //毗邻元素选择器标记
                 case "~":  //之后同级元素选择器标记
-                case ",":  //组合选择器标记
                     type = token;
+                    break;
+
+                case ",":  //组合选择器标记
+                    if (!result)
+                    {
+                        (result = []).split_selector = true;
+                        result.push(nodes);
+                    }
+
+                    result.push(nodes = []);
+                    node = null;
+                    type = " ";
                     break;
 
                 case "[": //属性 [name[?="value"]]
@@ -2535,70 +2508,60 @@ A~B                    匹配任何在A控件之后的同级B控件
                     }
                     break;
 
-                case ":": //伪类:name或伪元素::name(p1[,p2...])
-
-                    if ((token = tokens[i++]) === ":") //伪元素
+                case ":": //伪类
+                    if (!node) //未指定节点则默认添加*节点
                     {
-                        node = new element_node(nodes, type, "::", token);
+                        node = new element_node(nodes, type, "*", "");
                         type = "";
-
-                        //处理参数(存储至节点的parameters属性中)
-                        if (i < length && tokens[i] === "(")
-                        {
-                            node.parameters = [];
-
-                            while ((token = tokens[++i]) !== ")")
-                            {
-                                switch (token)
-                                {
-                                    case " ":
-                                    case ",":
-                                        break;
-
-                                    default:
-                                        node.parameters.push(token);
-                                        break;
-                                }
-                            }
-
-                            i++;
-                        }
                     }
-                    else //伪类
+
+                    node.push(new pseudo_class(token));
+                    break;
+
+                case "::": //伪元素::name(p1[,p2...])
+                    node = new element_node(nodes, type, "::", token);
+                    type = "";
+
+                    //处理参数(存储至节点的parameters属性中)
+                    if (i < length && tokens[i] === "(")
                     {
-                        if (!node) //未指定节点则默认添加*节点
+                        node.parameters = [];
+
+                        while ((token = tokens[++i]) !== ")")
                         {
-                            node = new element_node(nodes, type, "*", "");
-                            type = "";
+                            switch (token)
+                            {
+                                case " ":
+                                case ",":
+                                    break;
+
+                                default:
+                                    node.parameters.push(token);
+                                    break;
+                            }
                         }
 
-                        node.push(new pseudo_class(token));
+                        i++;
                     }
                     break;
 
-                case "]":  //属性选择器结束标记
-                case "=":  //属性名与值的分隔 可与其它字符组合
-                case "|":  //|= 匹配以-分隔的其中一段值 如匹配en-US中的en (由属性解析)
-                case "^":  //^= 属性值以XX开头 (由属性解析)
-                case "$":  //$= 属性值以XX结尾 (由属性解析)
-                case "(":  //开始参数
-                case ")":  //结束参数
-                    //由子类处理
-                    continue;
-
                 default: //类名 token = ""
-                    node = new element_node(nodes, type, "", token);
+                    if (token.length > 1 || token.match(/\w-/))
+                    {
+                        node = new element_node(nodes, type, "", token);
+                    }
+
                     type = "";
                     break;
             }
         }
 
-        return nodes;
+        return result || nodes;
     };
 
 
 
-    
+
 })(flyingon);
 
 
@@ -6652,10 +6615,8 @@ flyingon.ICollection = function () {
                 //解析选择器
                 selector = flyingon.parse_selector(selector);
 
-                if (selector.forks) //如果存在分支则拆分分支为独立选择器
+                if (selector.split_selector) //如果是组合选择器则拆分处理
                 {
-                    selector = split_selector(selector);
-
                     for (var i = 0, _ = selector.length ; i < _; i++)
                     {
                         css_list.push(handle_selector(selector[i], style, cssText, css_style));
@@ -6700,12 +6661,10 @@ flyingon.ICollection = function () {
                     if (name.indexOf("css:") === 0)
                     {
                         name = name.substring(4);
-                        name = (selector.indexOf("css:") !== 0 ? "css:" : "") + selector.replace("@", ".") + " " + name;
+                        selector = (selector.indexOf("css:") !== 0 ? "css:" : "") + selector.replace("@", ".");
                     }
-                    else
-                    {
-                        name = selector + " " + name
-                    }
+
+                    name = selector.replace(/\,/g, " " + name + ",") + " " + name;
 
                     styles[name] = value;
                     parse_selector(styles, name, exports);
@@ -6809,56 +6768,6 @@ flyingon.ICollection = function () {
         }
 
         return target;
-    };
-
-
-    //拆分有分支的选择器为多个独立选择器
-    function split_selector(selector) {
-
-        var result = [],                    //结果集
-            forks = selector.forks,         //分支位置集合
-            fill = 1,                       //每一轮的填充个数(从后到前逐级递增)
-            total = 1;                      //总数
-
-        //计算总结果数
-        for (var i = forks.length - 1; i >= 0; i--)
-        {
-            total *= selector[forks[i]].length;
-        }
-
-        result.length = total;
-
-        //先全部复制选择器内容
-        for (var i = 0; i < total; i++)
-        {
-            result[i] = selector.slice(0);
-        }
-
-        //再从后到前替换每个分支子项
-        for (var i = forks.length - 1; i >= 0; i--)
-        {
-            var index = forks[i],            //目标位置
-                nodes = selector[index],     //当前分支节点
-                length = nodes.length,
-                j = 0;                       //填充位置
-
-            while (j < total)
-            {
-                for (var j1 = 0; j1 < length; j1++)
-                {
-                    var node = nodes[j1];
-
-                    for (var j2 = 0; j2 < fill; j2++)
-                    {
-                        result[j++][index] = node;
-                    }
-                }
-            }
-
-            fill *= length;
-        }
-
-        return result;
     };
 
 
@@ -7086,53 +6995,67 @@ flyingon.defineClass("Query", function () {
 
 
 
-    //缓存选择器
+
     var document = window.document,
 
         parse_selector = flyingon.parse_selector,
 
-        selector_cache = {};
+        selector_cache = {}, //缓存选择器
+
+        query_types = Object.create(null); //查询类型
+
 
 
 
     //selector:     css样式选择表达式 
     //start:        开始搜索控件(省略则表示搜索所有控件)
-    //repeat_id:    是否支持重复id
-    Class.create = function (selector, start, cache) {
+    Class.create = function (selector, start) {
 
         if (selector)
         {
-            var selector = selector_cache[selector] || (cache !== false ? (selector_cache[selector] = parse_selector(selector)) : parse_selector(selector)),
-                length = selector.length,
-                items,
-                exports,
-                node;
+            var nodes = selector_cache[selector] || (selector_cache[selector] = parse_selector(selector)),
+                items = start ? [start] : flyingon.__all_windows;
 
-            //使用通用选择器搜索
-            items = start ? [start] : flyingon.__all_windows;
-
-            for (var i = 0; i < length; i++)
+            //如果是组合选择器
+            if (nodes.split_selector)
             {
-                node = selector[i];
-
-                this.__query_types[node.type](node, items, exports = []); //批量传入数组减少函数调用以提升性能
-
-                if (exports.length == 0)
+                for (var i = 0, _ = nodes.length; i < _; i++)
                 {
-                    return;
+                    query(this, nodes[i], items);
                 }
-
-                items = exports;
             }
-
-            if (exports.length > 0)
+            else
             {
-                this.push.apply(this, exports);
+                query(this, nodes, items);
             }
         }
     };
 
 
+
+    //查找控件
+    function query(target, nodes, items) {
+
+        var node, exports;
+
+        for (var i = 0, _ = nodes.length; i < _; i++)
+        {
+            query_types[(node = nodes[i]).type](node, items, exports = []); //批量传入数组减少函数调用以提升性能
+
+            if (exports.length == 0)
+            {
+                return;
+            }
+
+            items = exports;
+        }
+
+        if (exports && exports.length > 0)
+        {
+            target.push.apply(target, exports);
+        }
+    };
+    
 
 
     //组合查询方法
@@ -7251,7 +7174,6 @@ flyingon.defineClass("Query", function () {
         flyingon.__fn_check_property = check_property;
 
 
-
         //并列选择器
         this[""] = function (node, items, exports) {
 
@@ -7261,37 +7183,16 @@ flyingon.defineClass("Query", function () {
             }
         };
 
-        //合并元素集
-        this[","] = function (node, items, exports) {
-
-            var item, fn, values;
-
-            for (var i = 0, _ = node.length; i < _; i++)
-            {
-                item = node[i];
-
-                if (fn = this[item.type])
-                {
-                    fn(item, items, values = []);
-
-                    if (values.length > 0)
-                    {
-                        exports.push.apply(exports, values);
-                    }
-                }
-            }
-        };
-
         //所有后代元素(默认为所有后代元素)
         this[" "] = function (node, items, exports) {
 
-            var children;
+            var cache;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                if ((children = items[i].__children) && children.length > 0)
+                if ((cache = items[i].__children) && cache.length > 0)
                 {
-                    query_cascade(node, children, exports);
+                    query_cascade(node, cache, exports);
                 }
             }
         };
@@ -7314,15 +7215,15 @@ flyingon.defineClass("Query", function () {
         //子元素
         this[">"] = function (node, items, exports) {
 
-            var children;
+            var cache;
 
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                if ((children = items[i].__children) && children.length > 0)
+                if ((cache = items[i].__children) && cache.length > 0)
                 {
-                    for (var j = 0, __ = children.length; j < __; j++)
+                    for (var j = 0, __ = cache.length; j < __; j++)
                     {
-                        check_node(node, children[j], exports);
+                        check_node(node, cache[j], exports);
                     }
                 }
             }
@@ -7331,14 +7232,13 @@ flyingon.defineClass("Query", function () {
         //后一个元素 元素伪类:after也会转换成此节点类型
         this["+"] = function (node, items, exports) {
 
+            var item, children, index;
+
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__parent)
+                if ((item = items[i]).__parent)
                 {
-                    var children = item.__parent.__children,
-                        index;
+                    children = item.__parent.__children;
 
                     if (children.length > (index = children.indexOf(item) + 1))
                     {
@@ -7351,13 +7251,13 @@ flyingon.defineClass("Query", function () {
         //所有后续兄弟元素
         this["~"] = function (node, items, exports) {
 
+            var item, children;
+
             for (var i = 0, _ = items.length; i < _; i++)
             {
-                var item = items[i];
-
-                if (item.__parent)
+                if ((item = items[i]).__parent)
                 {
-                    var children = item.__parent.__children;
+                    children = item.__parent.__children;
 
                     for (var j = children.indexOf(item) + 1, __ = children.length; j < __; j++)
                     {
@@ -7528,7 +7428,7 @@ flyingon.defineClass("Query", function () {
         };
 
 
-    }).call(this.__query_types = Object.create(null));
+    }).call(query_types);
 
 
 

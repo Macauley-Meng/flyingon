@@ -17,9 +17,9 @@ var flyingon = (function () {
 
 
     //全局选择器
-    function fn(selector, start, cache) {
+    function fn(selector, start) {
 
-        return new flyingon.Query(selector, start, cache);
+        return new flyingon.Query(selector, start);
     };
 
 

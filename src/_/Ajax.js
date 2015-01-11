@@ -29,7 +29,11 @@
         {
             if (typeof XMLHttpRequest !== "undefined")
             {
-                return (ajax_fn = function () { return new XMLHttpRequest(); })();
+                return (ajax_fn = function () {
+
+                    return new XMLHttpRequest();
+
+                })();
             }
 
             if (typeof ActiveXObject !== "undefined")
@@ -46,7 +50,11 @@
                 {
                     try
                     {
-                        if (result = (ajax_fn = function () { return new ActiveXObject(items[i]); })())
+                        if (result = (ajax_fn = function () {
+
+                            return new ActiveXObject(items[i]);
+
+                        })())
                         {
                             return result;
                         }
@@ -81,7 +89,6 @@
                 clearTimeout(options.timer);
                 delete options.timer;
             }
-
 
             options.responseText = request.responseText;
 
