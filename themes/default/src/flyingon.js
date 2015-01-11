@@ -42,7 +42,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 [att*="val"]           属性att的值包含"val"字符串的控件
 
 
-本系统支持的伪类控件如下:
+本系统支持的伪类如下:
 
 :active                匹配鼠标已经其上按下但还没有释放的控件
 :hover                 匹配鼠标悬停其上的控件
@@ -51,22 +51,20 @@ A~B                    匹配任何在A控件之后的同级B控件
 :disabled              匹配禁用的控件
 :checked               匹配被选中的控件
 
+:empty                匹配一个不包含任何子控件的控件
+:nth-child(n)         匹配当前控件的第n个子控件, 第一个编号为1
+:nth-last-child(n)    匹配当前控件的倒数第n个子控件, 第一个编号为1
+:nth-of-type(n)       与:nth-child()作用类似, 但是仅匹配使用同种标签的子控件
+:nth-last-of-type(n)  与:nth-last-child() 作用类似, 但是仅匹配使用同种标签的子控件
+:first-child          匹配当前控件的第一个子控件
+:last-child           匹配当前控件的最后一个子控件, 等同于:nth-last-child(1)
+:first-of-type        匹配当前控件下使用同种标签的第一个子控件, 等同于:nth-of-type(1)
+:last-of-type         匹配当前控件下使用同种标签的最后一个子控件, 等同于:nth-last-of-type(1)
+:only-child           匹配当前控件下仅有的一个子控件, 等同于:first-child :last-child或:nth-child(0) :nth-last-child(1)
+:only-of-type         匹配当前控件下使用同种标签的唯一一个子控件, 等同于:first-of-type :last-of-type或:nth-of-type(1) :nth-last-of-type(1)
 
-本系统按CSS3标准规定伪元素以::表示, 支持的伪元素如下:
 
-::before               匹配当前控件之前一控件
-::after                匹配当前控件之后一控件
-::empty                匹配一个不包含任何子控件的控件
-::nth-child(n)         匹配当前控件的第n个子控件, 第一个编号为1
-::nth-last-child(n)    匹配当前控件的倒数第n个子控件, 第一个编号为1
-::nth-of-type(n)       与::nth-child()作用类似, 但是仅匹配使用同种标签的子控件
-::nth-last-of-type(n)  与::nth-last-child() 作用类似, 但是仅匹配使用同种标签的子控件
-::first-child          匹配当前控件的第一个子控件
-::last-child           匹配当前控件的最后一个子控件, 等同于::nth-last-child(1)
-::first-of-type        匹配当前控件下使用同种标签的第一个子控件, 等同于::nth-of-type(1)
-::last-of-type         匹配当前控件下使用同种标签的最后一个子控件, 等同于::nth-last-of-type(1)
-::only-child           匹配当前控件下仅有的一个子控件, 等同于::first-child ::last-child或::nth-child(0) ::nth-last-child(1)
-::only-of-type         匹配当前控件下使用同种标签的唯一一个子控件, 等同于::first-of-type ::last-of-type或::nth-of-type(1) ::nth-last-of-type(1)
+本系统不支持伪元素
 
 
 
