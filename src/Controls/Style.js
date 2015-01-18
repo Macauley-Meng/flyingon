@@ -19,8 +19,6 @@
 
         style_type_fn = Object.create(null),    //样式类型检查函数
 
-        style_pseudo_fn = Object.create(null),  //
-
         style_test = document.createElement("div").style,
 
         style_prefix1,  //样式前缀1
@@ -30,8 +28,6 @@
         style_object = flyingon.style(),    //保存样式对象
 
         regex_name = /[-_](\w)/g,   //名称转换规则 例: margin-left || margin_left -> marginLeft
-
-        check_property = flyingon.__fn_check_property,  //检查属性
 
         selector_rule_type = {      //支持的选择器规则类型
 
@@ -1330,14 +1326,8 @@
                 end = selector.length - 1,
                 node = selector[end];
 
-            //处理伪元素
-            if (node.token === ":" && (target = (style_pseudo_fn[node.name] || empty_fn)(node, target)) === undefined)
-            {
-                continue;
-            }
-
             //检测属性
-            if (node.length > 0 && check_property(node, target) === false)
+            if (node.length > 0 && node.check(target) === false)
             {
                 continue;
             }
@@ -1486,7 +1476,7 @@
 
     //查询方法
     //注: ","组合类型已被拆分,此处不处理
-    (function (type_fn, pseudo_fn, check_property) {
+    (function (type_fn) {
 
 
 
@@ -1524,17 +1514,10 @@
                         return false;
                     }
                     break;
-
-                case "::": //伪元素
-                    if ((target = (pseudo_fn[node.name] || empty_fn)(node, target)) === undefined)
-                    {
-                        return false;
-                    }
-                    break;
             }
 
             //再检测属性及伪类(不包含伪元素)
-            if (node.length > 0 && !check_property(node, target))
+            if (node.length > 0 && node.check(target) === false)
             {
                 return false;
             }
@@ -1618,89 +1601,7 @@
         };
 
 
-
-        pseudo_fn.empty = function (node, target) {
-
-            return target.__children && target.__children.length > 0 ? undefined : target;
-        };
-
-        pseudo_fn.before = function (node, target) {
-
-            var items, index;
-
-            if ((target = target.__parent) && (items = target.__children) && items.length > (index = items.indexOf(this)) + 1)
-            {
-                return items[index];
-            }
-        };
-
-        pseudo_fn.after = function (node, target) {
-
-            var items, index;
-
-            if ((target = target.__parent) && (items = target.__children) && (index = items.indexOf(this) - 1) >= 0)
-            {
-                return items[index];
-            }
-        };
-
-        pseudo_fn["first-child"] = pseudo_fn["first-of-type"] = function (node, target) {
-
-            var parent, items;
-
-            if ((parent = target.__parent) && (items = parent.__children) && items[0] === target &&
-                (node.name.length === 11 || target.xtype === parent.xtype))
-            {
-                return parent;
-            }
-        };
-
-        pseudo_fn["last-child"] = pseudo_fn["last-of-type"] = function (node, target) {
-
-            var parent, items;
-
-            if ((parent = target.__parent) && (items = parent.__children) && items[items.length - 1] === target &&
-                (node.name.length === 10 || target.xtype === parent.xtype))
-            {
-                return parent;
-            }
-        };
-
-        pseudo_fn["only-child"] = pseudo_fn["only-of-type"] = function (node, target) {
-
-            var parent, items;
-
-            if ((parent = target.__parent) && (items = parent.__children) && items.length === 1 &&
-                (node.name.length === 10 || target.xtype === parent.xtype))
-            {
-                return parent;
-            }
-        };
-
-        pseudo_fn["nth-child"] = pseudo_fn["nth-of-type"] = function (node, target) {
-
-            var parent, items;
-
-            if ((parent = target.__parent) && (items = parent.__children) && items[(+node.parameters[0] || 1) - 1] === target &&
-                (node.name.length === 9 || target.xtype === parent.xtype))
-            {
-                return parent;
-            }
-        };
-
-        pseudo_fn["nth-last-child"] = pseudo_fn["nth-last-of-type"] = function (node, target) {
-
-            var parent, items;
-
-            if ((parent = target.__parent) && (items = parent.__children) && items[items.length - (+node.parameters[0] || 1) - 1] === target &&
-                (node.name.length === 14 || target.xtype === parent.xtype))
-            {
-                return parent;
-            }
-        };
-
-
-    })(style_type_fn, style_pseudo_fn, check_property);
+    })(style_type_fn);
 
 
 
@@ -1730,27 +1631,33 @@
                     cssText = [],
                     style = styles[selector];
 
-                if (css_style) //css:开头表示定义标准css样式
-                {
-                    selector = selector.substring(4);
-                }
-
                 style = parse_style(null, style, styles, cssText, css_style);
                 cssText = cssText.join("\n");
 
-                //解析选择器
-                selector = flyingon.parse_selector(selector);
-
-                if (selector.split_selector) //如果是组合选择器则拆分处理
+                if (css_style) //css:开头表示定义标准css样式,不执行解析过程原样输出
                 {
-                    for (var i = 0, _ = selector.length ; i < _; i++)
-                    {
-                        css_list.push(handle_selector(selector[i], style, cssText, css_style));
-                    }
+                    css_list.push({
+
+                        css_style: true,
+                        cssText: selector.substring(4) + "{" + cssText + "}"
+                    });
                 }
                 else
                 {
-                    css_list.push(handle_selector(selector, style, cssText, css_style));
+                    //解析选择器
+                    selector = flyingon.parse_selector(selector);
+
+                    if (selector.split_selector) //如果是组合选择器则拆分处理
+                    {
+                        for (var i = 0, _ = selector.length ; i < _; i++)
+                        {
+                            css_list.push(handle_selector(selector[i], style, cssText));
+                        }
+                    }
+                    else
+                    {
+                        css_list.push(handle_selector(selector, style, cssText));
+                    }
                 }
             }
 
@@ -1790,7 +1697,7 @@
                         selector = (selector.indexOf("css:") !== 0 ? "css:" : "") + selector.replace("@", ".");
                     }
 
-                    name = selector.replace(/\,/g, " " + name + ",") + " " + name;
+                    name = selector.replace(/\,/g, " " + name + ",") + name;
 
                     styles[name] = value;
                     parse_selector(styles, name, exports);
@@ -1898,41 +1805,34 @@
 
 
     //处理选择器
-    function handle_selector(selector, style, cssText, css_style) {
+    function handle_selector(selector, style, cssText) {
 
         var length = selector.length,
             value = selector[length - 1];
 
         selector.style = style;
         selector.key = selector.join("");
-        selector.type = value.token === "::" ? "*" : value.token + value.name; //以最后一个节点的 token + name 作为样式类别并缓存样式类别名 (伪元素以*作为样式类别名)
+        selector.type = value.token + value.name; //以最后一个节点的 token + name 作为样式类别并缓存样式类别名
         selector.weight = selector_weight(selector);
 
         //如果控件dom使用css方式关联样式
         if (cssText)
         {
-            if (selector.css_style = css_style) //css样式直接按原样生成规则
-            {
-                selector.cssText = selector.key + "{" + cssText + "}";
-            }
-            else
-            {
-                var values = [];
+            var values = [];
 
-                for (var i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
+            {
+                if (value = selector_rule(selector, i))
                 {
-                    if (value = selector_rule(selector, i))
-                    {
-                        values.push(value);
-                    }
-                    else
-                    {
-                        return selector;
-                    }
+                    values.push(value);
                 }
-
-                selector.cssText = (selector.prefix || "") + values.join("") + "{" + cssText + "}"; //复用且保存css
+                else
+                {
+                    return selector;
+                }
             }
+
+            selector.cssText = (selector.prefix || "") + values.join("") + "{" + cssText + "}"; //复用且保存css
         }
         else
         {
@@ -1950,14 +1850,14 @@
     }
 
 
-    //获取选择器规则(伪元素及Id选择器及多伪类不支持生成css)
+    //获取选择器规则(Id选择器及多伪类不支持生成css)
     function selector_rule(selector, index) {
 
         var item = selector[index],
             type,
             result;
 
-        if (item.token === "::" || item.length > 1 || (item.type && !selector_rule_type[item.type]))
+        if (item.length > 1 || (item.type && !selector_rule_type[item.type]))
         {
             return null;
         }
@@ -2000,7 +1900,7 @@
     子选择符的权重为：0000
     属性选择符的权重为：0010
     伪类选择符的权重为：0010
-    伪元素选择符的权重为：0010
+    伪元素选择符的权重为：0010 (注：本系统不支持伪元素)
     包含选择符的权重为：包含的选择符权重值之和
     内联样式的权重为：1000
     继承的样式的权重为：0000
@@ -2021,7 +1921,6 @@
 
                 case "@": //自定义控件按10权重计, 等同于class
                 case ".": //class
-                case ":": //伪元素
                     result += 10;
                     break;
 
@@ -2030,7 +1929,7 @@
                     break;
             }
 
-            result += node.length * 10;
+            result += node.length * 10; //伪类或属性
         }
 
         return selector.weight = result << 16; //左移16个字节以留足中间插入的空间

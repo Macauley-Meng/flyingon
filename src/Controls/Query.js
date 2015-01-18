@@ -64,15 +64,11 @@ flyingon.defineClass("Query", function () {
             target.push.apply(target, exports);
         }
     };
-    
+
 
 
     //组合查询方法
     (function () {
-
-
-        //伪元素处理集
-        var pseudo_fn = {};
 
 
         //目标检测
@@ -107,80 +103,14 @@ flyingon.defineClass("Query", function () {
                         return;
                     }
                     break;
-
-                case "::": //伪元素
-                    (pseudo_fn[node.name] || pseudo_unkown)(node, target, exports);
-                    return;
             }
 
             //检查属性及伪类
-            if (check_property(node, target))
+            if (node.length === 0 || node.check(target) !== false)
             {
                 exports.push(target);
             }
         };
-
-
-        //检查属性及伪类
-        function check_property(node, target) {
-
-            var item;
-
-            for (var i = 0, _ = node.length; i < _; i++)
-            {
-                switch ((item = node[i]).token)
-                {
-                    case ":":
-                        switch (item.name)
-                        {
-                            case "active":
-                            case "hover":
-                            case "focus":
-                            case "disabled":
-                            case "checked":
-                                return target.__states != null && !!target.__states[item.name];
-
-                            case "enabled":
-                                return !target.__states || !target.__states.disabled;
-                        }
-                        break;
-
-                    case "[]":
-                        var value = target.get ? target.get(item.name) : target[item.name];
-
-                        switch (item.operator)
-                        {
-                            case "":
-                                return value !== undefined;
-
-                            case "=":
-                                return value == item.value;
-
-                            case "*=": // *= 包含属性值XX (由属性解析)
-                                return ("" + value).indexOf(item.value) >= 0;
-
-                            case "^=": // ^= 属性值以XX开头 (由属性解析)
-                                return ("" + value).indexOf(item.value) === 0;
-
-                            case "$=": // $= 属性值以XX结尾 (由属性解析)
-                                return (value = "" + value).lastIndexOf(item.value) === value.length - item.value.length;
-
-                            case "~=": // ~= 匹配以空格分隔的其中一段值 如匹配en US中的en (由属性解析)
-                                return (item.regex || (item.regex = new RegExp("/(\b|\s+)" + item.value + "(\s+|\b)"))).test("" + value);
-
-                            case "|=": // |= 匹配以-分隔的其中一段值 如匹配en-US中的en (由属性解析)
-                                return (item.regex || (item.regex = new RegExp("/(\b|\-+)" + item.value + "(\-+|\b)"))).test("" + value);
-                        }
-                        break;
-                }
-            }
-
-            return true;
-        };
-
-
-        //输出check_property给样式用
-        flyingon.__fn_check_property = check_property;
 
 
         //并列选择器
@@ -273,166 +203,6 @@ flyingon.defineClass("Query", function () {
                         check_node(node, children[j], exports);
                     }
                 }
-            }
-        };
-
-
-
-
-        //未知伪元素处理
-        function pseudo_unkown(node, target, exports) {
-
-            return false;
-        };
-
-
-
-        pseudo_fn.empty = function (node, target, exports) {
-
-            if (!target.__children || target.__children.length === 0)
-            {
-                exports.push(target);
-            }
-        };
-
-        pseudo_fn.before = function (node, target, exports) {
-
-            var items, item, index;
-
-            if ((target = target.__parent) && (items = target.__children) && (index = items.indexOf(target) - 1) >= 0 &&
-                (item = items[index]) &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn.after = function (node, target, exports) {
-
-            var items, item, index;
-
-            if ((target = target.__parent) && (items = target.__children) && items.length > (index = items.indexOf(target) + 1) &&
-                (item = items[index]) &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn["first-child"] = function (node, target, exports) {
-
-            var items, item;
-
-            if ((items = target.__children) && items.length > 0 &&
-                (item = items[0]) &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn["first-of-type"] = function (node, target, exports) {
-
-            var items, item;
-
-            if ((items = target.__children) && items.length > 0 &&
-                (item = items[0]) && item.xtype === target.xtype &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn["last-child"] = function (node, target, exports) {
-
-            var items, item;
-
-            if ((items = target.__children) && items.length > 0 &&
-                (item = items[items.length - 1]) &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn["last-of-type"] = function (node, target, exports) {
-
-            var items, item;
-
-            if ((items = target.__children) && items.length > 0 &&
-                (item = items[items.length - 1]) && item.xtype === target.xtype
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn["only-child"] = function (node, target, exports) {
-
-            if ((items = target.__children) && items.length === 1 &&
-                (node.length === 0 || check_property(node, target)))
-            {
-                exports.push(target);
-            }
-        };
-
-        pseudo_fn["only-of-type"] = function (node, target, exports) {
-
-            var items, item;
-
-            if ((items = target.__children) && items.length === 1 &&
-                (item = items[0]) && item.xtype === target.xtype &&
-                (node.length === 0 || check_property(node, target)))
-            {
-                exports.push(target);
-            }
-        };
-
-        pseudo_fn["nth-child"] = function (node, target, exports) {
-
-            var items, item, index = (+node.parameters[0] || 1) - 1;
-
-            if ((items = target.__children) && items.length > index &&
-                (item = items[index]) &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn["nth-of-type"] = function (node, target, exports) {
-
-            var items, item, index = (+node.parameters[0] || 1) - 1;
-
-            if ((items = target.__children) && items.length > index &&
-                (item = items[index]) && item.xtype === target.xtype &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn["nth-last-child"] = function (node, target, exports) {
-
-            var items, item, index = (+node.parameters[0] || 1) - 1;
-
-            if ((items = target.__children) && items.length > index &&
-                (item = items[items.length - index - 1]) &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
-            }
-        };
-
-        pseudo_fn["nth-last-of-type"] = function (node, target, exports) {
-
-            var items, item, index = (+node.parameters[0] || 1) - 1;
-
-            if ((items = target.__children) && items.length > index &&
-                (item = items[items.length - index - 1]) && item.xtype === target.xtype &&
-                (node.length === 0 || check_property(node, item)))
-            {
-                exports.push(item);
             }
         };
 

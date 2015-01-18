@@ -231,7 +231,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         //左右页签面板默认样式
         ".flyingon-TabPanel-left, .flyingon-TabPanel-right": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 vertical: true,
                 alignY: "top",
@@ -240,7 +240,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                 padding: "0 0 4px 0"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 textAlign: "center",
                 verticalAlign: "top"
@@ -250,7 +250,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         //上下页签面板默认样式
         ".flyingon-TabPanel-top, .flyingon-TabPanel-bottom": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 vertical: false,
                 alignX: "left",
@@ -259,7 +259,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                 padding: "0 4px 0 0"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 textAlign: "left",
                 verticalAlign: "middle"
@@ -270,7 +270,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         //收拢状态页签面板样式
         ".flyingon-TabPanel-collapse-left, .flyingon-TabPanel-collapse-right": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 width: "28px"
             }
@@ -278,7 +278,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-collapse-top, .flyingon-TabPanel-collapse-bottom": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 height: "28px"
             }
@@ -291,13 +291,13 @@ A~B                    匹配任何在A控件之后的同级B控件
             width: "28px",
             height: "50px",
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 height: "auto"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
@@ -308,14 +308,14 @@ A~B                    匹配任何在A控件之后的同级B控件
             width: "auto",
             height: "28px",
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 width: "auto",
                 paddingRight: "4px"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
@@ -325,13 +325,13 @@ A~B                    匹配任何在A控件之后的同级B控件
         //outlookbar页签面板样式
         ".flyingon-TabPanel-outlook-left, .flyingon-TabPanel-outlook-right": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 contentAlignY: "middle"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
@@ -339,13 +339,13 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-outlook-top, .flyingon-TabPanel-outlook-bottom": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 contentAlignX: "center"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
@@ -355,7 +355,7 @@ A~B                    匹配任何在A控件之后的同级B控件
         //缩略图页签面板样式
         ".flyingon-TabPanel-thumb-left, .flyingon-TabPanel-thumb-right": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 contentAlignY: "top",
@@ -365,12 +365,12 @@ A~B                    匹配任何在A控件之后的同级B控件
             },
 
             //选中状态时页签头
-            ".flyingon-TabPanelHeader-selected": {
+            " .flyingon-TabPanelHeader-selected": {
 
                 backgroundColor: hover_back
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
@@ -378,7 +378,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-thumb-top, .flyingon-TabPanel-thumb-bottom": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 contentAlignX: "left",
@@ -389,12 +389,12 @@ A~B                    匹配任何在A控件之后的同级B控件
             },
 
             //选中状态时页签头
-            ".flyingon-TabPanelHeader-selected": {
+            " .flyingon-TabPanelHeader-selected": {
 
                 backgroundColor: hover_back
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
@@ -404,20 +404,20 @@ A~B                    匹配任何在A控件之后的同级B控件
         //页签式页签面板样式
         ".flyingon-TabPanel-tab1-top, .flyingon-TabPanel-tab2-top, .flyingon-TabPanel-tab3-top, .flyingon-TabPanel-tab4-top": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 width: "auto",
                 paddingRight: "4px"
             },
 
-            ".flyingon-TabPanelHeader-selected": {
+            " .flyingon-TabPanelHeader-selected": {
 
                 borderBottomWidth: "0",
                 paddingBottom: "1px"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
@@ -425,19 +425,19 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab1-left, .flyingon-TabPanel-tab2-left, .flyingon-TabPanel-tab3-left, .flyingon-TabPanel-tab4-left": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 height: "auto"
             },
 
-            ".flyingon-TabPanelHeader-selected": {
+            " .flyingon-TabPanelHeader-selected": {
 
                 borderRightWidth: "0",
                 paddingRight: "1px"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
@@ -445,19 +445,19 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab1-right, .flyingon-TabPanel-tab2-right, .flyingon-TabPanel-tab3-right, .flyingon-TabPanel-tab4-right": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 height: "auto"
             },
 
-            ".flyingon-TabPanelHeader-selected": {
+            " .flyingon-TabPanelHeader-selected": {
 
                 borderLeftWidth: "0",
                 paddingLeft: "1px"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 height: "auto"
             }
@@ -465,20 +465,20 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab1-bottom, .flyingon-TabPanel-tab2-bottom, .flyingon-TabPanel-tab3-bottom, .flyingon-TabPanel-tab4-bottom": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 layoutType: "line",
                 width: "auto",
                 paddingRight: "4px"
             },
 
-            ".flyingon-TabPanelHeader-selected": {
+            " .flyingon-TabPanelHeader-selected": {
 
                 borderTopWidth: "0",
                 paddingTop: "1px"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 width: "auto"
             }
@@ -486,7 +486,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab2-left, .flyingon-TabPanel-tab4-left": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 contentAlignX: "right",
                 padding: "0 4px 0 0"
@@ -496,7 +496,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab2-left, .flyingon-TabPanel-tab2-right, .flyingon-TabPanel-tab4-left, .flyingon-TabPanel-tab4-right": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 vertical: false,
                 width: "120px",
@@ -505,7 +505,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                 contentAlignY: "middle"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 width: "auto",
                 textAlign: "left",
@@ -515,7 +515,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab2-right, .flyingon-TabPanel-tab4-right": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 contentAlignX: "left",
                 padding: "0 0 0 4px"
@@ -525,7 +525,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab3-top, .flyingon-TabPanel-tab3-bottom, .flyingon-TabPanel-tab4-top, .flyingon-TabPanel-tab4-bottom": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 vertical: true,
                 width: "27px",
@@ -535,7 +535,7 @@ A~B                    匹配任何在A控件之后的同级B控件
                 padding: "0 0 4px 0"
             },
 
-            ".flyingon-TabPanelHeader-text": {
+            " .flyingon-TabPanelHeader-text": {
 
                 height: "auto",
                 textAlign: "center",
@@ -545,7 +545,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
         ".flyingon-TabPanel-tab3-bottom, .flyingon-TabPanel-tab4-bottom": {
 
-            "@flyingon-TabPanelHeader": {
+            " @flyingon-TabPanelHeader": {
 
                 contentAlignY: "top",
                 padding: "4px 0 0 0"
@@ -619,7 +619,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             backgroundColor: control_back,
 
-            "@flyingon-TabControlHeader": {
+            " @flyingon-TabControlHeader": {
 
                 width: "27px"
             }
@@ -630,7 +630,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             backgroundColor: control_back,
 
-            "@flyingon-TabControlHeader": {
+            " @flyingon-TabControlHeader": {
 
                 height: "27px"
             }

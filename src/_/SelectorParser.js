@@ -76,18 +76,7 @@ A~B                    匹配任何在A控件之后的同级B控件
 
             this.type = type;
             this.token = token;
-
-            switch (name[0])
-            {
-                case "\"":
-                case "'":
-                    this.name = name.substring(1, name.length - 1);
-                    break;
-
-                default:
-                    this.name = name;
-                    break;
-            }
+            this.name = name;
 
             nodes.push(this);
         };
@@ -106,9 +95,18 @@ A~B                    匹配任何在A控件之后的同级B控件
         this.length = 0;
 
 
-        this.push = function (item) {
+        //检测属性及伪类值
+        this.check = function (target) {
 
-            this[this.length++] = item;
+            for (var i = 0, _ = this.length; i < _; i++)
+            {
+                if (this[i].check(target) === false)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         };
 
 
@@ -145,23 +143,6 @@ A~B                    匹配任何在A控件之后的同级B控件
     var element_property = flyingon.defineClass(function () {
 
 
-        Class.create = function (name) {
-
-            switch (name[0])
-            {
-                case "\"":
-                case "'":
-                    this.name = name.substring(1, name.length - 1);
-                    break;
-
-                default:
-                    this.name = name;
-                    break;
-            }
-        };
-
-
-
         //标识
         this.token = "[]";
 
@@ -175,10 +156,42 @@ A~B                    匹配任何在A控件之后的同级B控件
         this.value = "";
 
 
+        //检测属性值
+        this.check = function (target) {
+
+            var value = target.get ? target.get(this.name) : target[this.name];
+
+            switch (this.operator)
+            {
+                case "":
+                    return this.name in target;
+
+                case "=":
+                    return value == this.value;
+
+                case "*=": // *= 包含属性值XX (由属性解析)
+                    return ("" + value).indexOf(this.value) >= 0;
+
+                case "^=": // ^= 属性值以XX开头 (由属性解析)
+                    return ("" + value).indexOf(this.value) === 0;
+
+                case "$=": // $= 属性值以XX结尾 (由属性解析)
+                    return (value = "" + value).lastIndexOf(this.value) === value.length - this.value.length;
+
+                case "~=": // ~= 匹配以空格分隔的其中一段值 如匹配en US中的en (由属性解析)
+                    return (this.__regex || (this.__regex = new RegExp("/(\b|\s+)" + this.value + "(\s+|\b)"))).test("" + value);
+
+                case "|=": // |= 匹配以-分隔的其中一段值 如匹配en-US中的en (由属性解析)
+                    return (this.__regex || (this.__regex = new RegExp("/(\b|\-+)" + this.value + "(\-+|\b)"))).test("" + value);
+            }
+        };
+
+
         this.toString = function () {
 
             return "[" + this.name + this.operator + this.value + "]";
         };
+
 
     });
 
@@ -187,12 +200,6 @@ A~B                    匹配任何在A控件之后的同级B控件
 
     //伪类(不含伪元素)
     var pseudo_class = flyingon.defineClass(function () {
-
-
-        Class.create = function (name) {
-
-            this.name = name;
-        };
 
 
         //标识
@@ -205,77 +212,239 @@ A~B                    匹配任何在A控件之后的同级B控件
         this.length = 0;
 
 
+        //检测伪类
+        this.check = (function () {
+
+
+            var fn = (function () {
+
+
+                this.active = this.hover = this.focus = this.disabled = this.checked = function (target) {
+
+                    return target.__states != null && !!target.__states[item.name];
+                };
+
+
+                this.enabled = function (target) {
+
+                    return !target.__states || !target.__states.disabled;
+                };
+
+
+                this["empty"] = function (target) {
+
+                    return !target.__children || target.__children.length === 0;
+                };
+
+                this["first-child"] = function (target) {
+
+                    var cache = target.__parent;
+                    return cache && (cache = cache.__children) && cache[0] === target;
+                };
+
+                this["first-of-type"] = function (target) {
+
+                    var cache = target.__parent,
+                        type = target.xtype,
+                        item;
+
+                    if (cache && (cache === cache.__children))
+                    {
+                        for (var i = 0, _ = cache.length; i < _; i++)
+                        {
+                            if ((item = cache[i]) === target)
+                            {
+                                return true;
+                            }
+
+                            if (item.xtype === type)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return false;
+                };
+
+                this["last-child"] = function (target) {
+
+                    var cache = target.__parent;
+                    return cache && (cache = cache.__children) && cache[cache.length - 1] === target;
+                };
+
+                this["last-of-type"] = function (target) {
+
+                    var cache = target.__parent,
+                        type = target.xtype,
+                        item;
+
+                    if (cache && (cache === cache.__children))
+                    {
+                        for (var i = cache.length - 1; i >= 0; i--)
+                        {
+                            if ((item = cache[i]) === target)
+                            {
+                                return true;
+                            }
+
+                            if (item.xtype === type)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return false;
+                };
+
+                this["only-child"] = function (target) {
+
+                    var cache = target.__parent;
+                    return cache && (cache = cache.__children) && cache.length === 1;
+                };
+
+                this["only-of-type"] = function (target) {
+
+                    var cache = target.__parent,
+                        type = target.xtype,
+                        item;
+
+                    if (cache && (cache === cache.__children))
+                    {
+                        for (var i = cache.length - 1; i >= 0; i--)
+                        {
+                            if ((item = cache[i]) !== target && item.xtype === type)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return true;
+                };
+
+                this["nth-child"] = function (target) {
+
+                    var cache = target.__parent;
+                    return cache && (cache = cache.__children) && cache[+this[0] - 1 || 0] === target;
+                };
+
+                this["nth-of-type"] = function (target) {
+
+                    var cache = target.__parent,
+                        type = target.xtype,
+                        value = +this[0] - 1 || 0,
+                        length = 0,
+                        item;
+
+                    if (cache && (cache === cache.__children))
+                    {
+                        for (var i = 0, _ = cache.length; i < _; i++)
+                        {
+                            if ((item = cache[i]) === target)
+                            {
+                                return length === value;
+                            }
+
+                            if (item.xtype === type && (length++) === value)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return false;
+                };
+
+                this["nth-last-child"] = function (target) {
+
+                    var cache = target.__parent;
+                    return cache && (cache = cache.__children) && cache[+this[0] - 1 || 0] === target;
+                };
+
+                this["nth-last-of-type"] = function (target) {
+
+                    var cache = target.__parent,
+                        type = target.xtype,
+                        value = +this[0] - 1 || 0,
+                        length = 0,
+                        item;
+
+                    if (cache && (cache === cache.__children))
+                    {
+                        for (var i = cache.length - 1; i >= 0; i--)
+                        {
+                            if ((item = cache[i]) === target)
+                            {
+                                return length === value;
+                            }
+
+                            if (item.xtype === type && (length++) === value)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return false;
+                };
+
+                this["gt"] = function (target) {
+
+                    return target.childIndex() > +this[0] || 0;
+                };
+
+                this["lt"] = function (target) {
+
+                    return target.childIndex() < +this[0] || 0;
+                };
+
+                this["mod"] = function (target) {
+
+                    var index = target.childIndex(),
+                        value1 = +this[0] || 0,
+                        value2 = +this[1] || 2;
+
+                    return index % value2 === value1;
+                };
+
+                this["not"] = function (target) {
+
+                };
+
+                this["has"] = function (target) {
+
+                };
+
+
+            }).call(Object.create(null));
+
+
+            function default_fn() {
+
+                return true;
+            };
+
+
+            return function (target, index) {
+
+                return (fn[this.name] || default_fn)(target, index);
+            };
+
+
+        })();
+
+
         var join = Array.prototype.join;
 
         this.toString = function () {
 
-            return ":" + this.name + (this.parameters ? "(" + join.call(this, ",") + ")" : "");
+            return ":" + this.name + (this.length > 0 ? "(" + join.call(this, ",") + ")" : "");
         };
+
 
     });
-
-
-
-
-
-    //[name?="value"]属性选择器
-    function parse_property(values, length, index) {
-
-        var property,
-            token,
-            count = 0,  //占用数组数量
-            loop = true;
-
-        while (loop && index < length)
-        {
-            count++;
-
-            switch (token = values[index++])
-            {
-                case "]":
-                    loop = false;
-                    break;
-
-                case "*": // *= 包含属性值XX (由属性解析)
-                case "^": // ^= 属性值以XX开头 (由属性解析)
-                case "$": // $= 属性值以XX结尾 (由属性解析)
-                case "~": // ~= 匹配以空格分隔的其中一段值 如匹配en US中的en (由属性解析)
-                case "|": // |= 匹配以-分隔的其中一段值 如匹配en-US中的en (由属性解析)
-                    property.operator += token;
-                    break;
-
-                case "=":
-                    property.operator += "=";
-                    break;
-
-                case " ":
-                    break;
-
-                default:
-                    if (property)
-                    {
-                        switch (token[0])
-                        {
-                            case "\"":
-                            case "'":
-                                property.value = token.substring(1, token.length - 1);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        property = new element_property(token);
-                    }
-                    break;
-            }
-        }
-
-        return {
-
-            result: property,
-            count: count
-        };
-    };
 
 
 
@@ -283,29 +452,34 @@ A~B                    匹配任何在A控件之后的同级B控件
     var split_regex = /"[^"]*"|'[^']*'|[\w-]+|\W/g; //选择器拆分正则表达式
 
 
+    //解析选择器
+    flyingon.parse_selector = function (selector) {
+
+        var tokens = selector.match(split_regex);
+        return parse(tokens, 0, tokens.length, " ");
+    };
+
+
+    //解析选择器
     //注1: 按从左至右的顺序解析
     //注2: 两个之间没有任何符号表示并列选器, 但是IE6或怪异模式不支持两个class并列
-    flyingon.parse_selector = function (selector) {
+    function parse(tokens, index, end, type) {
 
         var result,                                 //结果
             nodes = [],                             //当前节点数组
             node,                                   //当前节点
-            tokens = selector.match(split_regex),   //标记集合
             token,                                  //当前标记
-            type = " ",                             //当前类型
-            i = 0,
-            length = tokens.length,
             cache;
 
-        while (i < length)
+        while (index < end)
         {
             //switch代码在chrome下的效率没有IE9好,不知道什么原因,有可能是其操作非合法变量名的时候性能太差
-            switch (token = tokens[i++])
+            switch (token = tokens[index++])
             {
                 case "@":   //自定义类型选择器
                 case "#":   //id选择器标记
                 case ".":   //class选择器标记
-                    node = new element_node(nodes, type, token, tokens[i++]);
+                    node = new element_node(nodes, type, token, tokens[index++]);
                     type = "";
                     break;
 
@@ -341,19 +515,13 @@ A~B                    匹配任何在A控件之后的同级B控件
                     break;
 
                 case "[": //属性 [name[?="value"]]
-                    cache = parse_property(tokens, length, i);
-                    i += cache.count;
-
-                    if (cache = cache.result)
+                    if (!node || type) //未指定节点则默认添加*节点
                     {
-                        if (!node) //未指定节点则默认添加*节点
-                        {
-                            node = new element_node(nodes, type, "*", "");
-                            type = "";
-                        }
-
-                        node.push(cache);
+                        node = new element_node(nodes, type, "*", "");
+                        type = "";
                     }
+
+                    index = parse_property(node, tokens, index, end);
                     break;
 
                 case ":": //伪类
@@ -363,37 +531,11 @@ A~B                    匹配任何在A控件之后的同级B控件
                         type = "";
                     }
 
-                    if (tokens[i + 1] === ":") //::伪元素
-                    {
-                        i++;
-                    }
-
-                    node.push(cache = new pseudo_class(token));
-
-                    //处理参数(存储至节点的parameters属性中)
-                    if (i < length && tokens[i] === "(")
-                    {
-                        while ((token = tokens[++i]) !== ")")
-                        {
-                            switch (token)
-                            {
-                                case " ":
-                                case "\t":
-                                case ",":
-                                    break;
-
-                                default:
-                                    cache.push(token);
-                                    break;
-                            }
-                        }
-
-                        i++;
-                    }
+                    index = parse_pseudo(node, tokens, index, end);
                     break;
 
                 default: //类名 token = ""
-                    if (token.length > 1 || token.match(/\w-/))
+                    if (token.length > 1 || token.match(/\w/))
                     {
                         node = new element_node(nodes, type, "", token);
                     }
@@ -406,6 +548,126 @@ A~B                    匹配任何在A控件之后的同级B控件
         return result || nodes;
     };
 
+
+    //解析伪类
+    function parse_pseudo(node, tokens, index, end) {
+
+        var target = new pseudo_class(),
+            token,
+            start,
+            count;
+
+        target.name = tokens[index++];
+
+        //处理参数
+        if (tokens[index] === "(")
+        {
+            start = ++index;
+            count = 0;
+
+            while (index < end)
+            {
+                switch (token = tokens[index++])
+                {
+                    case "(":
+                        count++;
+                        break;
+
+                    case ")":
+                        if (count === 0)
+                        {
+                            end = --index;
+                        }
+                        break;
+                }
+            }
+
+            switch (target.name)
+            {
+                case "not":
+                case "has":
+                    target[target.length++] = parse(tokens, start, index, "");
+                    break;
+
+                default:
+                    while (start < index)
+                    {
+                        switch (name = tokens[start++])
+                        {
+                            case " ":
+                            case "\t":
+                            case ",":
+                                break;
+
+                            default:
+                                target[target.length++] = name;
+                                break;
+                        }
+                    }
+                    break;
+            }
+
+            index++;
+        }
+
+        node[node.length++] = target;
+
+        return index;
+    };
+
+
+    //解析属性
+    function parse_property(node, tokens, index, end) {
+
+        var target = new element_property(),
+            token;
+
+        while (index < end)
+        {
+            switch (token = tokens[index++])
+            {
+                case "]":
+                    index++;
+                    return;
+
+                case "*": // *= 包含属性值XX (由属性解析)
+                case "^": // ^= 属性值以XX开头 (由属性解析)
+                case "$": // $= 属性值以XX结尾 (由属性解析)
+                case "~": // ~= 匹配以空格分隔的其中一段值 如匹配en US中的en (由属性解析)
+                case "|": // |= 匹配以-分隔的其中一段值 如匹配en-US中的en (由属性解析)
+                    target.operator += token;
+                    break;
+
+                case "=":
+                    target.operator += "=";
+                    break;
+
+                case " ":
+                case "\t":
+                    break;
+
+                default:
+                    if (target.operator)
+                    {
+                        switch (token.charAt(0))
+                        {
+                            case "\"":
+                            case "'":
+                                target.value = token.substring(1, token.length - 1);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        target.name = token;
+                        node[node.length++] = target;
+                    }
+                    break;
+            }
+        }
+
+        return index;
+    };
 
 
 
